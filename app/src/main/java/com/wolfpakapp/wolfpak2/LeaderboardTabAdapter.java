@@ -58,6 +58,7 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
         private TextView viewCountTextView;
 
         private ImageView thumbnailImageView;
+        private final int TEST_IMAGE_RES_ID = R.drawable.test_image;
 
         public ViewHolder(View itemView) {
             super(itemView);
@@ -78,8 +79,9 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
             updateViewCountBackground(item.getVoteStatus());
             viewCountTextView.setOnTouchListener(new ViewCountOnTouchListener());
 
-            Picasso.with(mParentManager.getParentActivity()).load(R.drawable.test_image)
+            Picasso.with(mParentManager.getParentActivity()).load(TEST_IMAGE_RES_ID)
                     .into(thumbnailImageView);
+            thumbnailImageView.setOnClickListener(new ThumbnailOnClickListener());
         }
 
         private void updateViewCountBackground(LeaderboardListItem.VoteStatus voteStatus) {
@@ -267,6 +269,13 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
                     parent.requestDisallowInterceptTouchEvent(disallowIntercept);
                     parent = parent.getParent();
                 }
+
+            }
+        }
+
+        private final class ThumbnailOnClickListener implements View.OnClickListener {
+            @Override
+            public void onClick(View v) {
 
             }
         }
