@@ -2,7 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="horizontal" android:layout_width="match_parent"
     android:layout_height="wrap_content" android:layout_margin="@dimen/leaderboard_item_margin"
-    android:background="@drawable/background_leaderboard_item">
+    android:background="@drawable/background_leaderboard_item" android:clipChildren="false">
 
     <ImageView
         android:layout_width="@dimen/leaderboard_item_thumbnail_size"

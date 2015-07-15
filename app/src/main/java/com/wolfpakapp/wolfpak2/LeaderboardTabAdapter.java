@@ -205,7 +205,7 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
                         mLayout.setEnabled(true);
 
                         // Determine the new VoteStatus of the post.
-                        LeaderboardListItem.VoteStatus newStatus = null;
+                        LeaderboardListItem.VoteStatus newStatus = item.getVoteStatus();
                         if (v.getY() < initialViewY) {
                             if (item.getVoteStatus() == LeaderboardListItem.VoteStatus.UPVOTED) {
                                 newStatus = LeaderboardListItem.VoteStatus.NOT_VOTED;
