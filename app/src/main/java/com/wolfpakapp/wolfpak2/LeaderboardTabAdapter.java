@@ -1,5 +1,7 @@
 package com.wolfpakapp.wolfpak2;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.graphics.drawable.GradientDrawable;
@@ -11,6 +13,9 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewParent;
+import android.view.animation.Interpolator;
+import android.view.animation.OvershootInterpolator;
 import android.widget.TextView;
 
 import java.util.ArrayList;
@@ -77,7 +82,7 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
                         .getDrawable(R.drawable.background_view_count);
             }
 
-            int statusColor = voteStatus.getStatusColor(mParentManager.getParentContext());
+            int statusColor = voteStatus.getStatusColor(mParentManager.getParentActivity());
             if (bg != null) {
                 bg.setColor(statusColor);
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
@@ -100,55 +105,48 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
             private float initialViewX;
             private float initialViewY;
 
-            private int ANIM_DURATION = 350;
-
             float lastTouchX = 0;
             float lastTouchY = 0;
 
+            private int ANIM_DURATION = 350;
+            private Interpolator INTERPOLATOR = new OvershootInterpolator(1.4f);
+
             @Override
-            public boolean onTouch(View v, MotionEvent event) {
+            public boolean onTouch(View vow, MotionEvent event) {
                 final int action = MotionEventCompat.getActionMasked(event);
 
                 switch (action) {
                     case MotionEvent.ACTION_DOWN: {
-                        // When a finger presses on the view count, store the original location of
-                        // the View and record the pointer ID of the finger.
-                        mLayout.setEnabled(false);
-
-                        final float x = event.getRawX();
-                        final float y = event.getRawY();
-
-                        lastTouchX = x;
-                        lastTouchY = y;
-
                         activePointerId = MotionEventCompat.getPointerId(event, 0);
 
-                        // Ensure that the View receives touch events before any elements under it.
-                        v.getParent().requestDisallowInterceptTouchEvent(true);
+                        mLayout.setEnabled(false);
+                        setClipChildrenForParents(viewCountTextView, false);
+                        requestDisallowInterceptTouchEventForParents(viewCountTextView, true);
 
-                        initialViewX = v.getX();
-                        initialViewY = v.getY();
+                        lastTouchX = event.getRawX();
+                        lastTouchY = event.getRawY();
 
-                        // Ensure that the RecyclerView draws the listItemView containing the view
-                        // count before all other listItemViews.
-//                        RecyclerView recyclerView = mParentManager.getRecyclerView();
-//                        final int indexOfFrontChild = recyclerView.indexOfChild(itemView);
-//                        recyclerView.setChildDrawingOrderCallback(new RecyclerView.ChildDrawingOrderCallback() {
-//                            private int nextChildIndexToRender;
-//                            @Override
-//                            public int onGetChildDrawingOrder(int childCount, int iteration) {
-//                                if (iteration == childCount - 1) {
-//                                    nextChildIndexToRender = 0;
-//                                    return indexOfFrontChild;
-//                                } else {
-//                                    if (nextChildIndexToRender == indexOfFrontChild) {
-//                                        nextChildIndexToRender++;
-//                                    }
-//                                    return nextChildIndexToRender++;
-//                                }
-//                            }
-//                        });
-//                        recyclerView.invalidate();
+                        initialViewX = viewCountTextView.getX();
+                        initialViewY = viewCountTextView.getY();
+
+                        RecyclerView recyclerView = mParentManager.getRecyclerView();
+                        final int indexOfFrontChild = recyclerView.indexOfChild(itemView);
+                        recyclerView.setChildDrawingOrderCallback(new RecyclerView.ChildDrawingOrderCallback() {
+                            private int nextChildIndexToRender;
+                            @Override
+                            public int onGetChildDrawingOrder(int childCount, int iteration) {
+                                if (iteration == childCount - 1) {
+                                    nextChildIndexToRender = 0;
+                                    return indexOfFrontChild;
+                                } else {
+                                    if (nextChildIndexToRender == indexOfFrontChild) {
+                                        nextChildIndexToRender++;
+                                    }
+                                    return nextChildIndexToRender++;
+                                }
+                            }
+                        });
+                        recyclerView.invalidate();
 
                         break;
                     }
@@ -156,22 +154,19 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
                         final float x = event.getRawX();
                         final float y = event.getRawY();
 
-                        // Calculate the change in pointer position.
                         final float dx = x - lastTouchX;
                         final float dy = y - lastTouchY;
 
-                        // Adjusts the view count based on dx and dy.
-                        v.setX(v.getX() + dx);
-                        v.setY(v.getY() + dy);
+                        viewCountTextView.setX(viewCountTextView.getX() + dx);
+                        viewCountTextView.setY(viewCountTextView.getY() + dy);
 
-                        // Update the color of the view count.
-                        if (v.getY() < initialViewY) {
+                        if (viewCountTextView.getY() < initialViewY) {
                             if (item.getVoteStatus() == LeaderboardListItem.VoteStatus.UPVOTED) {
                                 updateViewCountBackground(LeaderboardListItem.VoteStatus.NOT_VOTED);
                             } else {
                                 updateViewCountBackground(LeaderboardListItem.VoteStatus.UPVOTED);
                             }
-                        } else if (v.getY() > initialViewY) {
+                        } else if (viewCountTextView.getY() > initialViewY) {
                             if (item.getVoteStatus() == LeaderboardListItem.VoteStatus.DOWNVOTED) {
                                 updateViewCountBackground(LeaderboardListItem.VoteStatus.NOT_VOTED);
                             } else {
@@ -185,11 +180,8 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
                         break;
                     }
                     case MotionEvent.ACTION_POINTER_UP: {
-                        // When a finger is lifted (but not the last finger)
                         final int pointerIndex = MotionEventCompat.getActionIndex(event);
                         final int pointerId = MotionEventCompat.findPointerIndex(event, pointerIndex);
-                        // Ensure that the correct pointer ID is being used (in case the view
-                        // switched pointers
                         if (pointerId == activePointerId) {
                             final int newPointerIndex = pointerIndex == 0 ? 1 : 0;
                             lastTouchX = event.getRawX();
@@ -203,47 +195,69 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
                     case MotionEvent.ACTION_CANCEL:
                     case MotionEvent.ACTION_UP: {
                         mLayout.setEnabled(true);
+                        requestDisallowInterceptTouchEventForParents(viewCountTextView, false);
 
-                        // Determine the new VoteStatus of the post.
                         LeaderboardListItem.VoteStatus newStatus = item.getVoteStatus();
-                        if (v.getY() < initialViewY) {
+                        if (viewCountTextView.getY() < initialViewY) {
                             if (item.getVoteStatus() == LeaderboardListItem.VoteStatus.UPVOTED) {
                                 newStatus = LeaderboardListItem.VoteStatus.NOT_VOTED;
                             } else {
                                 newStatus = LeaderboardListItem.VoteStatus.UPVOTED;
                             }
-                        } else if (v.getY() > initialViewY) {
+                        } else if (viewCountTextView.getY() > initialViewY) {
                             if (item.getVoteStatus() == LeaderboardListItem.VoteStatus.DOWNVOTED) {
                                 newStatus = LeaderboardListItem.VoteStatus.NOT_VOTED;
                             } else {
                                 newStatus = LeaderboardListItem.VoteStatus.DOWNVOTED;
                             }
                         }
-                        // Update the post's VoteStatus and the view count background.
+
                         item.setVoteStatus(newStatus);
                         updateViewCountBackground(newStatus);
 
-                        // Update the vote status of the post on the server.
 //                        WolfpakLikeClient.updateVoteStatus(listItem.getId(), newStatus);
 
                         activePointerId = MotionEvent.INVALID_POINTER_ID;
 
-                        // Animate the view count so that it returns to the starting position.
                         AnimatorSet animatorSet = new AnimatorSet();
-                        ObjectAnimator xAnim = ObjectAnimator.ofFloat(v, "X", v.getX(), initialViewX);
-                        ObjectAnimator yAnim = ObjectAnimator.ofFloat(v, "Y", v.getY(), initialViewY);
+                        ObjectAnimator xAnim = ObjectAnimator.ofFloat(viewCountTextView, "X",
+                                viewCountTextView.getX(), initialViewX);
+                        ObjectAnimator yAnim = ObjectAnimator.ofFloat(viewCountTextView, "Y",
+                                viewCountTextView.getY(), initialViewY);
                         animatorSet.play(xAnim).with(yAnim);
                         animatorSet.setDuration(ANIM_DURATION);
-                        animatorSet.setInterpolator(LeaderboardTabManager.getViewCountInterpolator());
+                        animatorSet.setInterpolator(INTERPOLATOR);
+                        animatorSet.addListener(new AnimatorListenerAdapter() {
+                            @Override
+                            public void onAnimationEnd(Animator animation) {
+                                mParentManager.getRecyclerView().setChildDrawingOrderCallback(null);
+                                setClipChildrenForParents(viewCountTextView, true);
+                            }
+                        });
 
                         animatorSet.start();
-
-                        // Reset the RecyclerView's drawing order of the posts.
-//                        mParentManager.getRecyclerView().setChildDrawingOrderCallback(null);
                     }
                 }
 
                 return true;
+            }
+
+            private void setClipChildrenForParents(View v, boolean clipChildren) {
+                ViewParent parent = v.getParent();
+                while (parent instanceof ViewGroup) {
+                    ((ViewGroup) parent).setClipChildren(clipChildren);
+                    parent = parent.getParent();
+                }
+            }
+
+            private void requestDisallowInterceptTouchEventForParents(View v,
+                                                                      boolean disallowIntercept) {
+                ViewParent parent = v.getParent();
+                while (parent != null) {
+                    parent.requestDisallowInterceptTouchEvent(disallowIntercept);
+                    parent = parent.getParent();
+                }
+
             }
         }
     }

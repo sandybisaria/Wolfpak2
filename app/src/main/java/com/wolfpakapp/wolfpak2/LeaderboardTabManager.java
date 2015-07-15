@@ -15,8 +15,6 @@ public class LeaderboardTabManager {
     private SwipeRefreshLayout mSwipeRefreshLayout;
     private RecyclerView mRecyclerView;
 
-    private static final Interpolator VIEW_COUNT_INTERPOLATOR = new OvershootInterpolator(1.4f);
-
     private ArrayList<LeaderboardListItem> leaderboardListItems;
 
     private LeaderboardFragment mParentFragment;
@@ -55,11 +53,7 @@ public class LeaderboardTabManager {
         return mRecyclerView;
     }
 
-    public static Interpolator getViewCountInterpolator() {
-        return VIEW_COUNT_INTERPOLATOR;
-    }
-
-    public Context getParentContext() {
+    public Activity getParentActivity() {
         return mParentFragment.getActivity();
     }
 }
