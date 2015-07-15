@@ -8,9 +8,9 @@
         android:layout_width="@dimen/leaderboard_item_thumbnail_size"
         android:layout_height="@dimen/leaderboard_item_thumbnail_size"
         android:layout_margin="@dimen/leaderboard_item_thumbnail_margin"
-        android:src="@drawable/test_image"
         android:scaleType="centerCrop"
-        android:cropToPadding="true" />
+        android:cropToPadding="true"
+        android:id="@+id/leaderboard_item_thumbnail_image_view" />
 
     <RelativeLayout
         android:layout_width="match_parent"

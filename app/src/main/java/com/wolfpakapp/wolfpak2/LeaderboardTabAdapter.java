@@ -16,7 +16,10 @@ import android.view.ViewGroup;
 import android.view.ViewParent;
 import android.view.animation.Interpolator;
 import android.view.animation.OvershootInterpolator;
+import android.widget.ImageView;
 import android.widget.TextView;
+
+import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 
@@ -54,6 +57,8 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
         private TextView handleTextView;
         private TextView viewCountTextView;
 
+        private ImageView thumbnailImageView;
+
         public ViewHolder(View itemView) {
             super(itemView);
 
@@ -61,6 +66,8 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
                     .findViewById(R.id.leaderboard_item_handle_text_view);
             viewCountTextView = (TextView) itemView
                     .findViewById(R.id.leaderboard_item_view_count_text_view);
+            thumbnailImageView = (ImageView) itemView
+                    .findViewById(R.id.leaderboard_item_thumbnail_image_view);
         }
 
         public void bindListItem(LeaderboardListItem item) {
@@ -70,6 +77,9 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
 
             updateViewCountBackground(item.getVoteStatus());
             viewCountTextView.setOnTouchListener(new ViewCountOnTouchListener());
+
+            Picasso.with(mParentManager.getParentActivity()).load(R.drawable.test_image)
+                    .into(thumbnailImageView);
         }
 
         private void updateViewCountBackground(LeaderboardListItem.VoteStatus voteStatus) {
