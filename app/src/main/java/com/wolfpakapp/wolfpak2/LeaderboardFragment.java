@@ -10,12 +10,11 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
-import android.widget.ListView;
-import android.widget.RelativeLayout;
 import android.widget.TabHost;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 public class LeaderboardFragment extends Fragment implements TabHost.TabContentFactory {
 
@@ -23,9 +22,16 @@ public class LeaderboardFragment extends Fragment implements TabHost.TabContentF
     final String ALL_TIME_TAG = "all_time_leaderboard";
     final String DEN_TAG = "den_board";
 
+    HashMap<String, ArrayList<LeaderboardListItem>> mLeaderboardListMap;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        mLeaderboardListMap = new HashMap<>();
+        mLeaderboardListMap.put(LOCAL_TAG, new ArrayList<LeaderboardListItem>());
+        mLeaderboardListMap.put(ALL_TIME_TAG, new ArrayList<LeaderboardListItem>());
+        mLeaderboardListMap.put(DEN_TAG, new ArrayList<LeaderboardListItem>());
     }
 
     @Override
@@ -46,13 +52,22 @@ public class LeaderboardFragment extends Fragment implements TabHost.TabContentF
 
     @Override
     public View createTabContent(String tag) {
-        final SwipeRefreshLayout swipeRefreshLayout = (SwipeRefreshLayout) LayoutInflater.from(getActivity())
-                .inflate(R.layout.tab_leaderboard, null);
+        final SwipeRefreshLayout swipeRefreshLayout = (SwipeRefreshLayout) LayoutInflater
+                .from(getActivity()).inflate(R.layout.tab_leaderboard, null);
 
         RecyclerView recyclerView = (RecyclerView) swipeRefreshLayout
                 .findViewById(R.id.leaderboard_recycler_view);
         recyclerView.setHasFixedSize(true);
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
+
+        LeaderboardTabAdapter leaderboardTabAdapter =
+                new LeaderboardTabAdapter(mLeaderboardListMap.get(tag));
+
+        recyclerView.setAdapter(leaderboardTabAdapter);
+
+        mLeaderboardListMap.get(tag).add(new LeaderboardListItem());
+
+        leaderboardTabAdapter.notifyDataSetChanged();
 
         return swipeRefreshLayout;
     }
