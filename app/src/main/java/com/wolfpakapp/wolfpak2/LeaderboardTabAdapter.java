@@ -4,6 +4,8 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
+import android.animation.ValueAnimator;
+import android.graphics.Rect;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Build;
 import android.support.v4.view.MotionEventCompat;
@@ -14,8 +16,10 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewParent;
+import android.view.animation.AccelerateDecelerateInterpolator;
 import android.view.animation.Interpolator;
 import android.view.animation.OvershootInterpolator;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -26,6 +30,8 @@ import java.util.ArrayList;
 public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAdapter.ViewHolder> {
     private ArrayList<LeaderboardListItem> mLeaderboardListItems;
     private LeaderboardTabManager mParentManager;
+
+    private Animator mCurrentAnimator;
 
     public LeaderboardTabAdapter(ArrayList<LeaderboardListItem> mLeaderboardListItems,
                                  LeaderboardTabManager mParentManager) {
@@ -97,11 +103,7 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
             int statusColor = voteStatus.getStatusColor(mParentManager.getParentActivity());
             if (bg != null) {
                 bg.setColor(statusColor);
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-                    viewCountTextView.setBackground(bg);
-                } else {
-                    viewCountTextView.setBackgroundDrawable(bg);
-                }
+                viewCountTextView.setBackground(bg);
             }
 
             viewCountTextView.setText(Integer.toString(item.getUpdatedVoteCount()));
@@ -117,10 +119,10 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
             private float initialViewX;
             private float initialViewY;
 
-            float lastTouchX = 0;
-            float lastTouchY = 0;
+            private float lastTouchX = 0;
+            private float lastTouchY = 0;
 
-            private int ANIM_DURATION = 350;
+            private final int ANIM_DURATION = 350;
             private Interpolator INTERPOLATOR = new OvershootInterpolator(1.4f);
 
             @Override
@@ -274,9 +276,83 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
         }
 
         private final class ThumbnailOnClickListener implements View.OnClickListener {
+            private FrameLayout baseFrameLayout = mParentManager.getParentFragment()
+                    .getBaseFrameLayout();
+
+            private final int ANIM_DURATION = 900;
+            private final Interpolator INTERPOLATOR = new AccelerateDecelerateInterpolator();
+
             @Override
             public void onClick(View v) {
+                ImageView expandedImageView = new ImageView(mParentManager.getParentActivity());
 
+                ViewGroup.LayoutParams expandedParams = new ViewGroup.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+
+                expandedImageView.setLayoutParams(expandedParams);
+                expandedImageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                expandedImageView.setVisibility(View.GONE);
+                expandedImageView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN);
+                Picasso.with(mParentManager.getParentActivity()).load(TEST_IMAGE_RES_ID)
+                        .into(expandedImageView);
+                baseFrameLayout.addView(expandedImageView);
+
+                animateViewExpansion(expandedImageView);
+            }
+
+            private void animateViewExpansion(View expandedView) {
+                final ImageView animatingView = new ImageView(mParentManager.getParentActivity());
+                animatingView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                animatingView.setVisibility(View.GONE);
+                animatingView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
+                Picasso.with(mParentManager.getParentActivity()).load(TEST_IMAGE_RES_ID)
+                        .into(animatingView);
+                baseFrameLayout.addView(animatingView);
+
+                final Rect startBounds = new Rect();
+                final Rect finalBounds = new Rect();
+                final int thumbnailSize = (int) mParentManager.getParentActivity().getResources()
+                        .getDimension(R.dimen.leaderboard_item_thumbnail_size);
+
+                thumbnailImageView.getGlobalVisibleRect(startBounds);
+                mParentManager.getParentActivity().getWindow().getDecorView().getGlobalVisibleRect(finalBounds);
+
+                if (mCurrentAnimator != null) {
+                    mCurrentAnimator.cancel();
+                }
+
+                animatingView.setVisibility(ImageView.VISIBLE);
+                animatingView.setPivotX(0f);
+                animatingView.setPivotY(0f);
+
+                ValueAnimator widthAnimator = ValueAnimator.ofInt(thumbnailSize, finalBounds.width());
+                widthAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+                    @Override
+                    public void onAnimationUpdate(ValueAnimator animation) {
+                        //clipViewToGlobalBounds(animatingView);
+                        animatingView.getLayoutParams().width = (int) animation.getAnimatedValue();
+                        animatingView.requestLayout();
+                    }
+                });
+                ValueAnimator heightAnimator = ValueAnimator.ofInt(thumbnailSize, finalBounds.height());
+                heightAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+                    @Override
+                    public void onAnimationUpdate(ValueAnimator animation) {
+//                        clipViewToGlobalBounds(animatingView);
+                        animatingView.getLayoutParams().height = (int) animation.getAnimatedValue();
+                        animatingView.requestLayout();
+                    }
+                });
+
+                AnimatorSet set = new AnimatorSet();
+                set.play(ObjectAnimator.ofFloat(animatingView, View.X, startBounds.left, finalBounds.left))
+                        .with(ObjectAnimator.ofFloat(animatingView, View.Y, startBounds.top, finalBounds.top))
+                        .with(widthAnimator).with(heightAnimator);
+                set.setDuration(ANIM_DURATION);
+                set.setInterpolator(INTERPOLATOR);
+
+                set.start();
+                mCurrentAnimator = set;
             }
         }
     }

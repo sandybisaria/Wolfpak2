@@ -53,6 +53,10 @@ public class LeaderboardTabManager {
         return mRecyclerView;
     }
 
+    public LeaderboardFragment getParentFragment() {
+        return mParentFragment;
+    }
+
     public Activity getParentActivity() {
         return mParentFragment.getActivity();
     }
