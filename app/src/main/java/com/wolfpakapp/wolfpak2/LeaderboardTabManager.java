@@ -9,12 +9,12 @@ import android.view.LayoutInflater;
 import java.util.ArrayList;
 
 public class LeaderboardTabManager {
-    SwipeRefreshLayout mSwipeRefreshLayout;
-    RecyclerView mRecyclerView;
+    private SwipeRefreshLayout mSwipeRefreshLayout;
+    private RecyclerView mRecyclerView;
 
-    ArrayList<LeaderboardListItem> leaderboardListItems;
+    private ArrayList<LeaderboardListItem> leaderboardListItems;
 
-    LeaderboardFragment mParentFragment;
+    private LeaderboardFragment mParentFragment;
     final String tag;
 
     public LeaderboardTabManager(String tag, LeaderboardFragment mParentFragment) {
@@ -35,7 +35,9 @@ public class LeaderboardTabManager {
 
         mRecyclerView.setAdapter(leaderboardTabAdapter);
 
-        leaderboardListItems.add(new LeaderboardListItem(tag));
+        for (int x = 0; x < 15; x++) {
+            leaderboardListItems.add(new LeaderboardListItem(tag, x));
+        }
 
         leaderboardTabAdapter.notifyDataSetChanged();
     }

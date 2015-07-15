@@ -22,6 +22,15 @@
             android:textSize="@dimen/leaderboard_item_text_size"
             android:id="@+id/leaderboard_item_handle_text_view" />
 
+        <TextView
+            android:layout_width="@dimen/leaderboard_item_view_count_size"
+            android:layout_height="@dimen/leaderboard_item_view_count_size"
+            android:layout_centerInParent="true"
+            android:layout_alignParentBottom="true"
+            android:gravity="center"
+            android:background="@drawable/background_view_count"
+            android:id="@+id/leaderboard_item_view_count_text_view" />
+
     </RelativeLayout>
     
 </LinearLayout>

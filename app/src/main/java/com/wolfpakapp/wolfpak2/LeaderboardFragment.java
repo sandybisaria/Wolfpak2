@@ -11,11 +11,11 @@ import java.util.HashMap;
 
 public class LeaderboardFragment extends Fragment implements TabHost.TabContentFactory {
 
-    final String LOCAL_TAG = "local_leaderboard";
-    final String ALL_TIME_TAG = "all_time_leaderboard";
-    final String DEN_TAG = "den_board";
+    private final String LOCAL_TAG = "local_leaderboard";
+    private final String ALL_TIME_TAG = "all_time_leaderboard";
+    private final String DEN_TAG = "den_board";
 
-    HashMap<String, LeaderboardTabManager> mTabManagerMap;
+    private HashMap<String, LeaderboardTabManager> mTabManagerMap;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {

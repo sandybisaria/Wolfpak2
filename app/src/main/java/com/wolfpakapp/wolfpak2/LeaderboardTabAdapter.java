@@ -1,5 +1,6 @@
 package com.wolfpakapp.wolfpak2;
 
+import android.graphics.Color;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -9,7 +10,7 @@ import android.widget.TextView;
 import java.util.ArrayList;
 
 public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAdapter.ViewHolder> {
-    ArrayList<LeaderboardListItem> leaderboardListItems;
+    private ArrayList<LeaderboardListItem> leaderboardListItems;
 
     public LeaderboardTabAdapter(ArrayList<LeaderboardListItem> leaderboardListItems) {
         this.leaderboardListItems = leaderboardListItems;
@@ -34,21 +35,25 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {
-        LeaderboardListItem leaderboardListItem;
+        private LeaderboardListItem item;
 
-        TextView handleTextView;
+        private TextView handleTextView;
+        private TextView viewCountTextView;
 
         public ViewHolder(View itemView) {
             super(itemView);
 
             handleTextView = (TextView) itemView
                     .findViewById(R.id.leaderboard_item_handle_text_view);
+            viewCountTextView = (TextView) itemView
+                    .findViewById(R.id.leaderboard_item_view_count_text_view);
         }
 
-        public void bindListItem(LeaderboardListItem leaderboardListItem) {
-            this.leaderboardListItem = leaderboardListItem;
+        public void bindListItem(LeaderboardListItem item) {
+            this.item = item;
 
-            handleTextView.setText(leaderboardListItem.getHandle());
+            handleTextView.setText(item.getHandle());
+            viewCountTextView.setText(Integer.toString(item.getOriginalVoteCount()));
         }
     }
 }
