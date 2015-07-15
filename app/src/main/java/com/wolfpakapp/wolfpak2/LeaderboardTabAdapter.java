@@ -111,6 +111,16 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
             viewCountTextView.invalidate();
         }
 
+        private void requestDisallowInterceptTouchEventForParents(View v,
+                                                                  boolean disallowIntercept) {
+            ViewParent parent = v.getParent();
+            while (parent != null) {
+                parent.requestDisallowInterceptTouchEvent(disallowIntercept);
+                parent = parent.getParent();
+            }
+
+        }
+
         private final class ViewCountOnTouchListener implements View.OnTouchListener {
             private SwipeRefreshLayout mLayout = mParentManager.getTabLayout();
 
@@ -263,16 +273,6 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
                     parent = parent.getParent();
                 }
             }
-
-            private void requestDisallowInterceptTouchEventForParents(View v,
-                                                                      boolean disallowIntercept) {
-                ViewParent parent = v.getParent();
-                while (parent != null) {
-                    parent.requestDisallowInterceptTouchEvent(disallowIntercept);
-                    parent = parent.getParent();
-                }
-
-            }
         }
 
         private final class ThumbnailOnClickListener implements View.OnClickListener {
@@ -286,10 +286,9 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
             public void onClick(View v) {
                 ImageView expandedImageView = new ImageView(mParentManager.getParentActivity());
 
-                ViewGroup.LayoutParams expandedParams = new ViewGroup.LayoutParams(
-                        ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
-
-                expandedImageView.setLayoutParams(expandedParams);
+//                ViewGroup.LayoutParams expandedParams = new ViewGroup.LayoutParams(
+//                        ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+//                expandedImageView.setLayoutParams(expandedParams);
                 expandedImageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
                 expandedImageView.setVisibility(View.GONE);
                 expandedImageView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN);
@@ -356,11 +355,103 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
                     public void onAnimationEnd(Animator animation) {
                         expandedView.setVisibility(View.VISIBLE);
                         animatingView.setVisibility(View.GONE);
+
+                        expandedView
+                                .setOnTouchListener(new ExpandedViewOnTouchListener(expandedView));
                     }
                 });
 
                 set.start();
                 mCurrentAnimator = set;
+            }
+
+            private final class ExpandedViewOnTouchListener implements View.OnTouchListener {
+                private int activePointerId = MotionEvent.INVALID_POINTER_ID;
+
+                private float initialViewX;
+                private float initialViewY;
+
+                private float lastTouchX = 0;
+                private float lastTouchY = 0;
+
+                private boolean isAnimating = false;
+
+                public ExpandedViewOnTouchListener(View v) {
+                    initialViewX = v.getX();
+                    initialViewY = v.getY();
+                }
+
+                @Override
+                public boolean onTouch(View v, MotionEvent event) {
+                    if (isAnimating) {
+                        return true;
+                    }
+
+                    final int action = MotionEventCompat.getActionMasked(event);
+
+                    switch (action) {
+                        case MotionEvent.ACTION_DOWN: {
+                            activePointerId = MotionEventCompat.getPointerId(event, 0);
+                            requestDisallowInterceptTouchEventForParents(v, true);
+
+                            lastTouchX = event.getRawX();
+                            lastTouchY = event.getRawY();
+
+                            break;
+                        }
+                        case MotionEvent.ACTION_MOVE: {
+                            final float x = event.getRawX();
+                            final float y = event.getRawY();
+
+                            final float dx = x - lastTouchX;
+                            final float dy = y - lastTouchY;
+
+                            v.setX(v.getX() + dx);
+                            v.setY(v.getY() + dy);
+
+                            lastTouchX = x;
+                            lastTouchY = y;
+
+                            break;
+                        }
+                        case MotionEvent.ACTION_POINTER_UP: {
+                            final int pointerIndex = MotionEventCompat.getActionIndex(event);
+                            final int pointerId = MotionEventCompat.findPointerIndex(event, pointerIndex);
+                            if (pointerId == activePointerId) {
+                                final int newPointerIndex = pointerIndex == 0 ? 1 : 0;
+                                lastTouchX = event.getRawX();
+                                lastTouchY = event.getRawY();
+                                activePointerId = MotionEventCompat.getPointerId(event, newPointerIndex);
+                            }
+
+                            break;
+                        }
+                        case MotionEvent.ACTION_UP: {
+                            activePointerId = MotionEvent.INVALID_POINTER_ID;
+                            requestDisallowInterceptTouchEventForParents(v, false);
+
+                            AnimatorSet animatorSet = new AnimatorSet();
+                            ObjectAnimator xAnim = ObjectAnimator.ofFloat(v, "X",
+                                    v.getX(), initialViewX);
+                            ObjectAnimator yAnim = ObjectAnimator.ofFloat(v, "Y",
+                                    v.getY(), initialViewY);
+                            animatorSet.play(xAnim).with(yAnim);
+                            animatorSet.setDuration(ANIM_DURATION);
+                            animatorSet.setInterpolator(INTERPOLATOR);
+                            animatorSet.addListener(new AnimatorListenerAdapter() {
+                                @Override
+                                public void onAnimationEnd(Animator animation) {
+                                    isAnimating = false;
+                                }
+                            });
+
+                            isAnimating = true;
+                            animatorSet.start();
+                        }
+                    }
+
+                    return true;
+                }
             }
 
             private void animateViewShrinking(View animatingView, View expandedView) {
