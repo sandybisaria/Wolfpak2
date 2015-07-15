@@ -35,7 +35,7 @@ public class LeaderboardTabManager {
 
         mRecyclerView.setAdapter(leaderboardTabAdapter);
 
-        leaderboardListItems.add(new LeaderboardListItem());
+        leaderboardListItems.add(new LeaderboardListItem(tag));
 
         leaderboardTabAdapter.notifyDataSetChanged();
     }

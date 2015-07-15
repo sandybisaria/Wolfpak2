@@ -4,18 +4,10 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 import java.util.ArrayList;
 
-/**
- * The LeaderboardAdapter provides a binding from a set of
- * {@link com.wolfpakapp.wolfpak2.LeaderboardListItem} objects to a
- * {@link RecyclerView}.
- *
- * @see android.support.v7.widget.RecyclerView.Adapter
- * @see RecyclerView
- * @see com.wolfpakapp.wolfpak2.LeaderboardTabAdapter.ViewHolder
- */
 public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAdapter.ViewHolder> {
     ArrayList<LeaderboardListItem> leaderboardListItems;
 
@@ -44,12 +36,19 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
     public class ViewHolder extends RecyclerView.ViewHolder {
         LeaderboardListItem leaderboardListItem;
 
+        TextView handleTextView;
+
         public ViewHolder(View itemView) {
             super(itemView);
+
+            handleTextView = (TextView) itemView
+                    .findViewById(R.id.leaderboard_item_handle_text_view);
         }
 
         public void bindListItem(LeaderboardListItem leaderboardListItem) {
             this.leaderboardListItem = leaderboardListItem;
+
+            handleTextView.setText(leaderboardListItem.getHandle());
         }
     }
 }

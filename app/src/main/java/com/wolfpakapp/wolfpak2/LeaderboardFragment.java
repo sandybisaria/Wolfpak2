@@ -43,6 +43,7 @@ public class LeaderboardFragment extends Fragment implements TabHost.TabContentF
     @Override
     public View createTabContent(String tag) {
         LeaderboardTabManager manager = new LeaderboardTabManager(tag, this);
+        mTabManagerMap.put(tag, manager);
 
         return manager.getTabLayout();
     }
