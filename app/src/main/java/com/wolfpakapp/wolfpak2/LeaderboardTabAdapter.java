@@ -300,7 +300,7 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
                 animateViewExpansion(expandedImageView);
             }
 
-            private void animateViewExpansion(View expandedView) {
+            private void animateViewExpansion(final View expandedView) {
                 final ImageView animatingView = new ImageView(mParentManager.getParentActivity());
                 animatingView.setScaleType(ImageView.ScaleType.CENTER_CROP);
                 animatingView.setVisibility(View.GONE);
@@ -315,7 +315,8 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
                         .getDimension(R.dimen.leaderboard_item_thumbnail_size);
 
                 thumbnailImageView.getGlobalVisibleRect(startBounds);
-                mParentManager.getParentActivity().getWindow().getDecorView().getGlobalVisibleRect(finalBounds);
+                mParentManager.getParentActivity().getWindow().getDecorView()
+                        .getGlobalVisibleRect(finalBounds);
 
                 if (mCurrentAnimator != null) {
                     mCurrentAnimator.cancel();
@@ -350,9 +351,20 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
                         .with(widthAnimator).with(heightAnimator);
                 set.setDuration(ANIM_DURATION);
                 set.setInterpolator(INTERPOLATOR);
+                set.addListener(new AnimatorListenerAdapter() {
+                    @Override
+                    public void onAnimationEnd(Animator animation) {
+                        expandedView.setVisibility(View.VISIBLE);
+                        animatingView.setVisibility(View.GONE);
+                    }
+                });
 
                 set.start();
                 mCurrentAnimator = set;
+            }
+
+            private void animateViewShrinking(View animatingView, View expandedView) {
+
             }
         }
     }
