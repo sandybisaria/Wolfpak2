@@ -1,16 +1,21 @@
 package com.wolfpakapp.wolfpak2;
 
 import android.app.Activity;
+import android.content.Context;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
+import android.view.animation.Interpolator;
+import android.view.animation.OvershootInterpolator;
 
 import java.util.ArrayList;
 
 public class LeaderboardTabManager {
     private SwipeRefreshLayout mSwipeRefreshLayout;
     private RecyclerView mRecyclerView;
+
+    private static final Interpolator VIEW_COUNT_INTERPOLATOR = new OvershootInterpolator(1.4f);
 
     private ArrayList<LeaderboardListItem> leaderboardListItems;
 
@@ -31,7 +36,7 @@ public class LeaderboardTabManager {
         leaderboardListItems = new ArrayList<>();
 
         LeaderboardTabAdapter leaderboardTabAdapter =
-                new LeaderboardTabAdapter(leaderboardListItems);
+                new LeaderboardTabAdapter(leaderboardListItems, this);
 
         mRecyclerView.setAdapter(leaderboardTabAdapter);
 
@@ -44,5 +49,17 @@ public class LeaderboardTabManager {
 
     public SwipeRefreshLayout getTabLayout() {
         return mSwipeRefreshLayout;
+    }
+
+    public RecyclerView getRecyclerView() {
+        return mRecyclerView;
+    }
+
+    public static Interpolator getViewCountInterpolator() {
+        return VIEW_COUNT_INTERPOLATOR;
+    }
+
+    public Context getParentContext() {
+        return mParentFragment.getActivity();
     }
 }
