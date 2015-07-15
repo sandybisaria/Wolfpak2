@@ -131,24 +131,24 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
 
                         // Ensure that the RecyclerView draws the listItemView containing the view
                         // count before all other listItemViews.
-                        RecyclerView recyclerView = mParentManager.getRecyclerView();
-                        final int indexOfFrontChild = recyclerView.indexOfChild(itemView);
-                        recyclerView.setChildDrawingOrderCallback(new RecyclerView.ChildDrawingOrderCallback() {
-                            private int nextChildIndexToRender;
-                            @Override
-                            public int onGetChildDrawingOrder(int childCount, int iteration) {
-                                if (iteration == childCount - 1) {
-                                    nextChildIndexToRender = 0;
-                                    return indexOfFrontChild;
-                                } else {
-                                    if (nextChildIndexToRender == indexOfFrontChild) {
-                                        nextChildIndexToRender++;
-                                    }
-                                    return nextChildIndexToRender++;
-                                }
-                            }
-                        });
-                        recyclerView.invalidate();
+//                        RecyclerView recyclerView = mParentManager.getRecyclerView();
+//                        final int indexOfFrontChild = recyclerView.indexOfChild(itemView);
+//                        recyclerView.setChildDrawingOrderCallback(new RecyclerView.ChildDrawingOrderCallback() {
+//                            private int nextChildIndexToRender;
+//                            @Override
+//                            public int onGetChildDrawingOrder(int childCount, int iteration) {
+//                                if (iteration == childCount - 1) {
+//                                    nextChildIndexToRender = 0;
+//                                    return indexOfFrontChild;
+//                                } else {
+//                                    if (nextChildIndexToRender == indexOfFrontChild) {
+//                                        nextChildIndexToRender++;
+//                                    }
+//                                    return nextChildIndexToRender++;
+//                                }
+//                            }
+//                        });
+//                        recyclerView.invalidate();
 
                         break;
                     }
@@ -239,7 +239,7 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
                         animatorSet.start();
 
                         // Reset the RecyclerView's drawing order of the posts.
-                        mParentManager.getRecyclerView().setChildDrawingOrderCallback(null);
+//                        mParentManager.getRecyclerView().setChildDrawingOrderCallback(null);
                     }
                 }
 
