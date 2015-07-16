@@ -4,11 +4,8 @@ import android.content.Context;
 import android.util.Log;
 
 import com.loopj.android.http.AsyncHttpResponseHandler;
-import com.loopj.android.http.RequestParams;
 
 import org.apache.http.Header;
-import org.apache.http.HttpEntity;
-import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.message.BasicHeader;
 import org.apache.http.protocol.HTTP;
@@ -27,7 +24,7 @@ public class ServerLikeClient {
             JSONObject jsonObject = new JSONObject();
             jsonObject.put("post", postId);
             //TODO Get actual user ID!
-            jsonObject.put("user_liked", "temp_user_id");
+            jsonObject.put("user_liked", "temp_test_id");
             jsonObject.put("status", voteStatus.change);
             StringEntity entity = new StringEntity(jsonObject.toString());
             String contentType = "application/json";
@@ -42,7 +39,6 @@ public class ServerLikeClient {
 
                 @Override
                 public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
-                    Log.d(Integer.toString(statusCode), new String(responseBody));
                     viewHolder.updateViewCountBackground(viewHolder.getListItem().getVoteStatus());
                 }
             });

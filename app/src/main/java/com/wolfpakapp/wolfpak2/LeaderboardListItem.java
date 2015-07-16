@@ -13,14 +13,24 @@ public class LeaderboardListItem {
     private int updatedVoteCount;
     private VoteStatus voteStatus;
 
-    public LeaderboardListItem(int id, String handle, boolean isImage, String mediaUrl, int originalVoteCount, VoteStatus voteStatus) {
+    public LeaderboardListItem(int id, String handle, boolean isImage, String mediaUrl, int updatedVoteCount, VoteStatus voteStatus) {
         this.id = id;
         this.handle = handle;
         this.isImage = isImage;
         this.mediaUrl = mediaUrl;
-        this.originalVoteCount = originalVoteCount;
-        // Simultaneously sets the vote status and updates the vote count based on it
-        setVoteStatus(voteStatus);
+        this.voteStatus = voteStatus;
+        this.updatedVoteCount = updatedVoteCount;
+        switch (voteStatus) {
+            case NOT_VOTED: {
+                originalVoteCount = updatedVoteCount;
+                break;
+            }
+            case UPVOTED:
+            case DOWNVOTED: {
+                originalVoteCount = updatedVoteCount - voteStatus.change;
+                break;
+            }
+        }
     }
 
     public int getId() {

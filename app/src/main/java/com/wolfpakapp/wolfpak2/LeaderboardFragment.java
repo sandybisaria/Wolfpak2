@@ -78,9 +78,9 @@ public class LeaderboardFragment extends Fragment implements TabHost.TabContentF
         RequestParams allTimeParams = new RequestParams();
         RequestParams denParams = new RequestParams();
 
-        // TODO Get paramater values from other sources
-        localParams.add("user_id", "temp_user_id");
-        denParams.add("user_id", "temp_user_id");
+        //TODO Get paramater values from other sources
+        localParams.add("user_id", "temp_test_id");
+        denParams.add("user_id", "temp_test_id");
 
         localParams.add("latitude", "40.518715");
         localParams.add("longitude", "-74.412095");
