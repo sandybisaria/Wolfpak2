@@ -39,6 +39,11 @@ public class ServerLikeClient {
 
                 @Override
                 public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
+                    try {
+                        Log.d(Integer.toString(statusCode), new String(responseBody));
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                     viewHolder.updateViewCountBackground(viewHolder.getListItem().getVoteStatus());
                 }
             });

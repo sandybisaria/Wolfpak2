@@ -10,6 +10,8 @@ import android.widget.TabHost;
 
 import com.loopj.android.http.RequestParams;
 
+import org.json.JSONObject;
+
 import java.util.HashMap;
 
 public class LeaderboardFragment extends Fragment implements TabHost.TabContentFactory {
@@ -60,7 +62,6 @@ public class LeaderboardFragment extends Fragment implements TabHost.TabContentF
 
         return baseLayout;
     }
-
     @Override
     public View createTabContent(String tag) {
         LeaderboardTabManager manager = new LeaderboardTabManager(tag, this);
@@ -103,5 +104,48 @@ public class LeaderboardFragment extends Fragment implements TabHost.TabContentF
 
     public String getRelativeUrl(String tag) {
         return mRelativeUrlsMap.get(tag);
+    }
+
+    public LeaderboardListItem parseListItemJSONObject(String tag, JSONObject jsonObject) {
+        switch (tag) {
+            case LOCAL_TAG: {
+                int id = jsonObject.optInt("id");
+                String handle = jsonObject.optString("handle");
+                boolean isImage = jsonObject.optBoolean("is_image");
+                String mediaUrl = jsonObject.optString("media_url");
+                int originalVoteCount = jsonObject.optInt("likes");
+                int likeStatus = jsonObject.optInt("like_status");
+
+                return new LeaderboardListItem(id, handle, isImage, mediaUrl, originalVoteCount,
+                        LeaderboardListItem.VoteStatus.getVoteStatus(likeStatus));
+            }
+            case ALL_TIME_TAG: {
+                int id = jsonObject.optInt("id");
+                String handle = jsonObject.optString("handle");
+                boolean isImage = jsonObject.optBoolean("is_image");
+                String mediaUrl = jsonObject.optString("media_url");
+                int originalVoteCount = jsonObject.optInt("likes");
+                //TODO Get like status using API
+                int likeStatus = 0;
+
+                return new LeaderboardListItem(id, handle, isImage, mediaUrl, originalVoteCount,
+                        LeaderboardListItem.VoteStatus.getVoteStatus(likeStatus));
+            }
+            case DEN_TAG: {
+                int id = jsonObject.optInt("id");
+                String handle = jsonObject.optString("handle");
+                boolean isImage = jsonObject.optBoolean("is_image");
+                String mediaUrl = jsonObject.optString("media_url");
+                int originalVoteCount = jsonObject.optInt("likes");
+                //TODO likeStatus for Den does not make sense
+                int likeStatus = 0;
+
+                return new LeaderboardListItem(id, handle, isImage, mediaUrl, originalVoteCount,
+                        LeaderboardListItem.VoteStatus.getVoteStatus(likeStatus));
+            }
+            default: {
+                return null;
+            }
+        }
     }
 }

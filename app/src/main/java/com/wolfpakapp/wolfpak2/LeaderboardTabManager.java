@@ -29,7 +29,7 @@ public class LeaderboardTabManager {
     private LeaderboardFragment mParentFragment;
     final String tag;
 
-    public LeaderboardTabManager(String tag, final LeaderboardFragment mParentFragment) {
+    public LeaderboardTabManager(final String tag, final LeaderboardFragment mParentFragment) {
         this.tag = tag;
         this.mParentFragment = mParentFragment;
 
@@ -55,18 +55,8 @@ public class LeaderboardTabManager {
                 try {
                     resArray = new JSONArray(new String(responseBody));
                     for (int idx = 0; idx < resArray.length(); idx++) {
-                        JSONObject listItemObject = resArray.getJSONObject(idx);
-
-                        int id = listItemObject.optInt("id");
-                        String handle = listItemObject.optString("handle");
-                        boolean isImage = listItemObject.optBoolean("is_image");
-                        String mediaUrl = listItemObject.optString("media_url");
-                        int originalVoteCount = listItemObject.optInt("likes");
-                        int likeStatus = listItemObject.optInt("like_status");
-
-                        leaderboardListItems.add(new LeaderboardListItem(id, handle, isImage,
-                                mediaUrl, originalVoteCount, LeaderboardListItem.VoteStatus
-                                .getVoteStatus(likeStatus)));
+                        leaderboardListItems.add(mParentFragment
+                                .parseListItemJSONObject(tag, resArray.getJSONObject(idx)));
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
