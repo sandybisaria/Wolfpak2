@@ -57,6 +57,10 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
         holder.bindListItem(mLeaderboardListItems.get(position));
     }
 
+    public LeaderboardTabManager getParentManager() {
+        return mParentManager;
+    }
+
     // TODO Handle touching multiple items at once (i.e. view count + expanding view)
     public class ViewHolder extends RecyclerView.ViewHolder {
         private LeaderboardListItem item;
@@ -90,7 +94,7 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
             thumbnailImageView.setOnClickListener(new ThumbnailOnClickListener());
         }
 
-        private void updateViewCountBackground(LeaderboardListItem.VoteStatus voteStatus) {
+        public void updateViewCountBackground(LeaderboardListItem.VoteStatus voteStatus) {
             GradientDrawable bg;
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 bg = (GradientDrawable) viewCountTextView.getResources()
@@ -109,6 +113,10 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
             viewCountTextView.setText(Integer.toString(item.getUpdatedVoteCount()));
 
             viewCountTextView.invalidate();
+        }
+
+        public LeaderboardListItem getListItem() {
+            return item;
         }
 
         private void requestDisallowInterceptTouchEventForParents(View v,
@@ -236,10 +244,8 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
                             }
                         }
 
-                        item.setVoteStatus(newStatus);
-                        updateViewCountBackground(newStatus);
-
-//                        WolfpakLikeClient.updateVoteStatus(listItem.getId(), newStatus);
+                        ServerLikeClient.updateLikeStatus(LeaderboardTabAdapter.this, ViewHolder.this,
+                                item.getId(), newStatus);
 
                         activePointerId = MotionEvent.INVALID_POINTER_ID;
 
