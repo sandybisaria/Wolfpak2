@@ -57,6 +57,7 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
         holder.bindListItem(mLeaderboardListItems.get(position));
     }
 
+    // TODO Handle touching multiple items at once (i.e. view count + expanding view)
     public class ViewHolder extends RecyclerView.ViewHolder {
         private LeaderboardListItem item;
 
@@ -64,7 +65,6 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
         private TextView viewCountTextView;
 
         private ImageView thumbnailImageView;
-        private final int TEST_IMAGE_RES_ID = R.drawable.test;
 
         public ViewHolder(View itemView) {
             super(itemView);
@@ -85,7 +85,7 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
             updateViewCountBackground(item.getVoteStatus());
             viewCountTextView.setOnTouchListener(new ViewCountOnTouchListener());
 
-            Picasso.with(mParentManager.getParentActivity()).load(TEST_IMAGE_RES_ID)
+            Picasso.with(mParentManager.getParentActivity()).load(item.getMediaUrl())
                     .into(thumbnailImageView);
             thumbnailImageView.setOnClickListener(new ThumbnailOnClickListener());
         }
@@ -293,13 +293,10 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
             public void onClick(View v) {
                 ImageView expandedImageView = new ImageView(mParentManager.getParentActivity());
 
-//                ViewGroup.LayoutParams expandedParams = new ViewGroup.LayoutParams(
-//                        ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
-//                expandedImageView.setLayoutParams(expandedParams);
                 expandedImageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
                 expandedImageView.setVisibility(View.GONE);
                 expandedImageView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN);
-                Picasso.with(mParentManager.getParentActivity()).load(TEST_IMAGE_RES_ID)
+                Picasso.with(mParentManager.getParentActivity()).load(item.getMediaUrl())
                         .into(expandedImageView);
                 baseFrameLayout.addView(expandedImageView);
 
@@ -311,7 +308,7 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
                 animatingView.setScaleType(ImageView.ScaleType.CENTER_CROP);
                 animatingView.setVisibility(View.GONE);
                 animatingView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
-                Picasso.with(mParentManager.getParentActivity()).load(TEST_IMAGE_RES_ID)
+                Picasso.with(mParentManager.getParentActivity()).load(item.getMediaUrl())
                         .into(animatingView);
                 baseFrameLayout.addView(animatingView);
 

@@ -5,20 +5,30 @@ import android.content.Context;
 import android.content.res.Resources;
 
 public class LeaderboardListItem {
+    private int id;
     private String handle;
+    private boolean isImage;
+    private String mediaUrl;
     private int originalVoteCount;
     private int updatedVoteCount;
     private VoteStatus voteStatus;
 
-    public LeaderboardListItem(String handle, int originalVoteCount) {
+    public LeaderboardListItem(int id, String handle, boolean isImage, String mediaUrl, int originalVoteCount, VoteStatus voteStatus) {
+        this.id = id;
         this.handle = handle;
+        this.isImage = isImage;
+        this.mediaUrl = mediaUrl;
         this.originalVoteCount = originalVoteCount;
-        // TODO Get vote status from the server!
-        setVoteStatus(VoteStatus.NOT_VOTED);
+        // Simultaneously sets the vote status and updates the vote count based on it
+        setVoteStatus(voteStatus);
     }
 
     public String getHandle() {
         return handle;
+    }
+
+    public String getMediaUrl() {
+        return mediaUrl;
     }
 
     public int getUpdatedVoteCount() {
@@ -31,6 +41,18 @@ public class LeaderboardListItem {
 
         VoteStatus(int change) {
             this.change = change;
+        }
+
+        static VoteStatus getVoteStatus(int change) {
+            switch (change) {
+                case -1:
+                    return DOWNVOTED;
+                case 1:
+                    return UPVOTED;
+                case 0:
+                default:
+                    return NOT_VOTED;
+            }
         }
 
         int getStatusColor(Context context) {
