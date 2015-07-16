@@ -8,6 +8,8 @@ import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.TabHost;
 
+import com.loopj.android.http.RequestParams;
+
 import java.util.HashMap;
 
 public class LeaderboardFragment extends Fragment implements TabHost.TabContentFactory {
@@ -16,6 +18,8 @@ public class LeaderboardFragment extends Fragment implements TabHost.TabContentF
     private final String DEN_TAG = "den_board";
 
     private HashMap<String, LeaderboardTabManager> mTabManagerMap;
+    private HashMap<String, RequestParams> mRequestParamsMap;
+    private HashMap<String, String> mRelativeUrlsMap;
 
     private FrameLayout mBaseFrameLayout;
 
@@ -24,6 +28,10 @@ public class LeaderboardFragment extends Fragment implements TabHost.TabContentF
         super.onCreate(savedInstanceState);
 
         mTabManagerMap = new HashMap<>();
+        mRequestParamsMap = new HashMap<>();
+        setUpRequestParams();
+        mRelativeUrlsMap = new HashMap<>();
+        setUpRelativeUrls();
     }
 
     @Override
@@ -63,5 +71,37 @@ public class LeaderboardFragment extends Fragment implements TabHost.TabContentF
 
     public FrameLayout getBaseFrameLayout() {
         return mBaseFrameLayout;
+    }
+
+    private void setUpRequestParams() {
+        RequestParams localParams = new RequestParams();
+        RequestParams allTimeParams = new RequestParams();
+        RequestParams denParams = new RequestParams();
+
+        // TODO Get paramater values from other sources
+        localParams.add("user_id", "temp_user_id");
+        denParams.add("user_id", "temp_user_id");
+
+        localParams.add("latitude", "40.518715");
+        localParams.add("longitude", "-74.412095");
+        localParams.add("is_nsfw", "False");
+
+        mRequestParamsMap.put(LOCAL_TAG, localParams);
+        mRequestParamsMap.put(ALL_TIME_TAG, allTimeParams);
+        mRequestParamsMap.put(DEN_TAG, denParams);
+    }
+
+    public RequestParams getRequestParams(String tag) {
+        return mRequestParamsMap.get(tag);
+    }
+
+    private void setUpRelativeUrls() {
+        mRelativeUrlsMap.put(LOCAL_TAG, "posts/local_leaderboard/");
+        mRelativeUrlsMap.put(ALL_TIME_TAG, "/posts/all_time_leaderboard/");
+        mRelativeUrlsMap.put(DEN_TAG, "/users/den/");
+    }
+
+    public String getRelativeUrl(String tag) {
+        return mRelativeUrlsMap.get(tag);
     }
 }

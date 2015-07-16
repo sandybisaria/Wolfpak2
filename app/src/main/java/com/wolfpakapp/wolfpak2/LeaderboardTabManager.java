@@ -47,12 +47,8 @@ public class LeaderboardTabManager {
 
         mRecyclerView.setAdapter(leaderboardTabAdapter);
 
-        RequestParams params = new RequestParams();
-        params.add("user_id", "temp_user_id");
-        params.add("latitude", "40.518715");
-        params.add("longitude", "-74.412095");
-        params.add("is_nsfw", "False");
-        ServerRestClient.get("posts/local_leaderboard/", params, new AsyncHttpResponseHandler() {
+        ServerRestClient.get(mParentFragment.getRelativeUrl(tag), mParentFragment.getRequestParams(tag),
+                new AsyncHttpResponseHandler() {
             @Override
             public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
                 final JSONArray resArray;
@@ -79,7 +75,8 @@ public class LeaderboardTabManager {
             }
 
             @Override
-            public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
+            public void onFailure(int statusCode, Header[] headers, byte[] responseBody,
+                                  Throwable error) {
                 Toast.makeText(mParentFragment.getActivity(), "Failed", Toast.LENGTH_SHORT).show();
                 Log.d("Failure", Integer.toString(statusCode));
             }
