@@ -41,6 +41,10 @@ public class LeaderboardListItem {
         return handle;
     }
 
+    public boolean isImage() {
+        return isImage;
+    }
+
     public String getMediaUrl() {
         return mediaUrl;
     }

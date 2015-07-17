@@ -7,6 +7,8 @@ import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.graphics.Rect;
 import android.graphics.drawable.GradientDrawable;
+import android.media.MediaPlayer;
+import android.net.Uri;
 import android.os.Build;
 import android.support.v4.view.MotionEventCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
@@ -22,6 +24,7 @@ import android.view.animation.OvershootInterpolator;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.VideoView;
 
 import com.squareup.picasso.Picasso;
 
@@ -89,8 +92,15 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
             updateViewCountBackground(item.getVoteStatus());
             viewCountTextView.setOnTouchListener(new ViewCountOnTouchListener());
 
-            Picasso.with(mParentManager.getParentActivity()).load(item.getMediaUrl())
-                    .into(thumbnailImageView);
+            if (item.isImage()) {
+                Picasso.with(mParentManager.getParentActivity()).load(item.getMediaUrl())
+                        .into(thumbnailImageView);
+            } else {
+                //TODO Retrieve thumbnails from the server
+                Picasso.with(mParentManager.getParentActivity()).load(R.drawable.test)
+                        .into(thumbnailImageView);
+            }
+
             thumbnailImageView.setOnClickListener(new ThumbnailOnClickListener());
         }
 
@@ -297,16 +307,27 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
 
             @Override
             public void onClick(View v) {
-                ImageView expandedImageView = new ImageView(mParentManager.getParentActivity());
+                if (item.isImage()) {
+                    ImageView expandedImageView = new ImageView(mParentManager.getParentActivity());
 
-                expandedImageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
-                expandedImageView.setVisibility(View.GONE);
-                expandedImageView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN);
-                Picasso.with(mParentManager.getParentActivity()).load(item.getMediaUrl())
-                        .into(expandedImageView);
-                baseFrameLayout.addView(expandedImageView);
+                    expandedImageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                    expandedImageView.setVisibility(View.GONE);
+                    expandedImageView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN);
+                    Picasso.with(mParentManager.getParentActivity()).load(item.getMediaUrl())
+                            .into(expandedImageView);
+                    baseFrameLayout.addView(expandedImageView);
 
-                animateViewExpansion(expandedImageView);
+                    animateViewExpansion(expandedImageView);
+                } else {
+                    VideoView expandedVideoView = new VideoView(mParentManager.getParentActivity());
+                    expandedVideoView.setVisibility(View.GONE);
+                    expandedVideoView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN);
+                    expandedVideoView.setVideoURI(Uri.parse(item.getMediaUrl()));
+
+                    baseFrameLayout.addView(expandedVideoView);
+
+                    animateViewExpansion(expandedVideoView);
+                }
             }
 
             private void animateViewExpansion(final View expandedView) {
@@ -314,8 +335,9 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
                 animatingView.setScaleType(ImageView.ScaleType.CENTER_CROP);
                 animatingView.setVisibility(View.GONE);
                 animatingView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
-                Picasso.with(mParentManager.getParentActivity()).load(item.getMediaUrl())
-                        .into(animatingView);
+//                Picasso.with(mParentManager.getParentActivity()).load(item.getMediaUrl())
+//                        .into(animatingView);
+                animatingView.setImageDrawable(thumbnailImageView.getDrawable());
                 baseFrameLayout.addView(animatingView);
 
                 startBounds = new Rect();
@@ -366,8 +388,18 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
                         expandedView.setVisibility(View.VISIBLE);
                         animatingView.setVisibility(View.GONE);
 
-                        expandedView
-                                .setOnTouchListener(new ExpandedViewOnTouchListener());
+                        if (item.isImage()) {
+                            expandedView
+                                    .setOnTouchListener(new ExpandedViewOnTouchListener());
+                        } else {
+                            ((VideoView) expandedView).setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                                @Override
+                                public void onCompletion(MediaPlayer mp) {
+                                    expandedView.setOnTouchListener(new ExpandedViewOnTouchListener());
+                                }
+                            });
+                            ((VideoView) expandedView).start();
+                        }
                     }
                 });
 
