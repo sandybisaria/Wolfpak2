@@ -335,8 +335,6 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
                 animatingView.setScaleType(ImageView.ScaleType.CENTER_CROP);
                 animatingView.setVisibility(View.GONE);
                 animatingView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
-//                Picasso.with(mParentManager.getParentActivity()).load(item.getMediaUrl())
-//                        .into(animatingView);
                 animatingView.setImageDrawable(thumbnailImageView.getDrawable());
                 baseFrameLayout.addView(animatingView);
 
@@ -361,7 +359,6 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
                 widthAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
                     @Override
                     public void onAnimationUpdate(ValueAnimator animation) {
-                        //clipViewToGlobalBounds(animatingView);
                         animatingView.getLayoutParams().width = (int) animation.getAnimatedValue();
                         animatingView.requestLayout();
                     }
@@ -370,7 +367,6 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
                 heightAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
                     @Override
                     public void onAnimationUpdate(ValueAnimator animation) {
-//                        clipViewToGlobalBounds(animatingView);
                         animatingView.getLayoutParams().height = (int) animation.getAnimatedValue();
                         animatingView.requestLayout();
                     }
