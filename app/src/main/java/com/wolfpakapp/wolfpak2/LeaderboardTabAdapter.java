@@ -409,13 +409,8 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
                 private float lastTouchX = 0;
                 private float lastTouchY = 0;
 
-                private boolean isAnimating = false;
-
                 @Override
                 public boolean onTouch(View v, MotionEvent event) {
-                    if (isAnimating) {
-                        return true;
-                    }
 
                     final int action = MotionEventCompat.getActionMasked(event);
 
