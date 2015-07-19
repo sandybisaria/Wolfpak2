@@ -4,4 +4,5 @@
     <color name="leaderboard_view_count_background_grey">#AAAAAA</color>
     <color name="leaderboard_view_count_background_green">#00FF00</color>
     <color name="leaderboard_view_count_background_red">#FF0000</color>
+    <color name="leaderboard_karma_background_red">#F04446</color>
 </resources>

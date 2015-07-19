@@ -37,7 +37,7 @@ public class LeaderboardTabManager {
         mSwipeRefreshLayout = (SwipeRefreshLayout) LayoutInflater
                 .from(mParentFragment.getActivity()).inflate(R.layout.tab_leaderboard, null);
 
-        if (tag == LeaderboardFragment.DEN_TAG) {
+        if (tag.equals(LeaderboardFragment.DEN_TAG)) {
             karmaTextView = (TextView) mSwipeRefreshLayout.findViewById(R.id.leaderboard_den_karma_text_view);
             karmaTextView.setVisibility(View.VISIBLE);
             refreshKarmaCount();
@@ -108,7 +108,7 @@ public class LeaderboardTabManager {
                                 mSwipeRefreshLayout.setRefreshing(false);
                             }
                         });
-                if (tag == LeaderboardFragment.DEN_TAG){
+                if (tag.equals(LeaderboardFragment.DEN_TAG)){
                     refreshKarmaCount();
                 }
             }
@@ -132,7 +132,7 @@ public class LeaderboardTabManager {
     }
 
     private void refreshKarmaCount() {
-        if (tag != LeaderboardFragment.DEN_TAG) {
+        if (!tag.equals(LeaderboardFragment.DEN_TAG)) {
             return;
         }
         ServerRestClient.get("users/", null, new AsyncHttpResponseHandler() {
