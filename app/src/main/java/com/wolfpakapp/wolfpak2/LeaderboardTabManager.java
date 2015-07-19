@@ -6,18 +6,24 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.loopj.android.http.AsyncHttpResponseHandler;
 
 import org.apache.http.Header;
 import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 
 public class LeaderboardTabManager {
     private SwipeRefreshLayout mSwipeRefreshLayout;
     private RecyclerView mRecyclerView;
+
+    private TextView karmaTextView;
 
     private ArrayList<LeaderboardListItem> leaderboardListItems;
 
@@ -30,6 +36,12 @@ public class LeaderboardTabManager {
 
         mSwipeRefreshLayout = (SwipeRefreshLayout) LayoutInflater
                 .from(mParentFragment.getActivity()).inflate(R.layout.tab_leaderboard, null);
+
+        if (tag == LeaderboardFragment.DEN_TAG) {
+            karmaTextView = (TextView) mSwipeRefreshLayout.findViewById(R.id.leaderboard_den_karma_text_view);
+            karmaTextView.setVisibility(View.VISIBLE);
+            refreshKarmaCount();
+        }
 
         mRecyclerView = (RecyclerView) mSwipeRefreshLayout.findViewById(R.id.leaderboard_recycler_view);
         mRecyclerView.setHasFixedSize(true);
@@ -96,6 +108,9 @@ public class LeaderboardTabManager {
                                 mSwipeRefreshLayout.setRefreshing(false);
                             }
                         });
+                if (tag == LeaderboardFragment.DEN_TAG){
+                    refreshKarmaCount();
+                }
             }
         });
     }
@@ -114,5 +129,37 @@ public class LeaderboardTabManager {
 
     public Activity getParentActivity() {
         return mParentFragment.getActivity();
+    }
+
+    private void refreshKarmaCount() {
+        if (tag != LeaderboardFragment.DEN_TAG) {
+            return;
+        }
+        ServerRestClient.get("users/", null, new AsyncHttpResponseHandler() {
+                    @Override
+                    public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
+                        final JSONArray resArray;
+                        try {
+                            resArray = new JSONArray(new String(responseBody));
+                            for (int idx = 0; idx < resArray.length(); idx++) {
+                                JSONObject userObject = resArray.getJSONObject(idx);
+                                //TODO Get user ID from device!
+                                if (userObject.optString("user_id").equals("temp_test_id")) {
+                                    int totalLikes = userObject.getInt("total_likes");
+                                    karmaTextView.setText(Integer.toString(totalLikes));
+                                }
+                            }
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(int statusCode, Header[] headers, byte[] responseBody,
+                                          Throwable error) {
+                        Toast.makeText(mParentFragment.getActivity(), "Failed", Toast.LENGTH_SHORT).show();
+                        Log.d("Failure", Integer.toString(statusCode));
+                    }
+                });
     }
 }

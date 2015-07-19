@@ -15,9 +15,9 @@ import org.json.JSONObject;
 import java.util.HashMap;
 
 public class LeaderboardFragment extends Fragment implements TabHost.TabContentFactory {
-    private final String LOCAL_TAG = "local_leaderboard";
-    private final String ALL_TIME_TAG = "all_time_leaderboard";
-    private final String DEN_TAG = "den_board";
+    public static final String LOCAL_TAG = "local_leaderboard";
+    public static final String ALL_TIME_TAG = "all_time_leaderboard";
+    public static final String DEN_TAG = "den_board";
 
     private HashMap<String, LeaderboardTabManager> mTabManagerMap;
     private HashMap<String, RequestParams> mRequestParamsMap;
@@ -85,7 +85,9 @@ public class LeaderboardFragment extends Fragment implements TabHost.TabContentF
 
         localParams.add("latitude", "40.518715");
         localParams.add("longitude", "-74.412095");
+
         localParams.add("is_nsfw", "False");
+        allTimeParams.add("is_nsfw", "False");
 
         mRequestParamsMap.put(LOCAL_TAG, localParams);
         mRequestParamsMap.put(ALL_TIME_TAG, allTimeParams);
