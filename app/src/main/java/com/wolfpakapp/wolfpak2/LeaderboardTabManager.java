@@ -44,26 +44,58 @@ public class LeaderboardTabManager {
 
         ServerRestClient.get(mParentFragment.getRelativeUrl(tag), mParentFragment.getRequestParams(tag),
                 new AsyncHttpResponseHandler() {
-            @Override
-            public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
-                final JSONArray resArray;
-                try {
-                    resArray = new JSONArray(new String(responseBody));
-                    for (int idx = 0; idx < resArray.length(); idx++) {
-                        leaderboardListItems.add(mParentFragment
-                                .parseListItemJSONObject(tag, resArray.getJSONObject(idx)));
+                    @Override
+                    public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
+                        final JSONArray resArray;
+                        try {
+                            resArray = new JSONArray(new String(responseBody));
+                            for (int idx = 0; idx < resArray.length(); idx++) {
+                                leaderboardListItems.add(mParentFragment
+                                        .parseListItemJSONObject(tag, resArray.getJSONObject(idx)));
+                            }
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                        leaderboardTabAdapter.notifyDataSetChanged();
                     }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-                leaderboardTabAdapter.notifyDataSetChanged();
-            }
 
+                    @Override
+                    public void onFailure(int statusCode, Header[] headers, byte[] responseBody,
+                                          Throwable error) {
+                        Toast.makeText(mParentFragment.getActivity(), "Failed", Toast.LENGTH_SHORT).show();
+                        Log.d("Failure", Integer.toString(statusCode));
+                    }
+                });
+        mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
-            public void onFailure(int statusCode, Header[] headers, byte[] responseBody,
-                                  Throwable error) {
-                Toast.makeText(mParentFragment.getActivity(), "Failed", Toast.LENGTH_SHORT).show();
-                Log.d("Failure", Integer.toString(statusCode));
+            public void onRefresh() {
+                ServerRestClient.get(mParentFragment.getRelativeUrl(tag), mParentFragment.getRequestParams(tag),
+                        new AsyncHttpResponseHandler() {
+                            @Override
+                            public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
+                                final JSONArray resArray;
+                                leaderboardListItems.clear();
+                                try {
+                                    resArray = new JSONArray(new String(responseBody));
+                                    for (int idx = 0; idx < resArray.length(); idx++) {
+                                        leaderboardListItems.add(mParentFragment
+                                                .parseListItemJSONObject(tag, resArray.getJSONObject(idx)));
+                                    }
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
+                                leaderboardTabAdapter.notifyDataSetChanged();
+                                mSwipeRefreshLayout.setRefreshing(false);
+                            }
+
+                            @Override
+                            public void onFailure(int statusCode, Header[] headers, byte[] responseBody,
+                                                  Throwable error) {
+                                Toast.makeText(mParentFragment.getActivity(), "Failed", Toast.LENGTH_SHORT).show();
+                                Log.d("Failure", Integer.toString(statusCode));
+                                mSwipeRefreshLayout.setRefreshing(false);
+                            }
+                        });
             }
         });
     }
