@@ -70,6 +70,10 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
         return mParentManager;
     }
 
+    public boolean isItemSelected() {
+        return isItemSelected;
+    }
+
     //TODO Handle touching multiple items at once (i.e. view count + expanding view)
     public class ViewHolder extends RecyclerView.ViewHolder {
         private LeaderboardListItem item;
@@ -458,12 +462,13 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
 
                 @Override
                 public boolean onTouch(View v, MotionEvent event) {
-
                     final int action = MotionEventCompat.getActionMasked(event);
 
                     switch (action) {
                         case MotionEvent.ACTION_DOWN: {
+                            mParentManager.getTabLayout().setEnabled(false);
                             activePointerId = MotionEventCompat.getPointerId(event, 0);
+                            // May not be necessary...
                             requestDisallowInterceptTouchEventForParents(v, true);
 
                             lastTouchX = event.getRawX();
@@ -499,7 +504,11 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
                             break;
                         }
                         case MotionEvent.ACTION_UP: {
+                            mParentManager.getTabLayout().setEnabled(true);
+                            mParentManager.getRecyclerView().setEnabled(true);
+
                             activePointerId = MotionEvent.INVALID_POINTER_ID;
+                            // May not be necessary...
                             requestDisallowInterceptTouchEventForParents(v, false);
 
                             finalBounds = new Rect((int) v.getX(), (int) v.getY(),(int) v.getX() + v.getWidth(),
@@ -513,6 +522,8 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
             }
 
             private void animateViewShrinking(View expandedView) {
+                mParentManager.toggleSwipeRefreshLayout();
+
                 if (mCurrentAnimator != null) {
                     mCurrentAnimator.cancel();
                 }

@@ -6,6 +6,7 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
@@ -22,6 +23,7 @@ import java.util.ArrayList;
 public class LeaderboardTabManager {
     private SwipeRefreshLayout mSwipeRefreshLayout;
     private RecyclerView mRecyclerView;
+    private LeaderboardTabAdapter mTabAdapter;
 
     private TextView karmaTextView;
 
@@ -47,24 +49,25 @@ public class LeaderboardTabManager {
         mRecyclerView.setHasFixedSize(false);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(mParentFragment.getActivity()));
 
+        mRecyclerView.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                return mTabAdapter.isItemSelected();
+            }
+        });
         mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
-                toggleSwipeRefreshLayout();
-            }
-
-            @Override
-            public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
-
+                    toggleSwipeRefreshLayout();
             }
         });
 
         leaderboardListItems = new ArrayList<>();
 
-        final LeaderboardTabAdapter leaderboardTabAdapter =
-                new LeaderboardTabAdapter(leaderboardListItems, this);
+        mTabAdapter = new LeaderboardTabAdapter(leaderboardListItems, this);
 
-        mRecyclerView.setAdapter(leaderboardTabAdapter);
+        mRecyclerView.setAdapter(mTabAdapter);
+
 
         ServerRestClient.get(mParentFragment.getRelativeUrl(tag), mParentFragment.getRequestParams(tag),
                 new AsyncHttpResponseHandler() {
@@ -80,7 +83,7 @@ public class LeaderboardTabManager {
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
-                        leaderboardTabAdapter.notifyDataSetChanged();
+                        mTabAdapter.notifyDataSetChanged();
                     }
 
                     @Override
@@ -108,7 +111,7 @@ public class LeaderboardTabManager {
                                 } catch (Exception e) {
                                     e.printStackTrace();
                                 }
-                                leaderboardTabAdapter.notifyDataSetChanged();
+                                mTabAdapter.notifyDataSetChanged();
                                 mSwipeRefreshLayout.setRefreshing(false);
                             }
 
