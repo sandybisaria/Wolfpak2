@@ -28,7 +28,7 @@ public class LeaderboardTabManager {
     private ArrayList<LeaderboardListItem> leaderboardListItems;
 
     private LeaderboardFragment mParentFragment;
-    final String tag;
+    private final String tag;
 
     public LeaderboardTabManager(final String tag, final LeaderboardFragment mParentFragment) {
         this.tag = tag;
@@ -47,19 +47,15 @@ public class LeaderboardTabManager {
         mRecyclerView.setHasFixedSize(false);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(mParentFragment.getActivity()));
 
-        //TODO Doesn't always work (after interacting with an element..)!
         mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
-                int firstVisiblePos = ((LinearLayoutManager) mRecyclerView.getLayoutManager())
-                        .findFirstCompletelyVisibleItemPosition();
-                mSwipeRefreshLayout.setEnabled(firstVisiblePos == 0);
-                super.onScrolled(recyclerView, dx, dy);
+                toggleSwipeRefreshLayout();
             }
 
             @Override
             public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
-                super.onScrollStateChanged(recyclerView, newState);
+
             }
         });
 
@@ -135,6 +131,12 @@ public class LeaderboardTabManager {
         return mSwipeRefreshLayout;
     }
 
+    public void toggleSwipeRefreshLayout() {
+        int firstVisiblePos = ((LinearLayoutManager) mRecyclerView.getLayoutManager())
+                .findFirstCompletelyVisibleItemPosition();
+        mSwipeRefreshLayout.setEnabled(firstVisiblePos == 0);
+    }
+
     public RecyclerView getRecyclerView() {
         return mRecyclerView;
     }
@@ -145,6 +147,10 @@ public class LeaderboardTabManager {
 
     public Activity getParentActivity() {
         return mParentFragment.getActivity();
+    }
+
+    public String getTag() {
+        return tag;
     }
 
     private void refreshKarmaCount() {

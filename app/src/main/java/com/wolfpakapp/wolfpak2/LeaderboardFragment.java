@@ -140,7 +140,7 @@ public class LeaderboardFragment extends Fragment implements TabHost.TabContentF
                 boolean isImage = jsonObject.optBoolean("is_image");
                 String mediaUrl = jsonObject.optString("media_url");
                 int originalVoteCount = jsonObject.optInt("likes");
-                //TODO likeStatus for Den does not make sense
+                //TODO Color determined by vote count?
                 int likeStatus = 0;
 
                 return new LeaderboardListItem(id, handle, isImage, mediaUrl, originalVoteCount,

@@ -93,7 +93,7 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
             handleTextView.setText(item.getHandle());
 
             updateViewCountBackground(item.getVoteStatus());
-            if (!mParentManager.tag.equals(LeaderboardFragment.DEN_TAG)) {
+            if (!mParentManager.getTag().equals(LeaderboardFragment.DEN_TAG)) {
                 viewCountTextView.setOnTouchListener(new ViewCountOnTouchListener());
             }
 
@@ -183,6 +183,7 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
                     case MotionEvent.ACTION_DOWN: {
                         activePointerId = MotionEventCompat.getPointerId(event, 0);
 
+                        // Ensure that the SwipeRefreshLayout is disabled... (is this still needed?)
                         mLayout.setEnabled(false);
                         setClipChildrenForParents(viewCountTextView, false);
                         requestDisallowInterceptTouchEventForParents(viewCountTextView, true);
@@ -195,8 +196,10 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
 
                         RecyclerView recyclerView = mParentManager.getRecyclerView();
                         final int indexOfFrontChild = recyclerView.indexOfChild(itemView);
-                        recyclerView.setChildDrawingOrderCallback(new RecyclerView.ChildDrawingOrderCallback() {
+                        recyclerView.setChildDrawingOrderCallback(new RecyclerView
+                                .ChildDrawingOrderCallback() {
                             private int nextChildIndexToRender;
+
                             @Override
                             public int onGetChildDrawingOrder(int childCount, int iteration) {
                                 if (iteration == childCount - 1) {
@@ -258,7 +261,7 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
 
                     case MotionEvent.ACTION_CANCEL:
                     case MotionEvent.ACTION_UP: {
-                        mLayout.setEnabled(true);
+                        mParentManager.toggleSwipeRefreshLayout();
                         requestDisallowInterceptTouchEventForParents(viewCountTextView, false);
 
                         LeaderboardListItem.VoteStatus newStatus = item.getVoteStatus();
