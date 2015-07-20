@@ -17,7 +17,8 @@ import org.json.JSONObject;
 import java.util.HashMap;
 
 /**
- * The LeaderboardFragment represents the leaderboard screen of the Wolfpak application.
+ * The LeaderboardFragment represents the leaderboard screen of the Wolfpak application. It
+ * implements the TabContentFactory interface so it can set up the layouts for each tab.
  */
 public class LeaderboardFragment extends Fragment implements TabHost.TabContentFactory {
     public static final String LOCAL_TAG = "local_leaderboard";
@@ -91,6 +92,9 @@ public class LeaderboardFragment extends Fragment implements TabHost.TabContentF
         return manager.getTabLayout();
     }
 
+    /**
+     * @return The base FrameLayout (with ID tabcontent) that contains the current tab layout.
+     */
     public FrameLayout getBaseFrameLayout() {
         return mBaseFrameLayout;
     }
