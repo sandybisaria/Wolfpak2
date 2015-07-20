@@ -90,7 +90,9 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
             handleTextView.setText(item.getHandle());
 
             updateViewCountBackground(item.getVoteStatus());
-            viewCountTextView.setOnTouchListener(new ViewCountOnTouchListener());
+            if (!mParentManager.tag.equals(LeaderboardFragment.DEN_TAG)) {
+                viewCountTextView.setOnTouchListener(new ViewCountOnTouchListener());
+            }
 
             if (item.isImage()) {
                 Picasso.with(mParentManager.getParentActivity()).load(item.getMediaUrl())

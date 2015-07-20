@@ -44,7 +44,7 @@ public class LeaderboardTabManager {
         }
 
         mRecyclerView = (RecyclerView) mSwipeRefreshLayout.findViewById(R.id.leaderboard_recycler_view);
-        mRecyclerView.setHasFixedSize(true);
+        mRecyclerView.setHasFixedSize(false);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(mParentFragment.getActivity()));
 
         mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
