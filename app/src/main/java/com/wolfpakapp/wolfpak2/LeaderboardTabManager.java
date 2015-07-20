@@ -47,6 +47,21 @@ public class LeaderboardTabManager {
         mRecyclerView.setHasFixedSize(true);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(mParentFragment.getActivity()));
 
+        mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                int firstVisiblePos = ((LinearLayoutManager) mRecyclerView.getLayoutManager())
+                        .findFirstCompletelyVisibleItemPosition();
+                mSwipeRefreshLayout.setEnabled(firstVisiblePos == 0);
+                super.onScrolled(recyclerView, dx, dy);
+            }
+
+            @Override
+            public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
+                super.onScrollStateChanged(recyclerView, newState);
+            }
+        });
+
         leaderboardListItems = new ArrayList<>();
 
         final LeaderboardTabAdapter leaderboardTabAdapter =
