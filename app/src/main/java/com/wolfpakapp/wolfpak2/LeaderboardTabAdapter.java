@@ -307,7 +307,9 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
             private void setClipChildrenForParents(View v, boolean clipChildren) {
                 ViewParent parent = v.getParent();
                 while (parent instanceof ViewGroup) {
-                    ((ViewGroup) parent).setClipChildren(clipChildren);
+                    if (!(parent instanceof SwipeRefreshLayout)) {
+                        ((ViewGroup) parent).setClipChildren(clipChildren);
+                    }
                     parent = parent.getParent();
                 }
             }

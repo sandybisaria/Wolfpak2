@@ -47,6 +47,7 @@ public class LeaderboardTabManager {
         mRecyclerView.setHasFixedSize(false);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(mParentFragment.getActivity()));
 
+        //TODO Doesn't always work (after interacting with an element..)!
         mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
