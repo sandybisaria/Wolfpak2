@@ -5,6 +5,7 @@ import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
+import android.graphics.Color;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
@@ -117,7 +118,7 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
                 }
                 Drawable[] layers = {thumbnailDrawable, overlayDrawable};
                 thumbnailImageView.setImageDrawable(new LayerDrawable(layers));
-
+                thumbnailImageView.setBackgroundColor(Color.BLACK);
 //                Picasso.with(mParentManager.getParentActivity()).load(R.drawable.test)
 //                        .into(thumbnailImageView);
             }
