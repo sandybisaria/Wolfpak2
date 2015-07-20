@@ -30,9 +30,12 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.VideoView;
 
+import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.squareup.picasso.Picasso;
 import com.wolfpakapp.wolfpak2.R;
 import com.wolfpakapp.wolfpak2.ServerLikeClient;
+
+import org.apache.http.Header;
 
 import java.util.ArrayList;
 
@@ -279,7 +282,7 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
                         mParentManager.toggleSwipeRefreshLayout();
                         requestDisallowInterceptTouchEventForParents(viewCountTextView, false);
 
-                        LeaderboardListItem.VoteStatus newStatus = item.getVoteStatus();
+                        final LeaderboardListItem.VoteStatus newStatus;
                         if (viewCountTextView.getY() < initialViewY) {
                             if (item.getVoteStatus() == LeaderboardListItem.VoteStatus.UPVOTED) {
                                 newStatus = LeaderboardListItem.VoteStatus.NOT_VOTED;
@@ -292,10 +295,33 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
                             } else {
                                 newStatus = LeaderboardListItem.VoteStatus.DOWNVOTED;
                             }
+                        } else {
+                            // Don't change the vote status (this case should rarely happen).
+                            newStatus = item.getVoteStatus();
                         }
 
-                        ServerLikeClient.updateLikeStatus(LeaderboardTabAdapter.this, ViewHolder.this,
-                                item.getId(), newStatus);
+                        ServerLikeClient.updateLikeStatus(LeaderboardTabAdapter.this, item.getId(),
+                                newStatus, new AsyncHttpResponseHandler() {
+                            @Override
+                            public void onSuccess(int statusCode, Header[] headers,
+                                                  byte[] responseBody) {
+                                // If successful, locally update the vote status and background.
+                                item.setVoteStatus(newStatus);
+                                updateViewCountBackground(newStatus);
+                            }
+
+                            @Override
+                            public void onFailure(int statusCode, Header[] headers,
+                                                  byte[] responseBody, Throwable error) {
+                                try {
+                                    Log.d(Integer.toString(statusCode), new String(responseBody));
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
+                                // If unsuccessful, the item's vote status is unchanged.
+                                updateViewCountBackground(item.getVoteStatus());
+                            }
+                        });
 
                         activePointerId = MotionEvent.INVALID_POINTER_ID;
 

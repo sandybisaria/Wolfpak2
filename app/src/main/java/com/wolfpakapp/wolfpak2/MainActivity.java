@@ -10,8 +10,8 @@ public class MainActivity extends AppCompatActivity {
 
     static final int NUM_PAGES = 1;
 
-    WolfpakPagerAdapter mPagerAdapter;
-    ViewPager mViewPager;
+    private WolfpakPagerAdapter mPagerAdapter;
+    private ViewPager mViewPager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,6 +45,9 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    /**
+     * @return The number of pages in the Wolfpak application
+     */
     public static int getNumPages() {
         return NUM_PAGES;
     }

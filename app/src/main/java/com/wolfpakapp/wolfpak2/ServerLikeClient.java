@@ -13,13 +13,23 @@ import org.apache.http.message.BasicHeader;
 import org.apache.http.protocol.HTTP;
 import org.json.JSONObject;
 
+/**
+ * The ServerLikeClient provides a way to update the like status of Wolfpak posts.
+ */
 public class ServerLikeClient {
     private static final String RELATIVE_URL = "like_status/";
 
-    public static void updateLikeStatus(LeaderboardTabAdapter adapter,
-                                        final LeaderboardTabAdapter.ViewHolder viewHolder,
-                                        int postId,
-                                        final LeaderboardListItem.VoteStatus voteStatus) {
+    /**
+     * Update the like status of the given post. If successful, the view count will update its color
+     * and text to reflect the changed status. Otherwise, it will remain unchanged.
+     * @param adapter The adapter that contains the post.
+     * @param postId The ID of the post.
+     * @param voteStatus The VoteStatus to send to the server.
+     * @param handler The response handler.
+     */
+    public static void updateLikeStatus(LeaderboardTabAdapter adapter, int postId,
+                                        final LeaderboardListItem.VoteStatus voteStatus,
+                                        AsyncHttpResponseHandler handler) {
         try {
             Context context = adapter.getParentManager().getParentActivity();
 
@@ -32,23 +42,7 @@ public class ServerLikeClient {
             String contentType = "application/json";
             entity.setContentEncoding(new BasicHeader(HTTP.CONTENT_TYPE, contentType));
 
-            ServerRestClient.post(context, RELATIVE_URL, entity, contentType, new AsyncHttpResponseHandler() {
-                @Override
-                public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
-                    viewHolder.getListItem().setVoteStatus(voteStatus);
-                    viewHolder.updateViewCountBackground(voteStatus);
-                }
-
-                @Override
-                public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
-                    try {
-                        Log.d(Integer.toString(statusCode), new String(responseBody));
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                    viewHolder.updateViewCountBackground(viewHolder.getListItem().getVoteStatus());
-                }
-            });
+            ServerRestClient.post(context, RELATIVE_URL, entity, contentType, handler);
 
         } catch (Exception e) {
             e.printStackTrace();
