@@ -40,6 +40,7 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
 
     private Animator mCurrentAnimator;
     private boolean isItemSelected = false;
+    private boolean isNewDrawingOrderSet = false;
 
     public LeaderboardTabAdapter(ArrayList<LeaderboardListItem> mLeaderboardListItems,
                                  LeaderboardTabManager mParentManager) {
@@ -175,8 +176,6 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
             private final int ANIM_DURATION = 350;
             private Interpolator INTERPOLATOR = new OvershootInterpolator(1.4f);
 
-            private RecyclerView.ChildDrawingOrderCallback childDrawingOrderCallback = null;
-
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 final int action = MotionEventCompat.getActionMasked(event);
@@ -204,10 +203,11 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
                         return true;
                     }
                     case MotionEvent.ACTION_MOVE: {
-                        if (childDrawingOrderCallback == null) {
+                        if (!isNewDrawingOrderSet) {
                             RecyclerView recyclerView = mParentManager.getRecyclerView();
                             final int indexOfFrontChild = recyclerView.indexOfChild(itemView);
-                            childDrawingOrderCallback = new RecyclerView
+                            Log.d("Index",Integer.toString(indexOfFrontChild));
+                            recyclerView.setChildDrawingOrderCallback(new RecyclerView
                                     .ChildDrawingOrderCallback() {
                                 private int nextChildIndexToRender;
 
@@ -223,8 +223,9 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
                                         return nextChildIndexToRender++;
                                     }
                                 }
-                            };
-                            recyclerView.setChildDrawingOrderCallback(childDrawingOrderCallback);
+                            });
+                            isNewDrawingOrderSet = true;
+                            recyclerView.invalidate();
                         }
 
                         final float x = event.getRawX();
@@ -304,9 +305,10 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
                         animatorSet.addListener(new AnimatorListenerAdapter() {
                             @Override
                             public void onAnimationEnd(Animator animation) {
-                                childDrawingOrderCallback = null;
-                                mParentManager.getRecyclerView()
-                                        .setChildDrawingOrderCallback(childDrawingOrderCallback);
+                                RecyclerView recyclerView = mParentManager.getRecyclerView();
+                                recyclerView.setChildDrawingOrderCallback(null);
+                                recyclerView.invalidate();
+                                isNewDrawingOrderSet = false;
                                 setClipChildrenForParents(viewCountTextView, true);
                                 isItemSelected = false;
                             }
