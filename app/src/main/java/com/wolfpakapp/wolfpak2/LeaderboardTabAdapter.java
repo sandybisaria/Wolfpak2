@@ -121,8 +121,6 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
                 Drawable[] layers = {thumbnailDrawable, overlayDrawable};
                 thumbnailImageView.setImageDrawable(new LayerDrawable(layers));
                 thumbnailImageView.setBackgroundColor(Color.BLACK);
-//                Picasso.with(mParentManager.getParentActivity()).load(R.drawable.test)
-//                        .into(thumbnailImageView);
             }
 
             thumbnailImageView.setOnClickListener(new ThumbnailOnClickListener());
@@ -349,6 +347,10 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
 
             @Override
             public void onClick(View v) {
+                if (isItemSelected) {
+                    return;
+                }
+                isItemSelected = true;
                 if (item.isImage()) {
                     ImageView expandedImageView = new ImageView(mParentManager.getParentActivity());
 
@@ -441,6 +443,7 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
                     }
                 });
 
+                thumbnailImageView.setVisibility(View.INVISIBLE);
                 set.start();
                 mCurrentAnimator = set;
             }
@@ -541,14 +544,10 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
                 set.addListener(new AnimatorListenerAdapter() {
                     @Override
                     public void onAnimationEnd(Animator animation) {
-                        animatingView.setVisibility(View.GONE);
+                        thumbnailImageView.setVisibility(View.VISIBLE);
                         mCurrentAnimator = null;
-                    }
-
-                    @Override
-                    public void onAnimationCancel(Animator animation) {
+                        isItemSelected = false;
                         animatingView.setVisibility(View.GONE);
-                        mCurrentAnimator = null;
                     }
                 });
 
