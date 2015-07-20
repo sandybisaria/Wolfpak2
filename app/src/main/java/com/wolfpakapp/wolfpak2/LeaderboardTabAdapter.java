@@ -74,7 +74,6 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
         return isItemSelected;
     }
 
-    //TODO Handle touching multiple items at once (i.e. view count + expanding view)
     public class ViewHolder extends RecyclerView.ViewHolder {
         private LeaderboardListItem item;
 

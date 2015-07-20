@@ -47,6 +47,7 @@ public class LeaderboardFragment extends Fragment implements TabHost.TabContentF
 
         TabHost tabHost = (TabHost) baseLayout.findViewById(android.R.id.tabhost);
         tabHost.setup();
+        ((WolfpakTabHost) tabHost).setParentFragment(this);
 
         //TODO If you click on the tab you are on, then scroll to the top of the list?
         tabHost.addTab(tabHost.newTabSpec(LOCAL_TAG).setIndicator("Local").setContent(this));
@@ -152,5 +153,10 @@ public class LeaderboardFragment extends Fragment implements TabHost.TabContentF
                 return null;
             }
         }
+    }
+
+    public void scrollToTop(String tag) {
+        LeaderboardTabManager tabManager = mTabManagerMap.get(tag);
+        tabManager.getRecyclerView().smoothScrollToPosition(0);
     }
 }
