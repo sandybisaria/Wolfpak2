@@ -16,6 +16,7 @@ import android.os.Build;
 import android.support.v4.view.MotionEventCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -176,7 +177,7 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
             private Interpolator INTERPOLATOR = new OvershootInterpolator(1.4f);
 
             @Override
-            public boolean onTouch(View vow, MotionEvent event) {
+            public boolean onTouch(View v, MotionEvent event) {
                 final int action = MotionEventCompat.getActionMasked(event);
 
                 switch (action) {
@@ -215,7 +216,7 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
                         });
                         recyclerView.invalidate();
 
-                        break;
+                        return true;
                     }
                     case MotionEvent.ACTION_MOVE: {
                         final float x = event.getRawX();
@@ -244,7 +245,7 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
                         lastTouchX = x;
                         lastTouchY = y;
 
-                        break;
+                        return true;
                     }
                     case MotionEvent.ACTION_POINTER_UP: {
                         final int pointerIndex = MotionEventCompat.getActionIndex(event);
@@ -256,7 +257,7 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
                             activePointerId = MotionEventCompat.getPointerId(event, newPointerIndex);
                         }
 
-                        break;
+                        return true;
                     }
 
                     case MotionEvent.ACTION_CANCEL:
@@ -301,10 +302,11 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
                         });
 
                         animatorSet.start();
+                        return true;
                     }
                 }
 
-                return true;
+                return false;
             }
 
             private void setClipChildrenForParents(View v, boolean clipChildren) {
