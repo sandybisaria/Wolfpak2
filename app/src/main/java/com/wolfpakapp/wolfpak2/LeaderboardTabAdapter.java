@@ -39,6 +39,7 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
     private LeaderboardTabManager mParentManager;
 
     private Animator mCurrentAnimator;
+    private boolean isItemSelected = false;
 
     public LeaderboardTabAdapter(ArrayList<LeaderboardListItem> mLeaderboardListItems,
                                  LeaderboardTabManager mParentManager) {
@@ -176,12 +177,19 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
             private final int ANIM_DURATION = 350;
             private Interpolator INTERPOLATOR = new OvershootInterpolator(1.4f);
 
+            private RecyclerView.ChildDrawingOrderCallback childDrawingOrderCallback = null;
+
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 final int action = MotionEventCompat.getActionMasked(event);
 
                 switch (action) {
                     case MotionEvent.ACTION_DOWN: {
+                        if (isItemSelected) {
+                            return false;
+                        }
+                        isItemSelected = true;
+
                         activePointerId = MotionEventCompat.getPointerId(event, 0);
 
                         // Ensure that the SwipeRefreshLayout is disabled... (is this still needed?)
@@ -195,30 +203,32 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
                         initialViewX = viewCountTextView.getX();
                         initialViewY = viewCountTextView.getY();
 
-                        RecyclerView recyclerView = mParentManager.getRecyclerView();
-                        final int indexOfFrontChild = recyclerView.indexOfChild(itemView);
-                        recyclerView.setChildDrawingOrderCallback(new RecyclerView
-                                .ChildDrawingOrderCallback() {
-                            private int nextChildIndexToRender;
-
-                            @Override
-                            public int onGetChildDrawingOrder(int childCount, int iteration) {
-                                if (iteration == childCount - 1) {
-                                    nextChildIndexToRender = 0;
-                                    return indexOfFrontChild;
-                                } else {
-                                    if (nextChildIndexToRender == indexOfFrontChild) {
-                                        nextChildIndexToRender++;
-                                    }
-                                    return nextChildIndexToRender++;
-                                }
-                            }
-                        });
-                        recyclerView.invalidate();
-
                         return true;
                     }
                     case MotionEvent.ACTION_MOVE: {
+                        if (childDrawingOrderCallback == null) {
+                            RecyclerView recyclerView = mParentManager.getRecyclerView();
+                            final int indexOfFrontChild = recyclerView.indexOfChild(itemView);
+                            childDrawingOrderCallback = new RecyclerView
+                                    .ChildDrawingOrderCallback() {
+                                private int nextChildIndexToRender;
+
+                                @Override
+                                public int onGetChildDrawingOrder(int childCount, int iteration) {
+                                    if (iteration == childCount - 1) {
+                                        nextChildIndexToRender = 0;
+                                        return indexOfFrontChild;
+                                    } else {
+                                        if (nextChildIndexToRender == indexOfFrontChild) {
+                                            nextChildIndexToRender++;
+                                        }
+                                        return nextChildIndexToRender++;
+                                    }
+                                }
+                            };
+                            recyclerView.setChildDrawingOrderCallback(childDrawingOrderCallback);
+                        }
+
                         final float x = event.getRawX();
                         final float y = event.getRawY();
 
@@ -296,8 +306,11 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
                         animatorSet.addListener(new AnimatorListenerAdapter() {
                             @Override
                             public void onAnimationEnd(Animator animation) {
-                                mParentManager.getRecyclerView().setChildDrawingOrderCallback(null);
+                                childDrawingOrderCallback = null;
+                                mParentManager.getRecyclerView()
+                                        .setChildDrawingOrderCallback(childDrawingOrderCallback);
                                 setClipChildrenForParents(viewCountTextView, true);
+                                isItemSelected = false;
                             }
                         });
 
