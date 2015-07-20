@@ -156,6 +156,10 @@ public class LeaderboardTabManager {
         return tag;
     }
 
+    public boolean isItemSelected() {
+        return mTabAdapter.isItemSelected();
+    }
+
     private void refreshKarmaCount() {
         if (!tag.equals(LeaderboardFragment.DEN_TAG)) {
             return;

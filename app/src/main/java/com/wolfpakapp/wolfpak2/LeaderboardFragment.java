@@ -155,8 +155,7 @@ public class LeaderboardFragment extends Fragment implements TabHost.TabContentF
         }
     }
 
-    public void scrollToTop(String tag) {
-        LeaderboardTabManager tabManager = mTabManagerMap.get(tag);
-        tabManager.getRecyclerView().smoothScrollToPosition(0);
+    public LeaderboardTabManager getTabManager(String tag) {
+        return mTabManagerMap.get(tag);
     }
 }
