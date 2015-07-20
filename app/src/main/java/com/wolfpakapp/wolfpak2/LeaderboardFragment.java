@@ -46,6 +46,7 @@ public class LeaderboardFragment extends Fragment implements TabHost.TabContentF
         TabHost tabHost = (TabHost) baseLayout.findViewById(android.R.id.tabhost);
         tabHost.setup();
 
+        //TODO If you click on the tab you are on, then scroll to the top of the list?
         tabHost.addTab(tabHost.newTabSpec(LOCAL_TAG).setIndicator("Local").setContent(this));
         tabHost.addTab(tabHost.newTabSpec(ALL_TIME_TAG).setIndicator("All Time").setContent(this));
         tabHost.addTab(tabHost.newTabSpec(DEN_TAG).setIndicator("Den").setContent(this));

@@ -6,7 +6,9 @@ import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.graphics.Rect;
+import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
+import android.graphics.drawable.LayerDrawable;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Build;
@@ -98,9 +100,26 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
                 Picasso.with(mParentManager.getParentActivity()).load(item.getMediaUrl())
                         .into(thumbnailImageView);
             } else {
-                //TODO Retrieve thumbnails from the server
-                Picasso.with(mParentManager.getParentActivity()).load(R.drawable.test)
-                        .into(thumbnailImageView);
+                Drawable thumbnailDrawable;
+                Drawable overlayDrawable;
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    //TODO Retrieve thumbnails from the server
+                    thumbnailDrawable = mParentManager.getParentActivity()
+                            .getDrawable(R.drawable.empty_video_icon);
+                    overlayDrawable = mParentManager.getParentActivity()
+                            .getDrawable(R.drawable.play_icon);
+                } else {
+                    thumbnailDrawable = mParentManager.getParentActivity().getResources()
+                            .getDrawable(R.drawable.empty_video_icon);
+                    overlayDrawable = mParentManager.getParentActivity().getResources()
+                            .getDrawable(R.drawable.play_icon);
+
+                }
+                Drawable[] layers = {thumbnailDrawable, overlayDrawable};
+                thumbnailImageView.setImageDrawable(new LayerDrawable(layers));
+
+//                Picasso.with(mParentManager.getParentActivity()).load(R.drawable.test)
+//                        .into(thumbnailImageView);
             }
 
             thumbnailImageView.setOnClickListener(new ThumbnailOnClickListener());
