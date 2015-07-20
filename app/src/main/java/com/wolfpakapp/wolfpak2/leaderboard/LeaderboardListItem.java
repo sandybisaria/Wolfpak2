@@ -1,8 +1,10 @@
-package com.wolfpakapp.wolfpak2;
+package com.wolfpakapp.wolfpak2.leaderboard;
 
 
 import android.content.Context;
 import android.content.res.Resources;
+
+import com.wolfpakapp.wolfpak2.R;
 
 public class LeaderboardListItem {
     private int id;

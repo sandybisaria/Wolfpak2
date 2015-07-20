@@ -1,16 +1,16 @@
-package com.wolfpakapp.wolfpak2;
+package com.wolfpakapp.wolfpak2.leaderboard;
 
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.TabHost;
 
 import com.loopj.android.http.RequestParams;
+import com.wolfpakapp.wolfpak2.R;
+import com.wolfpakapp.wolfpak2.WolfpakTabHost;
 
 import org.json.JSONObject;
 

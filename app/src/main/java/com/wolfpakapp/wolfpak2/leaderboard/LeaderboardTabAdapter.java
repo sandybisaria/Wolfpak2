@@ -1,4 +1,4 @@
-package com.wolfpakapp.wolfpak2;
+package com.wolfpakapp.wolfpak2.leaderboard;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
@@ -31,6 +31,8 @@ import android.widget.TextView;
 import android.widget.VideoView;
 
 import com.squareup.picasso.Picasso;
+import com.wolfpakapp.wolfpak2.R;
+import com.wolfpakapp.wolfpak2.ServerLikeClient;
 
 import java.util.ArrayList;
 

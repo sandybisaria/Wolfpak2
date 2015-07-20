@@ -4,6 +4,9 @@ import android.content.Context;
 import android.util.AttributeSet;
 import android.widget.TabHost;
 
+import com.wolfpakapp.wolfpak2.leaderboard.LeaderboardFragment;
+import com.wolfpakapp.wolfpak2.leaderboard.LeaderboardTabManager;
+
 public class WolfpakTabHost extends TabHost{
     private LeaderboardFragment mParentFragment;
 

@@ -4,6 +4,8 @@ import android.content.Context;
 import android.util.Log;
 
 import com.loopj.android.http.AsyncHttpResponseHandler;
+import com.wolfpakapp.wolfpak2.leaderboard.LeaderboardListItem;
+import com.wolfpakapp.wolfpak2.leaderboard.LeaderboardTabAdapter;
 
 import org.apache.http.Header;
 import org.apache.http.entity.StringEntity;

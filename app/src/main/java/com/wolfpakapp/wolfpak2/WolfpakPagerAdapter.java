@@ -4,6 +4,8 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 
+import com.wolfpakapp.wolfpak2.leaderboard.LeaderboardFragment;
+
 public class WolfpakPagerAdapter extends FragmentStatePagerAdapter {
 
     public WolfpakPagerAdapter(FragmentManager fm) {
