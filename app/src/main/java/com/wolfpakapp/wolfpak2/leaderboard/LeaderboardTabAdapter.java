@@ -39,6 +39,10 @@ import org.apache.http.Header;
 
 import java.util.ArrayList;
 
+/**
+ * The LeaderboardTabAdapter provides a binding from the list of LeaderboardListItems to the
+ * RecyclerView. It contains the ViewHolder class that is responsible for each list item's view.
+ */
 public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAdapter.ViewHolder> {
     private ArrayList<LeaderboardListItem> mLeaderboardListItems;
     private LeaderboardTabManager mParentManager;
@@ -47,10 +51,10 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
     private boolean isItemSelected = false;
     private boolean isNewDrawingOrderSet = false;
 
-    public LeaderboardTabAdapter(ArrayList<LeaderboardListItem> mLeaderboardListItems,
-                                 LeaderboardTabManager mParentManager) {
-        this.mLeaderboardListItems = mLeaderboardListItems;
-        this.mParentManager = mParentManager;
+    public LeaderboardTabAdapter(ArrayList<LeaderboardListItem> leaderboardListItems,
+                                 LeaderboardTabManager parentManager) {
+        mLeaderboardListItems = leaderboardListItems;
+        mParentManager = parentManager;
     }
 
     @Override
@@ -75,10 +79,17 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
         return mParentManager;
     }
 
+    /**
+     * @return True if an item in the tab was selected.
+     */
     public boolean isItemSelected() {
         return isItemSelected;
     }
 
+    /**
+     * The ViewHolder class describes the view for each list item and configures behaviors for the
+     * different elements in each item view.
+     */
     public class ViewHolder extends RecyclerView.ViewHolder {
         private LeaderboardListItem item;
 
@@ -104,6 +115,7 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
             handleTextView.setText(item.getHandle());
 
             updateViewCountBackground(item.getVoteStatus());
+            // The view count TextViews can not be interacted with in the den
             if (!mParentManager.getTag().equals(LeaderboardFragment.DEN_TAG)) {
                 viewCountTextView.setOnTouchListener(new ViewCountOnTouchListener());
             }
@@ -112,6 +124,7 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
                 Picasso.with(mParentManager.getParentActivity()).load(item.getMediaUrl())
                         .into(thumbnailImageView);
             } else {
+                // Overlay a play icon on top of the video thumbnail
                 Drawable thumbnailDrawable;
                 Drawable overlayDrawable;
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -135,6 +148,12 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
             thumbnailImageView.setOnClickListener(new ThumbnailOnClickListener());
         }
 
+        /**
+         * Update the view count background so that it corresponds to the passed VoteStatus. Note
+         * that this does NOT change the LeaderboardListItem's actual VoteStatus. Also ensure that
+         * the vote count matches the item's updated vote count.
+         * @param voteStatus
+         */
         public void updateViewCountBackground(LeaderboardListItem.VoteStatus voteStatus) {
             GradientDrawable bg;
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -160,6 +179,11 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
             return item;
         }
 
+        /**
+         * Call requestDisallowInterceptTouchEvent() on all parents of the view.
+         * @param v The child view.
+         * @param disallowIntercept True to stop the parent from intercepting touch events.
+         */
         private void requestDisallowInterceptTouchEventForParents(View v,
                                                                   boolean disallowIntercept) {
             ViewParent parent = v.getParent();
@@ -170,6 +194,9 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
 
         }
 
+        /**
+         * The ViewCountOnTouchListener handles touch events on the vote count.
+         */
         private final class ViewCountOnTouchListener implements View.OnTouchListener {
             private SwipeRefreshLayout mLayout = mParentManager.getTabLayout();
 
@@ -190,6 +217,7 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
 
                 switch (action) {
                     case MotionEvent.ACTION_DOWN: {
+                        // Only one item can be selected at a time
                         if (isItemSelected) {
                             return false;
                         }
@@ -211,10 +239,15 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
                         return true;
                     }
                     case MotionEvent.ACTION_MOVE: {
+                        // Was originally under ACTION_DOWN, but a simultaneous tap on two elements
+                        // causes the application to crash due to the RecyclerView (for some reason)
+                        // being unable to draw the elements. Now, only when the view has been moved
+                        // will the drawing oder of the RecyclerView be modified
                         if (!isNewDrawingOrderSet) {
                             RecyclerView recyclerView = mParentManager.getRecyclerView();
                             final int indexOfFrontChild = recyclerView.indexOfChild(itemView);
                             Log.d("Index",Integer.toString(indexOfFrontChild));
+                            // Needed so that the vote count can be drawn over sibling item views.
                             recyclerView.setChildDrawingOrderCallback(new RecyclerView
                                     .ChildDrawingOrderCallback() {
                                 private int nextChildIndexToRender;
@@ -233,6 +266,7 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
                                 }
                             });
                             isNewDrawingOrderSet = true;
+                            // NEEDED SO THE APP DOESN'T CRASH
                             recyclerView.invalidate();
                         }
 
@@ -242,9 +276,11 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
                         final float dx = x - lastTouchX;
                         final float dy = y - lastTouchY;
 
+                        // Calculate how much the pointer has moved, and move the vote count as much.
                         viewCountTextView.setX(viewCountTextView.getX() + dx);
                         viewCountTextView.setY(viewCountTextView.getY() + dy);
 
+                        // Change the COLOR of the vote count, but do NOT save the status yet!
                         if (viewCountTextView.getY() < initialViewY) {
                             if (item.getVoteStatus() == LeaderboardListItem.VoteStatus.UPVOTED) {
                                 updateViewCountBackground(LeaderboardListItem.VoteStatus.NOT_VOTED);
@@ -265,6 +301,8 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
                         return true;
                     }
                     case MotionEvent.ACTION_POINTER_UP: {
+                        // If the vote count is (somehow) tapped by two pointers and the original is
+                        // lifted, then monitor the next pointer's movements.
                         final int pointerIndex = MotionEventCompat.getActionIndex(event);
                         final int pointerId = MotionEventCompat.findPointerIndex(event, pointerIndex);
                         if (pointerId == activePointerId) {
@@ -279,9 +317,11 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
 
                     case MotionEvent.ACTION_CANCEL:
                     case MotionEvent.ACTION_UP: {
+                        // Ensure that the SwipeRefreshLayout is not prematurely enabled.
                         mParentManager.toggleSwipeRefreshLayout();
                         requestDisallowInterceptTouchEventForParents(viewCountTextView, false);
 
+                        // Determine the new VoteStatus of the list item.
                         final LeaderboardListItem.VoteStatus newStatus;
                         if (viewCountTextView.getY() < initialViewY) {
                             if (item.getVoteStatus() == LeaderboardListItem.VoteStatus.UPVOTED) {
@@ -325,6 +365,7 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
 
                         activePointerId = MotionEvent.INVALID_POINTER_ID;
 
+                        // Animate the vote count returning to its position.
                         AnimatorSet animatorSet = new AnimatorSet();
                         ObjectAnimator xAnim = ObjectAnimator.ofFloat(viewCountTextView, "X",
                                 viewCountTextView.getX(), initialViewX);
@@ -336,11 +377,14 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
                         animatorSet.addListener(new AnimatorListenerAdapter() {
                             @Override
                             public void onAnimationEnd(Animator animation) {
+                                // Reset the drawing order of the RecyclerView.
                                 RecyclerView recyclerView = mParentManager.getRecyclerView();
                                 recyclerView.setChildDrawingOrderCallback(null);
                                 recyclerView.invalidate();
                                 isNewDrawingOrderSet = false;
+
                                 setClipChildrenForParents(viewCountTextView, true);
+                                // No item is being selected anymore.
                                 isItemSelected = false;
                             }
                         });
@@ -353,9 +397,17 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
                 return false;
             }
 
+            /**
+             * Call setClipChildren on (almost) all parents of the view. However, the
+             * SwipeRefreshLayout is never modified.
+             * @param v The child view.
+             * @param clipChildren True to clip children to the bounds.
+             */
             private void setClipChildrenForParents(View v, boolean clipChildren) {
                 ViewParent parent = v.getParent();
                 while (parent instanceof ViewGroup) {
+                    // This is a bandage solution to fix the issue where if the SwipeRefreshLayout
+                    // is set to false, then the entire list item view covers the tab widget...
                     if (!(parent instanceof SwipeRefreshLayout)) {
                         ((ViewGroup) parent).setClipChildren(clipChildren);
                     }
@@ -364,6 +416,9 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
             }
         }
 
+        /**
+         * The ThumbnailOnClickListener handles clicks on the thumbnail.
+         */
         private final class ThumbnailOnClickListener implements View.OnClickListener {
             private FrameLayout baseFrameLayout = mParentManager.getParentFragment()
                     .getBaseFrameLayout();
@@ -380,11 +435,13 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
 
             @Override
             public void onClick(View v) {
+                // Do not respond if another element is selected.
                 if (isItemSelected) {
                     return;
                 }
                 isItemSelected = true;
                 if (item.isImage()) {
+                    // Create an expanded ImageView.
                     ImageView expandedImageView = new ImageView(mParentManager.getParentActivity());
 
                     expandedImageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
@@ -396,6 +453,7 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
 
                     animateViewExpansion(expandedImageView);
                 } else {
+                    // Create an expanded VideoView.
                     VideoView expandedVideoView = new VideoView(mParentManager.getParentActivity());
                     expandedVideoView.setVisibility(View.GONE);
                     expandedVideoView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN);
@@ -407,7 +465,12 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
                 }
             }
 
+            /**
+             * Animate the expansion of the thumbnail.
+             * @param expandedView The expanded View.
+             */
             private void animateViewExpansion(final View expandedView) {
+                // The animating view is used purely for the animation.
                 animatingView = new ImageView(mParentManager.getParentActivity());
                 animatingView.setScaleType(ImageView.ScaleType.CENTER_CROP);
                 animatingView.setVisibility(View.GONE);
@@ -420,6 +483,7 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
                 thumbnailSize = (int) mParentManager.getParentActivity().getResources()
                         .getDimension(R.dimen.leaderboard_item_thumbnail_size);
 
+                // Determine the start and final bounds for the animating view.
                 thumbnailImageView.getGlobalVisibleRect(startBounds);
                 mParentManager.getParentActivity().getWindow().getDecorView()
                         .getGlobalVisibleRect(finalBounds);
