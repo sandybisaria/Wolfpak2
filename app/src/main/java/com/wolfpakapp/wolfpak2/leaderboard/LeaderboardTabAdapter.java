@@ -41,8 +41,8 @@ import org.apache.http.Header;
 import java.util.ArrayList;
 
 /**
- * The LeaderboardTabAdapter provides a binding from the list of LeaderboardListItems to the
- * RecyclerView. It contains the ViewHolder class that is responsible for each list item's view.
+ * The LeaderboardTabAdapter provides a binding from the list of Posts to the RecyclerView. It
+ * contains the ViewHolder class that is responsible for each post's view.
  */
 public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAdapter.ViewHolder> {
     private ArrayList<Post> mPosts;
@@ -73,7 +73,7 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
 
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
-        holder.bindListItem(mPosts.get(position));
+        holder.bindPost(mPosts.get(position));
     }
 
     public LeaderboardTabManager getParentManager() {
@@ -88,14 +88,14 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
     }
 
     /**
-     * The ViewHolder class describes the view for each list item and configures behaviors for the
-     * different elements in each item view.
+     * The ViewHolder class describes the view for each post and configures behaviors for the
+     * different elements in each post view.
      */
     public class ViewHolder extends RecyclerView.ViewHolder {
-        private Post item;
+        private Post mPost;
 
         private TextView handleTextView;
-        private TextView viewCountTextView;
+        private TextView voteCountTextView;
 
         private ImageView thumbnailImageView;
 
@@ -104,25 +104,25 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
 
             handleTextView = (TextView) itemView
                     .findViewById(R.id.leaderboard_item_handle_text_view);
-            viewCountTextView = (TextView) itemView
+            voteCountTextView = (TextView) itemView
                     .findViewById(R.id.leaderboard_item_view_count_text_view);
             thumbnailImageView = (ImageView) itemView
                     .findViewById(R.id.leaderboard_item_thumbnail_image_view);
         }
 
-        public void bindListItem(Post item) {
-            this.item = item;
+        public void bindPost(Post post) {
+            mPost = post;
 
-            handleTextView.setText(item.getHandle());
+            handleTextView.setText(post.getHandle());
 
-            updateViewCountBackground(item.getVoteStatus());
+            updateVoteCountBackground(post.getVoteStatus());
             // The view count TextViews can not be interacted with in the den
             if (!mParentManager.getTag().equals(LeaderboardFragment.DEN_TAG)) {
-                viewCountTextView.setOnTouchListener(new ViewCountOnTouchListener());
+                voteCountTextView.setOnTouchListener(new VoteCountOnTouchListener());
             }
 
-            if (item.isImage()) {
-                Picasso.with(mParentManager.getParentActivity()).load(item.getMediaUrl())
+            if (post.isImage()) {
+                Picasso.with(mParentManager.getParentActivity()).load(post.getMediaUrl())
                         .into(thumbnailImageView);
             } else {
                 // Overlay a play icon on top of the video thumbnail
@@ -150,34 +150,30 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
         }
 
         /**
-         * Update the view count background so that it corresponds to the passed VoteStatus. Note
-         * that this does NOT change the LeaderboardListItem's actual VoteStatus. Also ensure that
-         * the vote count matches the item's updated vote count.
+         * Update the vote count background so that it corresponds to the passed VoteStatus. Note
+         * that this does NOT change the Post's actual VoteStatus. Also ensure that
+         * the vote count matches the Post's updated vote count.
          * @param voteStatus
          */
-        public void updateViewCountBackground(Post.VoteStatus voteStatus) {
+        public void updateVoteCountBackground(Post.VoteStatus voteStatus) {
             GradientDrawable bg;
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                bg = (GradientDrawable) viewCountTextView.getResources()
+                bg = (GradientDrawable) voteCountTextView.getResources()
                         .getDrawable(R.drawable.background_view_count, null);
             } else {
-                bg = (GradientDrawable) viewCountTextView.getResources()
+                bg = (GradientDrawable) voteCountTextView.getResources()
                         .getDrawable(R.drawable.background_view_count);
             }
 
             int statusColor = voteStatus.getStatusColor(mParentManager.getParentActivity());
             if (bg != null) {
                 bg.setColor(statusColor);
-                viewCountTextView.setBackground(bg);
+                voteCountTextView.setBackground(bg);
             }
 
-            viewCountTextView.setText(Integer.toString(item.getUpdatedVoteCount()));
+            voteCountTextView.setText(Integer.toString(mPost.getUpdatedVoteCount()));
 
-            viewCountTextView.invalidate();
-        }
-
-        public Post getListItem() {
-            return item;
+            voteCountTextView.invalidate();
         }
 
         /**
@@ -198,7 +194,7 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
         /**
          * The ViewCountOnTouchListener handles touch events on the vote count.
          */
-        private final class ViewCountOnTouchListener implements View.OnTouchListener {
+        private final class VoteCountOnTouchListener implements View.OnTouchListener {
             private SwipeRefreshLayout mLayout = mParentManager.getTabLayout();
 
             private int activePointerId = MotionEvent.INVALID_POINTER_ID;
@@ -228,14 +224,14 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
 
                         // Ensure that the SwipeRefreshLayout is disabled... (is this still needed?)
                         mLayout.setEnabled(false);
-                        setClipChildrenForParents(viewCountTextView, false);
-                        requestDisallowInterceptTouchEventForParents(viewCountTextView, true);
+                        setClipChildrenForParents(voteCountTextView, false);
+                        requestDisallowInterceptTouchEventForParents(voteCountTextView, true);
 
                         lastTouchX = event.getRawX();
                         lastTouchY = event.getRawY();
 
-                        initialViewX = viewCountTextView.getX();
-                        initialViewY = viewCountTextView.getY();
+                        initialViewX = voteCountTextView.getX();
+                        initialViewY = voteCountTextView.getY();
 
                         return true;
                     }
@@ -248,7 +244,7 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
                             RecyclerView recyclerView = mParentManager.getRecyclerView();
                             final int indexOfFrontChild = recyclerView.indexOfChild(itemView);
                             Log.d("Index",Integer.toString(indexOfFrontChild));
-                            // Needed so that the vote count can be drawn over sibling item views.
+                            // Needed so that the vote count can be drawn over sibling post views.
                             recyclerView.setChildDrawingOrderCallback(new RecyclerView
                                     .ChildDrawingOrderCallback() {
                                 private int nextChildIndexToRender;
@@ -278,21 +274,21 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
                         final float dy = y - lastTouchY;
 
                         // Calculate how much the pointer has moved, and move the vote count as much.
-                        viewCountTextView.setX(viewCountTextView.getX() + dx);
-                        viewCountTextView.setY(viewCountTextView.getY() + dy);
+                        voteCountTextView.setX(voteCountTextView.getX() + dx);
+                        voteCountTextView.setY(voteCountTextView.getY() + dy);
 
                         // Change the COLOR of the vote count, but do NOT save the status yet!
-                        if (viewCountTextView.getY() < initialViewY) {
-                            if (item.getVoteStatus() == Post.VoteStatus.UPVOTED) {
-                                updateViewCountBackground(Post.VoteStatus.NOT_VOTED);
+                        if (voteCountTextView.getY() < initialViewY) {
+                            if (mPost.getVoteStatus() == Post.VoteStatus.UPVOTED) {
+                                updateVoteCountBackground(Post.VoteStatus.NOT_VOTED);
                             } else {
-                                updateViewCountBackground(Post.VoteStatus.UPVOTED);
+                                updateVoteCountBackground(Post.VoteStatus.UPVOTED);
                             }
-                        } else if (viewCountTextView.getY() > initialViewY) {
-                            if (item.getVoteStatus() == Post.VoteStatus.DOWNVOTED) {
-                                updateViewCountBackground(Post.VoteStatus.NOT_VOTED);
+                        } else if (voteCountTextView.getY() > initialViewY) {
+                            if (mPost.getVoteStatus() == Post.VoteStatus.DOWNVOTED) {
+                                updateVoteCountBackground(Post.VoteStatus.NOT_VOTED);
                             } else {
-                                updateViewCountBackground(Post.VoteStatus.DOWNVOTED);
+                                updateVoteCountBackground(Post.VoteStatus.DOWNVOTED);
                             }
                         }
 
@@ -320,35 +316,35 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
                     case MotionEvent.ACTION_UP: {
                         // Ensure that the SwipeRefreshLayout is not prematurely enabled.
                         mParentManager.toggleSwipeRefreshLayout();
-                        requestDisallowInterceptTouchEventForParents(viewCountTextView, false);
+                        requestDisallowInterceptTouchEventForParents(voteCountTextView, false);
 
-                        // Determine the new VoteStatus of the list item.
+                        // Determine the new VoteStatus of the post.
                         final Post.VoteStatus newStatus;
-                        if (viewCountTextView.getY() < initialViewY) {
-                            if (item.getVoteStatus() == Post.VoteStatus.UPVOTED) {
+                        if (voteCountTextView.getY() < initialViewY) {
+                            if (mPost.getVoteStatus() == Post.VoteStatus.UPVOTED) {
                                 newStatus = Post.VoteStatus.NOT_VOTED;
                             } else {
                                 newStatus = Post.VoteStatus.UPVOTED;
                             }
-                        } else if (viewCountTextView.getY() > initialViewY) {
-                            if (item.getVoteStatus() == Post.VoteStatus.DOWNVOTED) {
+                        } else if (voteCountTextView.getY() > initialViewY) {
+                            if (mPost.getVoteStatus() == Post.VoteStatus.DOWNVOTED) {
                                 newStatus = Post.VoteStatus.NOT_VOTED;
                             } else {
                                 newStatus = Post.VoteStatus.DOWNVOTED;
                             }
                         } else {
                             // Don't change the vote status (this case should rarely happen).
-                            newStatus = item.getVoteStatus();
+                            newStatus = mPost.getVoteStatus();
                         }
 
-                        ServerLikeClient.updateLikeStatus(LeaderboardTabAdapter.this, item.getId(),
+                        ServerLikeClient.updateLikeStatus(LeaderboardTabAdapter.this, mPost.getId(),
                                 newStatus, new AsyncHttpResponseHandler() {
                             @Override
                             public void onSuccess(int statusCode, Header[] headers,
                                                   byte[] responseBody) {
                                 // If successful, locally update the vote status and background.
-                                item.setVoteStatus(newStatus);
-                                updateViewCountBackground(newStatus);
+                                mPost.setVoteStatus(newStatus);
+                                updateVoteCountBackground(newStatus);
                             }
 
                             @Override
@@ -359,8 +355,8 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
                                 } catch (Exception e) {
                                     e.printStackTrace();
                                 }
-                                // If unsuccessful, the item's vote status is unchanged.
-                                updateViewCountBackground(item.getVoteStatus());
+                                // If unsuccessful, the post's vote status is unchanged.
+                                updateVoteCountBackground(mPost.getVoteStatus());
                             }
                         });
 
@@ -368,10 +364,10 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
 
                         // Animate the vote count returning to its position.
                         AnimatorSet animatorSet = new AnimatorSet();
-                        ObjectAnimator xAnim = ObjectAnimator.ofFloat(viewCountTextView, "X",
-                                viewCountTextView.getX(), initialViewX);
-                        ObjectAnimator yAnim = ObjectAnimator.ofFloat(viewCountTextView, "Y",
-                                viewCountTextView.getY(), initialViewY);
+                        ObjectAnimator xAnim = ObjectAnimator.ofFloat(voteCountTextView, "X",
+                                voteCountTextView.getX(), initialViewX);
+                        ObjectAnimator yAnim = ObjectAnimator.ofFloat(voteCountTextView, "Y",
+                                voteCountTextView.getY(), initialViewY);
                         animatorSet.play(xAnim).with(yAnim);
                         animatorSet.setDuration(ANIM_DURATION);
                         animatorSet.setInterpolator(INTERPOLATOR);
@@ -384,7 +380,7 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
                                 recyclerView.invalidate();
                                 isNewDrawingOrderSet = false;
 
-                                setClipChildrenForParents(viewCountTextView, true);
+                                setClipChildrenForParents(voteCountTextView, true);
                                 // No item is being selected anymore.
                                 isItemSelected = false;
                             }
@@ -408,7 +404,7 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
                 ViewParent parent = v.getParent();
                 while (parent instanceof ViewGroup) {
                     // This is a bandage solution to fix the issue where if the SwipeRefreshLayout
-                    // is set to false, then the entire list item view covers the tab widget...
+                    // is set to false, then the entire post view covers the tab widget...
                     if (!(parent instanceof SwipeRefreshLayout)) {
                         ((ViewGroup) parent).setClipChildren(clipChildren);
                     }
@@ -442,14 +438,14 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
                     return;
                 }
                 isItemSelected = true;
-                if (item.isImage()) {
+                if (mPost.isImage()) {
                     // Create an expanded ImageView.
                     ImageView expandedImageView = new ImageView(mParentManager.getParentActivity());
 
                     expandedImageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
                     expandedImageView.setVisibility(View.GONE);
                     expandedImageView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN);
-                    Picasso.with(mParentManager.getParentActivity()).load(item.getMediaUrl())
+                    Picasso.with(mParentManager.getParentActivity()).load(mPost.getMediaUrl())
                             .into(expandedImageView);
                     baseFrameLayout.addView(expandedImageView);
 
@@ -459,7 +455,7 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
                     VideoView expandedVideoView = new VideoView(mParentManager.getParentActivity());
                     expandedVideoView.setVisibility(View.GONE);
                     expandedVideoView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN);
-                    expandedVideoView.setVideoURI(Uri.parse(item.getMediaUrl()));
+                    expandedVideoView.setVideoURI(Uri.parse(mPost.getMediaUrl()));
 
                     baseFrameLayout.addView(expandedVideoView);
 
@@ -530,7 +526,7 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
                         expandedView.setVisibility(View.VISIBLE);
                         animatingView.setVisibility(View.GONE);
 
-                        if (item.isImage()) {
+                        if (mPost.isImage()) {
                             expandedView
                                     .setOnTouchListener(new ExpandedViewOnTouchListener());
                         } else {
@@ -554,7 +550,7 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
             /**
              * The ExpandedViewOnTouchListener handles touch events on the expanded view. The drag
              * implementation is similar to that of the vote count.
-             * @see com.wolfpakapp.wolfpak2.leaderboard.LeaderboardTabAdapter.ViewHolder.ViewCountOnTouchListener
+             * @see VoteCountOnTouchListener
              */
             private final class ExpandedViewOnTouchListener implements View.OnTouchListener {
                 private int activePointerId = MotionEvent.INVALID_POINTER_ID;

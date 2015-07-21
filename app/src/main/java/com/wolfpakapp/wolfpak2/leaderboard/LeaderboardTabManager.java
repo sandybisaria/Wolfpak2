@@ -78,7 +78,7 @@ public class LeaderboardTabManager {
 
         mRecyclerView.setAdapter(mTabAdapter);
 
-        // Retrieve the set of list items from the server.
+        // Retrieve the set of posts from the server.
         ServerRestClient.get(mParentFragment.getRelativeUrl(tag), mParentFragment.getRequestParams(tag),
                 new AsyncHttpResponseHandler() {
                     @Override
@@ -102,7 +102,7 @@ public class LeaderboardTabManager {
                         Log.d("Failure", Integer.toString(statusCode));
                     }
                 });
-        // When the SwipeRefreshLayout is refreshed, retrieve a fresh set of list items.
+        // When the SwipeRefreshLayout is refreshed, retrieve a fresh set of posts.
         mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
@@ -111,7 +111,7 @@ public class LeaderboardTabManager {
                     @Override
                     public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
                         final JSONArray resArray;
-                        // The naive approach is to clear the leaderboard of list items and rebuild
+                        // The naive approach is to clear the leaderboard of posts and rebuild
                         mPosts.clear();
                         try {
                             resArray = new JSONArray(new String(responseBody));
@@ -151,10 +151,10 @@ public class LeaderboardTabManager {
      * Toggle the SwipeRefreshLayout based on whether the user has scrolled to the top.
      */
     public void toggleSwipeRefreshLayout() {
-        // Get the position of the first completely visible list item.
+        // Get the position of the first completely visible post.
         int firstVisiblePos = ((LinearLayoutManager) mRecyclerView.getLayoutManager())
                 .findFirstCompletelyVisibleItemPosition();
-        // If the first visible list item is not the first actual item (#0), then keep the
+        // If the first visible post is not the first actual item (#0), then keep the
         // SwipeRefreshLayout disabled.
         mSwipeRefreshLayout.setEnabled(firstVisiblePos == 0);
     }
