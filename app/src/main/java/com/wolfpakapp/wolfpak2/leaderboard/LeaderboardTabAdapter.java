@@ -32,6 +32,7 @@ import android.widget.VideoView;
 
 import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.squareup.picasso.Picasso;
+import com.wolfpakapp.wolfpak2.Post;
 import com.wolfpakapp.wolfpak2.R;
 import com.wolfpakapp.wolfpak2.ServerLikeClient;
 
@@ -44,22 +45,22 @@ import java.util.ArrayList;
  * RecyclerView. It contains the ViewHolder class that is responsible for each list item's view.
  */
 public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAdapter.ViewHolder> {
-    private ArrayList<LeaderboardListItem> mLeaderboardListItems;
+    private ArrayList<Post> mPosts;
     private LeaderboardTabManager mParentManager;
 
     private Animator mCurrentAnimator;
     private boolean isItemSelected = false;
     private boolean isNewDrawingOrderSet = false;
 
-    public LeaderboardTabAdapter(ArrayList<LeaderboardListItem> leaderboardListItems,
+    public LeaderboardTabAdapter(ArrayList<Post> posts,
                                  LeaderboardTabManager parentManager) {
-        mLeaderboardListItems = leaderboardListItems;
+        mPosts = posts;
         mParentManager = parentManager;
     }
 
     @Override
     public int getItemCount() {
-        return mLeaderboardListItems.size();
+        return mPosts.size();
     }
 
     @Override
@@ -72,7 +73,7 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
 
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
-        holder.bindListItem(mLeaderboardListItems.get(position));
+        holder.bindListItem(mPosts.get(position));
     }
 
     public LeaderboardTabManager getParentManager() {
@@ -91,7 +92,7 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
      * different elements in each item view.
      */
     public class ViewHolder extends RecyclerView.ViewHolder {
-        private LeaderboardListItem item;
+        private Post item;
 
         private TextView handleTextView;
         private TextView viewCountTextView;
@@ -109,7 +110,7 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
                     .findViewById(R.id.leaderboard_item_thumbnail_image_view);
         }
 
-        public void bindListItem(LeaderboardListItem item) {
+        public void bindListItem(Post item) {
             this.item = item;
 
             handleTextView.setText(item.getHandle());
@@ -154,7 +155,7 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
          * the vote count matches the item's updated vote count.
          * @param voteStatus
          */
-        public void updateViewCountBackground(LeaderboardListItem.VoteStatus voteStatus) {
+        public void updateViewCountBackground(Post.VoteStatus voteStatus) {
             GradientDrawable bg;
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 bg = (GradientDrawable) viewCountTextView.getResources()
@@ -175,7 +176,7 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
             viewCountTextView.invalidate();
         }
 
-        public LeaderboardListItem getListItem() {
+        public Post getListItem() {
             return item;
         }
 
@@ -282,16 +283,16 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
 
                         // Change the COLOR of the vote count, but do NOT save the status yet!
                         if (viewCountTextView.getY() < initialViewY) {
-                            if (item.getVoteStatus() == LeaderboardListItem.VoteStatus.UPVOTED) {
-                                updateViewCountBackground(LeaderboardListItem.VoteStatus.NOT_VOTED);
+                            if (item.getVoteStatus() == Post.VoteStatus.UPVOTED) {
+                                updateViewCountBackground(Post.VoteStatus.NOT_VOTED);
                             } else {
-                                updateViewCountBackground(LeaderboardListItem.VoteStatus.UPVOTED);
+                                updateViewCountBackground(Post.VoteStatus.UPVOTED);
                             }
                         } else if (viewCountTextView.getY() > initialViewY) {
-                            if (item.getVoteStatus() == LeaderboardListItem.VoteStatus.DOWNVOTED) {
-                                updateViewCountBackground(LeaderboardListItem.VoteStatus.NOT_VOTED);
+                            if (item.getVoteStatus() == Post.VoteStatus.DOWNVOTED) {
+                                updateViewCountBackground(Post.VoteStatus.NOT_VOTED);
                             } else {
-                                updateViewCountBackground(LeaderboardListItem.VoteStatus.DOWNVOTED);
+                                updateViewCountBackground(Post.VoteStatus.DOWNVOTED);
                             }
                         }
 
@@ -322,18 +323,18 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
                         requestDisallowInterceptTouchEventForParents(viewCountTextView, false);
 
                         // Determine the new VoteStatus of the list item.
-                        final LeaderboardListItem.VoteStatus newStatus;
+                        final Post.VoteStatus newStatus;
                         if (viewCountTextView.getY() < initialViewY) {
-                            if (item.getVoteStatus() == LeaderboardListItem.VoteStatus.UPVOTED) {
-                                newStatus = LeaderboardListItem.VoteStatus.NOT_VOTED;
+                            if (item.getVoteStatus() == Post.VoteStatus.UPVOTED) {
+                                newStatus = Post.VoteStatus.NOT_VOTED;
                             } else {
-                                newStatus = LeaderboardListItem.VoteStatus.UPVOTED;
+                                newStatus = Post.VoteStatus.UPVOTED;
                             }
                         } else if (viewCountTextView.getY() > initialViewY) {
-                            if (item.getVoteStatus() == LeaderboardListItem.VoteStatus.DOWNVOTED) {
-                                newStatus = LeaderboardListItem.VoteStatus.NOT_VOTED;
+                            if (item.getVoteStatus() == Post.VoteStatus.DOWNVOTED) {
+                                newStatus = Post.VoteStatus.NOT_VOTED;
                             } else {
-                                newStatus = LeaderboardListItem.VoteStatus.DOWNVOTED;
+                                newStatus = Post.VoteStatus.DOWNVOTED;
                             }
                         } else {
                             // Don't change the vote status (this case should rarely happen).

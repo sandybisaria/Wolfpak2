@@ -1,10 +1,8 @@
 package com.wolfpakapp.wolfpak2.leaderboard;
 
-import android.app.Activity;
 import android.location.Location;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,6 +11,7 @@ import android.widget.TabHost;
 
 import com.loopj.android.http.RequestParams;
 import com.wolfpakapp.wolfpak2.MainActivity;
+import com.wolfpakapp.wolfpak2.Post;
 import com.wolfpakapp.wolfpak2.R;
 import com.wolfpakapp.wolfpak2.WolfpakTabHost;
 
@@ -126,7 +125,6 @@ public class LeaderboardFragment extends Fragment implements TabHost.TabContentF
         denParams.add("user_id", "temp_test_id");
 
         Location lastLocation = ((MainActivity) getActivity()).getLastLocation();
-
         localParams.add("latitude", Double.toString(lastLocation.getLatitude()));
         localParams.add("longitude", Double.toString(lastLocation.getLongitude()));
 
@@ -162,43 +160,6 @@ public class LeaderboardFragment extends Fragment implements TabHost.TabContentF
      */
     public String getRelativeUrl(String tag) {
         return mRelativeUrlsMap.get(tag);
-    }
-
-    /**
-     * Return a LeaderboardListItem object created using the passed JSONObject. The tag determines
-     * how to parse the JSONObject and instantiate the LeaderboardListItem.
-     * @param tag The tag of the current leaderboard tab.
-     * @param jsonObject The JSONObject of the list item.
-     * @return A new LeaderboardListItem object.
-     */
-    public LeaderboardListItem parseListItemJSONObject(String tag, JSONObject jsonObject) {
-        int id = jsonObject.optInt("id");
-        String handle = jsonObject.optString("handle");
-        boolean isImage = jsonObject.optBoolean("is_image");
-        String mediaUrl = jsonObject.optString("media_url");
-        int originalVoteCount = jsonObject.optInt("likes");
-        // "Default" like status is 0
-        int likeStatus = 0;
-        switch (tag) {
-            case LOCAL_TAG: {
-                likeStatus = jsonObject.optInt("like_status");
-                break;
-            }
-            case ALL_TIME_TAG: {
-                //TODO Get like status using API
-                likeStatus = 0;
-                break;
-            }
-            case DEN_TAG: {
-                // Since the user can't like his own post, the like status takes on a different
-                // meaning...
-                //TODO Color determined by vote count?
-                likeStatus = 0;
-                break;
-            }
-        }
-        return new LeaderboardListItem(id, handle, isImage, mediaUrl, originalVoteCount,
-                LeaderboardListItem.VoteStatus.getVoteStatus(likeStatus));
     }
 
     /**

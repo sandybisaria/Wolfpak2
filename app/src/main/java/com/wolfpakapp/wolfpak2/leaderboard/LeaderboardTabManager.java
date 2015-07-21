@@ -9,10 +9,10 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.wolfpakapp.wolfpak2.MainActivity;
+import com.wolfpakapp.wolfpak2.Post;
 import com.wolfpakapp.wolfpak2.R;
 import com.wolfpakapp.wolfpak2.ServerRestClient;
 
@@ -34,7 +34,7 @@ public class LeaderboardTabManager {
 
     private TextView karmaTextView;
 
-    private ArrayList<LeaderboardListItem> leaderboardListItems;
+    private ArrayList<Post> mPosts;
 
     private LeaderboardFragment mParentFragment;
     private final String tag;
@@ -72,9 +72,9 @@ public class LeaderboardTabManager {
             }
         });
 
-        leaderboardListItems = new ArrayList<>();
+        mPosts = new ArrayList<>();
 
-        mTabAdapter = new LeaderboardTabAdapter(leaderboardListItems, this);
+        mTabAdapter = new LeaderboardTabAdapter(mPosts, this);
 
         mRecyclerView.setAdapter(mTabAdapter);
 
@@ -87,8 +87,7 @@ public class LeaderboardTabManager {
                         try {
                             resArray = new JSONArray(new String(responseBody));
                             for (int idx = 0; idx < resArray.length(); idx++) {
-                                leaderboardListItems.add(mParentFragment
-                                        .parseListItemJSONObject(tag, resArray.getJSONObject(idx)));
+                                mPosts.add(Post.parsePostJSONObject(tag, resArray.getJSONObject(idx)));
                             }
                         } catch (Exception e) {
                             e.printStackTrace();
@@ -99,7 +98,7 @@ public class LeaderboardTabManager {
                     @Override
                     public void onFailure(int statusCode, Header[] headers, byte[] responseBody,
                                           Throwable error) {
-                        Toast.makeText(mParentFragment.getActivity(), "Failed", Toast.LENGTH_SHORT).show();
+//                        Toast.makeText(mParentFragment.getActivity(), "Failed", Toast.LENGTH_SHORT).show();
                         Log.d("Failure", Integer.toString(statusCode));
                     }
                 });
@@ -113,12 +112,11 @@ public class LeaderboardTabManager {
                     public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
                         final JSONArray resArray;
                         // The naive approach is to clear the leaderboard of list items and rebuild
-                        leaderboardListItems.clear();
+                        mPosts.clear();
                         try {
                             resArray = new JSONArray(new String(responseBody));
                             for (int idx = 0; idx < resArray.length(); idx++) {
-                                leaderboardListItems.add(mParentFragment
-                                        .parseListItemJSONObject(tag, resArray.getJSONObject(idx)));
+                                mPosts.add(Post.parsePostJSONObject(tag, resArray.getJSONObject(idx)));
                             }
                         } catch (Exception e) {
                             e.printStackTrace();

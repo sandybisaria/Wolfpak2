@@ -1,16 +1,19 @@
-package com.wolfpakapp.wolfpak2.leaderboard;
+package com.wolfpakapp.wolfpak2;
 
 
 import android.content.Context;
 import android.content.res.Resources;
 
 import com.wolfpakapp.wolfpak2.R;
+import com.wolfpakapp.wolfpak2.leaderboard.LeaderboardFragment;
+
+import org.json.JSONObject;
 
 /**
- * The LeaderboardListItem represents a single list item on a leaderboard. Every object stores info
- * like the ID, handle, URL of the image/video, and vote count.
+ * The Post represents a single post. Every object stores info like the ID, handle, URL of the
+ * image/video, and vote count.
  */
-public class LeaderboardListItem {
+public class Post {
     private int id;
     private String handle;
     private boolean isImage;
@@ -19,8 +22,8 @@ public class LeaderboardListItem {
     private int updatedVoteCount;
     private VoteStatus voteStatus;
 
-    public LeaderboardListItem(int id, String handle, boolean isImage, String mediaUrl,
-                               int updatedVoteCount, VoteStatus voteStatus) {
+    public Post(int id, String handle, boolean isImage, String mediaUrl,
+                int updatedVoteCount, VoteStatus voteStatus) {
         this.id = id;
         this.handle = handle;
         this.isImage = isImage;
@@ -41,6 +44,43 @@ public class LeaderboardListItem {
                 break;
             }
         }
+    }
+
+    /**
+     * Return a Post object created using the passed JSONObject. The tag determines how to parse the
+     * JSONObject and instantiate the Post.
+     * @param tag The tag of the current leaderboard tab (or null otherwise).
+     * @param jsonObject The JSONObject of the post.
+     * @return A new Post object.
+     */
+    public static Post parsePostJSONObject(String tag, JSONObject jsonObject) {
+        int id = jsonObject.optInt("id");
+        String handle = jsonObject.optString("handle");
+        boolean isImage = jsonObject.optBoolean("is_image");
+        String mediaUrl = jsonObject.optString("media_url");
+        int originalVoteCount = jsonObject.optInt("likes");
+        // "Default" like status is 0
+        int likeStatus = 0;
+        switch (tag) {
+            case LeaderboardFragment.LOCAL_TAG: {
+                likeStatus = jsonObject.optInt("like_status");
+                break;
+            }
+            case LeaderboardFragment.ALL_TIME_TAG: {
+                //TODO Get like status using API
+                likeStatus = 0;
+                break;
+            }
+            case LeaderboardFragment.DEN_TAG: {
+                // Since the user can't like his own post, the like status takes on a different
+                // meaning...
+                //TODO Color determined by vote count?
+                likeStatus = 0;
+                break;
+            }
+        }
+        return new Post(id, handle, isImage, mediaUrl, originalVoteCount,
+                Post.VoteStatus.getVoteStatus(likeStatus));
     }
 
     public int getId() {
@@ -81,7 +121,7 @@ public class LeaderboardListItem {
          * @param change The integral like status (from the server response).
          * @return The corresponding VoteStatus.
          */
-        static VoteStatus getVoteStatus(int change) {
+        public static VoteStatus getVoteStatus(int change) {
             switch (change) {
                 case -1:
                     return DOWNVOTED;
@@ -97,7 +137,7 @@ public class LeaderboardListItem {
          * @param context The Context which will be used to retrieve the color.
          * @return The color integer corresponding to the VoteStatus enum.
          */
-        int getStatusColor(Context context) {
+        public int getStatusColor(Context context) {
             Resources resources = context.getResources();
             switch (this) {
                 case UPVOTED: {

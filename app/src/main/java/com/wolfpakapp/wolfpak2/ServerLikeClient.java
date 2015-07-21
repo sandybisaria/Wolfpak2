@@ -1,13 +1,10 @@
 package com.wolfpakapp.wolfpak2;
 
 import android.content.Context;
-import android.util.Log;
 
 import com.loopj.android.http.AsyncHttpResponseHandler;
-import com.wolfpakapp.wolfpak2.leaderboard.LeaderboardListItem;
 import com.wolfpakapp.wolfpak2.leaderboard.LeaderboardTabAdapter;
 
-import org.apache.http.Header;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.message.BasicHeader;
 import org.apache.http.protocol.HTTP;
@@ -28,7 +25,7 @@ public class ServerLikeClient {
      * @param handler The response handler.
      */
     public static void updateLikeStatus(LeaderboardTabAdapter adapter, int postId,
-                                        final LeaderboardListItem.VoteStatus voteStatus,
+                                        final Post.VoteStatus voteStatus,
                                         AsyncHttpResponseHandler handler) {
         try {
             Context context = adapter.getParentManager().getParentActivity();
