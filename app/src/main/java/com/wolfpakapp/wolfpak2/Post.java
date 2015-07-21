@@ -166,4 +166,17 @@ public class Post {
         updatedVoteCount = originalVoteCount + voteStatus.change;
         this.voteStatus = voteStatus;
     }
+
+    @Override
+    public String toString() {
+        return "Post{" +
+                "handle='" + handle + '\'' +
+                ", id=" + id +
+                ", isImage=" + isImage +
+                ", mediaUrl='" + mediaUrl + '\'' +
+                ", originalVoteCount=" + originalVoteCount +
+                ", updatedVoteCount=" + updatedVoteCount +
+                ", voteStatus=" + voteStatus +
+                '}';
+    }
 }

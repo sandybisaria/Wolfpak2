@@ -11,6 +11,7 @@ import android.view.ViewGroup;
 import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
 import com.wolfpakapp.wolfpak2.MainActivity;
+import com.wolfpakapp.wolfpak2.Post;
 import com.wolfpakapp.wolfpak2.R;
 import com.wolfpakapp.wolfpak2.ServerRestClient;
 
@@ -31,6 +32,8 @@ public class MainFeedFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View baseLayout = inflater.inflate(R.layout.fragment_main_feed, container, false);
+
+        retrieveNewPosts();
 
         return baseLayout;
     }
@@ -69,11 +72,13 @@ public class MainFeedFragment extends Fragment {
         ServerRestClient.get("posts/", mMainFeedParams, new AsyncHttpResponseHandler() {
             @Override
             public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
+                Log.d("Success", Integer.toString(statusCode));
+
                 final JSONArray resArray;
                 try {
                     resArray = new JSONArray(new String(responseBody));
                     for (int idx = 0; idx < resArray.length(); idx++) {
-
+                        Log.d("Hey", Post.parsePostJSONObject("", resArray.getJSONObject(idx)).toString());
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
