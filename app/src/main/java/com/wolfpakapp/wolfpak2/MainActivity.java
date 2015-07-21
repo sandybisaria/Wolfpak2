@@ -15,7 +15,7 @@ import com.google.android.gms.location.LocationServices;
 public class MainActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener{
 
-    private static final int NUM_PAGES = 1;
+    private static final int NUM_PAGES = 2;
 
     private WolfpakPagerAdapter mPagerAdapter;
     private ViewPager mViewPager;

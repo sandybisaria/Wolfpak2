@@ -418,6 +418,7 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
 
         /**
          * The ThumbnailOnClickListener handles clicks on the thumbnail.
+         * TODO Can swipe left/right while view is expanding
          */
         private final class ThumbnailOnClickListener implements View.OnClickListener {
             private FrameLayout baseFrameLayout = mParentManager.getParentFragment()

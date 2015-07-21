@@ -5,6 +5,7 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 
 import com.wolfpakapp.wolfpak2.leaderboard.LeaderboardFragment;
+import com.wolfpakapp.wolfpak2.mainfeed.MainFeedFragment;
 
 /**
  * The WolfpakPagerAdapter is an extension of the FragmentStatePagerAdapter suited for use in the
@@ -22,6 +23,7 @@ public class WolfpakPagerAdapter extends FragmentStatePagerAdapter {
      * are:
      * <ul>
      *     <li>0 - {@link LeaderboardFragment}</li>
+     *     <li>1 - {@link MainFeedFragment}</li>
      * </ul>
      * @param i The index of the Fragment to get.
      * @return The requested Fragment.
@@ -31,6 +33,9 @@ public class WolfpakPagerAdapter extends FragmentStatePagerAdapter {
         switch (i) {
             case 0: {
                 return new LeaderboardFragment();
+            }
+            case 1: {
+                return new MainFeedFragment();
             }
         }
 
