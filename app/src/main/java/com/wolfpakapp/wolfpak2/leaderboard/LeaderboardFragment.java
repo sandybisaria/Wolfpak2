@@ -111,7 +111,7 @@ public class LeaderboardFragment extends Fragment implements TabHost.TabContentF
         RequestParams allTimeParams = new RequestParams();
         RequestParams denParams = new RequestParams();
 
-        //TODO Get paramater values from other sources
+        String userID = ((MainActivity) getActivity()).getDeviceUUID();
         localParams.add("user_id", "temp_test_id");
         denParams.add("user_id", "temp_test_id");
 

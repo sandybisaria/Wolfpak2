@@ -1,9 +1,11 @@
 package com.wolfpakapp.wolfpak2;
 
 import android.location.Location;
+import android.provider.Settings;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -11,6 +13,8 @@ import android.view.MenuItem;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationServices;
+
+import java.util.UUID;
 
 public class MainActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener{
@@ -20,6 +24,8 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     private WolfpakPagerAdapter mPagerAdapter;
     private ViewPager mViewPager;
 
+    private String mDeviceUUID;
+
     private GoogleApiClient mGoogleApiClient;
     private Location mLastLocation = null;
 
@@ -28,8 +34,25 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        retrieveDeviceId();
+
         buildGoogleApiClient();
         mGoogleApiClient.connect();
+    }
+
+    /**
+     * Retrieve the device's unique UUID from memory (or generate it for a first-time user).
+     */
+    private void retrieveDeviceId() {
+        //TODO Store on the phone so you don't have to generate it every time!
+        TelephonyManager manager = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
+        String deviceId = manager.getDeviceId();
+        String serialNumber = manager.getSimSerialNumber();
+        String androidId = Settings.Secure.getString(getContentResolver(),
+                Settings.Secure.ANDROID_ID);
+        UUID deviceUUID = new UUID(androidId.hashCode(),
+                ((long) deviceId.hashCode() << 32) | serialNumber.hashCode());
+        mDeviceUUID = deviceUUID.toString();
     }
 
     /**
@@ -68,6 +91,10 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
      */
     public static int getNumPages() {
         return NUM_PAGES;
+    }
+
+    public String getDeviceUUID() {
+        return mDeviceUUID;
     }
 
     protected synchronized void buildGoogleApiClient() {
