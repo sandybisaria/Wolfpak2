@@ -1,7 +1,10 @@
 package com.wolfpakapp.wolfpak2.leaderboard;
 
+import android.app.Activity;
+import android.location.Location;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -9,6 +12,7 @@ import android.widget.FrameLayout;
 import android.widget.TabHost;
 
 import com.loopj.android.http.RequestParams;
+import com.wolfpakapp.wolfpak2.MainActivity;
 import com.wolfpakapp.wolfpak2.R;
 import com.wolfpakapp.wolfpak2.WolfpakTabHost;
 
@@ -111,8 +115,10 @@ public class LeaderboardFragment extends Fragment implements TabHost.TabContentF
         localParams.add("user_id", "temp_test_id");
         denParams.add("user_id", "temp_test_id");
 
-        localParams.add("latitude", "40.518715");
-        localParams.add("longitude", "-74.412095");
+        Location lastLocation = ((MainActivity) getActivity()).getLastLocation();
+
+        localParams.add("latitude", Double.toString(lastLocation.getLatitude()));
+        localParams.add("longitude", Double.toString(lastLocation.getLongitude()));
 
         localParams.add("is_nsfw", "False");
         allTimeParams.add("is_nsfw", "False");
