@@ -67,11 +67,6 @@ public class LeaderboardFragment extends Fragment implements TabHost.TabContentF
         tabHost.addTab(tabHost.newTabSpec(ALL_TIME_TAG).setIndicator("All Time").setContent(this));
         tabHost.addTab(tabHost.newTabSpec(DEN_TAG).setIndicator("Den").setContent(this));
 
-        // The leaderboard fragment is a fullscreen fragment. This is necessary so that the expanded
-        // content can take up the whole screen (dismissing the status bar in the process).
-        getActivity().getWindow().getDecorView()
-                .setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE |
-                        View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
         // Add padding to the top of the layout so that it doesn't sink under the status bar.
         int statusBarPadding = 0;
         int resourceId = getResources().getIdentifier("status_bar_height", "dimen", "android");
@@ -81,6 +76,21 @@ public class LeaderboardFragment extends Fragment implements TabHost.TabContentF
         tabHost.setPadding(0, statusBarPadding, 0, 0);
 
         return baseLayout;
+    }
+
+    @Override
+    public void setUserVisibleHint(boolean isVisibleToUser) {
+        super.setUserVisibleHint(isVisibleToUser);
+
+        if (isVisibleToUser) {
+            // The leaderboard fragment is not "fullscreen", but when media is expanded, the status
+            // bar needs to be dismissed without causing drastic UI stutters. Thus, the leaderboard
+            // is laid out as if it were fullscreen, and when an image or video expands, the bar can
+            // be dismissed smoothly
+            getActivity().getWindow().getDecorView()
+                    .setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE |
+                            View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
+        }
     }
 
     /**
