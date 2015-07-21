@@ -514,14 +514,17 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
                 });
 
                 AnimatorSet set = new AnimatorSet();
-                set.play(ObjectAnimator.ofFloat(animatingView, View.X, startBounds.left, finalBounds.left))
-                        .with(ObjectAnimator.ofFloat(animatingView, View.Y, startBounds.top, finalBounds.top))
-                        .with(widthAnimator).with(heightAnimator);
+                set.playTogether(ObjectAnimator
+                                .ofFloat(animatingView, View.X, startBounds.left, finalBounds.left),
+                        ObjectAnimator
+                                .ofFloat(animatingView, View.Y, startBounds.top, finalBounds.top),
+                        widthAnimator, heightAnimator);
                 set.setDuration(ANIM_DURATION);
                 set.setInterpolator(INTERPOLATOR);
                 set.addListener(new AnimatorListenerAdapter() {
                     @Override
                     public void onAnimationEnd(Animator animation) {
+                        thumbnailImageView.setVisibility(View.INVISIBLE);
                         expandedView.setVisibility(View.VISIBLE);
                         animatingView.setVisibility(View.GONE);
 
@@ -529,7 +532,9 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
                             expandedView
                                     .setOnTouchListener(new ExpandedViewOnTouchListener());
                         } else {
-                            ((VideoView) expandedView).setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                            // Do not set the OnTouchListener until the video is completed.
+                            ((VideoView) expandedView).setOnCompletionListener(new MediaPlayer
+                                    .OnCompletionListener() {
                                 @Override
                                 public void onCompletion(MediaPlayer mp) {
                                     expandedView.setOnTouchListener(new ExpandedViewOnTouchListener());
@@ -540,11 +545,15 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
                     }
                 });
 
-                thumbnailImageView.setVisibility(View.INVISIBLE);
                 set.start();
                 mCurrentAnimator = set;
             }
 
+            /**
+             * The ExpandedViewOnTouchListener handles touch events on the expanded view. The drag
+             * implementation is similar to that of the vote count.
+             * @see com.wolfpakapp.wolfpak2.leaderboard.LeaderboardTabAdapter.ViewHolder.ViewCountOnTouchListener
+             */
             private final class ExpandedViewOnTouchListener implements View.OnTouchListener {
                 private int activePointerId = MotionEvent.INVALID_POINTER_ID;
 
@@ -557,6 +566,7 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
 
                     switch (action) {
                         case MotionEvent.ACTION_DOWN: {
+                            // Make sure that the SwipeRefreshLayout is disabled.
                             mParentManager.getTabLayout().setEnabled(false);
                             activePointerId = MotionEventCompat.getPointerId(event, 0);
                             // May not be necessary...
@@ -602,8 +612,10 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
                             // May not be necessary...
                             requestDisallowInterceptTouchEventForParents(v, false);
 
+                            // Recalculate the finalBounds as the expanded View may have been dragged
                             finalBounds = new Rect((int) v.getX(), (int) v.getY(),(int) v.getX() + v.getWidth(),
                                     (int) v.getY() + v.getHeight());
+
                             animateViewShrinking(v);
                         }
                     }
@@ -612,6 +624,10 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
                 }
             }
 
+            /**
+             * Animate the shrinking of the expanded View.
+             * @param expandedView The expanded View.
+             */
             private void animateViewShrinking(View expandedView) {
                 mParentManager.toggleSwipeRefreshLayout();
 
@@ -640,9 +656,11 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
                 });
 
                 AnimatorSet set = new AnimatorSet();
-                set.play(ObjectAnimator.ofFloat(animatingView, View.X, finalBounds.left, startBounds.left))
-                        .with(ObjectAnimator.ofFloat(animatingView, View.Y, finalBounds.top, startBounds.top))
-                        .with(widthAnimator).with(heightAnimator);
+                set.playTogether(ObjectAnimator
+                                .ofFloat(animatingView, View.X, finalBounds.left, startBounds.left),
+                        ObjectAnimator
+                                .ofFloat(animatingView, View.Y, finalBounds.top, startBounds.top),
+                        widthAnimator, heightAnimator);
                 set.setDuration(ANIM_DURATION);
                 set.setInterpolator(INTERPOLATOR);
                 set.addListener(new AnimatorListenerAdapter() {
@@ -650,6 +668,7 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
                     public void onAnimationEnd(Animator animation) {
                         thumbnailImageView.setVisibility(View.VISIBLE);
                         mCurrentAnimator = null;
+                        // The item is no longer selected.
                         isItemSelected = false;
                         animatingView.setVisibility(View.GONE);
                     }
