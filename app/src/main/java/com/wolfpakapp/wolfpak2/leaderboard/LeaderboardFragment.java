@@ -62,7 +62,6 @@ public class LeaderboardFragment extends Fragment implements TabHost.TabContentF
         ((WolfpakTabHost) tabHost).setParentFragment(this);
 
         // Set up the tabs
-        //TODO If you click on the tab you are on, then scroll to the top of the list?
         tabHost.addTab(tabHost.newTabSpec(LOCAL_TAG).setIndicator("Local").setContent(this));
         tabHost.addTab(tabHost.newTabSpec(ALL_TIME_TAG).setIndicator("All Time").setContent(this));
         tabHost.addTab(tabHost.newTabSpec(DEN_TAG).setIndicator("Den").setContent(this));
@@ -121,6 +120,7 @@ public class LeaderboardFragment extends Fragment implements TabHost.TabContentF
         RequestParams allTimeParams = new RequestParams();
         RequestParams denParams = new RequestParams();
 
+        //TODO In the "real" app use the device UUID
         String userID = ((MainActivity) getActivity()).getDeviceUUID();
         localParams.add("user_id", "temp_test_id");
         denParams.add("user_id", "temp_test_id");
@@ -130,6 +130,7 @@ public class LeaderboardFragment extends Fragment implements TabHost.TabContentF
         localParams.add("latitude", Double.toString(lastLocation.getLatitude()));
         localParams.add("longitude", Double.toString(lastLocation.getLongitude()));
 
+        //TODO is_nsfw comes from the user settings
         localParams.add("is_nsfw", "False");
         allTimeParams.add("is_nsfw", "False");
 

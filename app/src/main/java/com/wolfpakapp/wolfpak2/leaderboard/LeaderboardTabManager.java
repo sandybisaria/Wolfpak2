@@ -12,6 +12,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.loopj.android.http.AsyncHttpResponseHandler;
+import com.wolfpakapp.wolfpak2.MainActivity;
 import com.wolfpakapp.wolfpak2.R;
 import com.wolfpakapp.wolfpak2.ServerRestClient;
 
@@ -199,7 +200,8 @@ public class LeaderboardTabManager {
                     resArray = new JSONArray(new String(responseBody));
                     for (int idx = 0; idx < resArray.length(); idx++) {
                         JSONObject userObject = resArray.getJSONObject(idx);
-                        //TODO Get user ID from device!
+                        //TODO In the "real" app use the device UUID
+                        String userID = ((MainActivity) getParentActivity()).getDeviceUUID();
                         if (userObject.optString("user_id").equals("temp_test_id")) {
                             int totalLikes = userObject.getInt("total_likes");
                             karmaTextView.setText(Integer.toString(totalLikes));
