@@ -72,9 +72,8 @@ public class MainFeedFragment extends Fragment {
         String userID = ((MainActivity) getActivity()).getDeviceUUID();
         mMainFeedParams.add("user_id", "temp_test_id");
 
-        Location lastLocation = ((MainActivity) getActivity()).getLastLocation();
-        mMainFeedParams.add("latitude", Double.toString(lastLocation.getLatitude()));
-        mMainFeedParams.add("longitude", Double.toString(lastLocation.getLongitude()));
+        mMainFeedParams.add("latitude", "40.518715");
+        mMainFeedParams.add("longitude", "-74.412095");
 
         //TODO is_nsfw comes from the user settings
         mMainFeedParams.add("is_nsfw", "False");

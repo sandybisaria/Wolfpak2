@@ -124,9 +124,8 @@ public class LeaderboardFragment extends Fragment implements TabHost.TabContentF
         localParams.add("user_id", "temp_test_id");
         denParams.add("user_id", "temp_test_id");
 
-        Location lastLocation = ((MainActivity) getActivity()).getLastLocation();
-        localParams.add("latitude", Double.toString(lastLocation.getLatitude()));
-        localParams.add("longitude", Double.toString(lastLocation.getLongitude()));
+        localParams.add("latitude", "40.518715");
+        localParams.add("longitude", "-74.412095");
 
         //TODO is_nsfw comes from the user settings
         localParams.add("is_nsfw", "False");

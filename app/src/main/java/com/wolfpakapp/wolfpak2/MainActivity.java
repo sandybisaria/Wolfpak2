@@ -10,14 +10,10 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.location.LocationServices;
 
 import java.util.UUID;
 
-public class MainActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener{
+public class MainActivity extends AppCompatActivity {
 
     private static final int NUM_PAGES = 2;
 
@@ -26,9 +22,6 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
 
     private String mDeviceUUID;
 
-    private GoogleApiClient mGoogleApiClient;
-    private Location mLastLocation = null;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -36,8 +29,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
 
         retrieveDeviceId();
 
-        buildGoogleApiClient();
-        mGoogleApiClient.connect();
+        setUpUI();
     }
 
     /**
@@ -95,34 +87,5 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
 
     public String getDeviceUUID() {
         return mDeviceUUID;
-    }
-
-    protected synchronized void buildGoogleApiClient() {
-        mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
-                .addApi(LocationServices.API)
-                .build();
-    }
-
-    @Override
-    public void onConnected(Bundle bundle) {
-        mLastLocation = LocationServices.FusedLocationApi.getLastLocation(
-                mGoogleApiClient);
-        setUpUI();
-    }
-
-    @Override
-    public void onConnectionSuspended(int i) {
-        // To be implemented...
-    }
-
-    @Override
-    public void onConnectionFailed(ConnectionResult connectionResult) {
-        // To be implemented...
-    }
-
-    public Location getLastLocation() {
-        return mLastLocation;
     }
 }
