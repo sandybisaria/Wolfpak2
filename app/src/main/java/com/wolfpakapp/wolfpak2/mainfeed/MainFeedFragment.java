@@ -1,10 +1,11 @@
 package com.wolfpakapp.wolfpak2.mainfeed;
 
-import android.location.Location;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.view.MotionEventCompat;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
@@ -123,6 +124,49 @@ public class MainFeedFragment extends Fragment {
             Picasso.with(getActivity()).load(post.getMediaUrl()).into(imageView);
 
             mBaseFrameLayout.addView(imageView);
+        }
+    }
+
+    private final class PostOnTouchListener implements View.OnTouchListener {
+        private float lastTouchX = 0;
+        private float lastTouchY = 0;
+
+        @Override
+        public boolean onTouch(View v, MotionEvent event) {
+            final int action = MotionEventCompat.getActionMasked(event);
+
+            switch (action) {
+                case MotionEvent.ACTION_DOWN: {
+                    lastTouchX = event.getRawX();
+                    lastTouchY = event.getRawY();
+
+                    return true;
+                }
+                case MotionEvent.ACTION_MOVE: {
+                    final float x = event.getRawX();
+                    final float y = event.getRawY();
+
+                    final float dx = x - lastTouchX;
+                    final float dy = y - lastTouchY;
+
+                    v.setX(v.getX() + dx);
+                    v.setY(v.getY() + dy);
+
+                    lastTouchX = x;
+                    lastTouchY = y;
+
+                    return true;
+                }
+                case MotionEvent.ACTION_POINTER_UP: {
+                    return true;
+                }
+                case MotionEvent.ACTION_CANCEL:
+                case MotionEvent.ACTION_UP: {
+                    return true;
+                }
+            }
+
+            return false;
         }
     }
 }

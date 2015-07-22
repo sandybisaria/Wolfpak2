@@ -197,8 +197,6 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
         private final class VoteCountOnTouchListener implements View.OnTouchListener {
             private SwipeRefreshLayout mLayout = mParentManager.getTabLayout();
 
-            private int activePointerId = MotionEvent.INVALID_POINTER_ID;
-
             private float initialViewX;
             private float initialViewY;
 
@@ -219,8 +217,6 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
                             return false;
                         }
                         isItemSelected = true;
-
-                        activePointerId = MotionEventCompat.getPointerId(event, 0);
 
                         // Ensure that the SwipeRefreshLayout is disabled... (is this still needed?)
                         mLayout.setEnabled(false);
@@ -298,17 +294,6 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
                         return true;
                     }
                     case MotionEvent.ACTION_POINTER_UP: {
-                        // If the vote count is (somehow) tapped by two pointers and the original is
-                        // lifted, then monitor the next pointer's movements.
-                        final int pointerIndex = MotionEventCompat.getActionIndex(event);
-                        final int pointerId = MotionEventCompat.findPointerIndex(event, pointerIndex);
-                        if (pointerId == activePointerId) {
-                            final int newPointerIndex = pointerIndex == 0 ? 1 : 0;
-                            lastTouchX = event.getRawX();
-                            lastTouchY = event.getRawY();
-                            activePointerId = MotionEventCompat.getPointerId(event, newPointerIndex);
-                        }
-
                         return true;
                     }
 
@@ -359,8 +344,6 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
                                 updateVoteCountBackground(mPost.getVoteStatus());
                             }
                         });
-
-                        activePointerId = MotionEvent.INVALID_POINTER_ID;
 
                         // Animate the vote count returning to its position.
                         AnimatorSet animatorSet = new AnimatorSet();
@@ -553,8 +536,6 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
              * @see VoteCountOnTouchListener
              */
             private final class ExpandedViewOnTouchListener implements View.OnTouchListener {
-                private int activePointerId = MotionEvent.INVALID_POINTER_ID;
-
                 private float lastTouchX = 0;
                 private float lastTouchY = 0;
 
@@ -566,14 +547,13 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
                         case MotionEvent.ACTION_DOWN: {
                             // Make sure that the SwipeRefreshLayout is disabled.
                             mParentManager.getTabLayout().setEnabled(false);
-                            activePointerId = MotionEventCompat.getPointerId(event, 0);
                             // May not be necessary...
                             requestDisallowInterceptTouchEventForParents(v, true);
 
                             lastTouchX = event.getRawX();
                             lastTouchY = event.getRawY();
 
-                            break;
+                            return true;
                         }
                         case MotionEvent.ACTION_MOVE: {
                             final float x = event.getRawX();
@@ -588,25 +568,16 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
                             lastTouchX = x;
                             lastTouchY = y;
 
-                            break;
+                            return true;
                         }
                         case MotionEvent.ACTION_POINTER_UP: {
-                            final int pointerIndex = MotionEventCompat.getActionIndex(event);
-                            final int pointerId = MotionEventCompat.findPointerIndex(event, pointerIndex);
-                            if (pointerId == activePointerId) {
-                                final int newPointerIndex = pointerIndex == 0 ? 1 : 0;
-                                lastTouchX = event.getRawX();
-                                lastTouchY = event.getRawY();
-                                activePointerId = MotionEventCompat.getPointerId(event, newPointerIndex);
-                            }
-
-                            break;
+                            return true;
                         }
+                        case MotionEvent.ACTION_CANCEL:
                         case MotionEvent.ACTION_UP: {
                             mParentManager.getTabLayout().setEnabled(true);
                             mParentManager.getRecyclerView().setEnabled(true);
 
-                            activePointerId = MotionEvent.INVALID_POINTER_ID;
                             // May not be necessary...
                             requestDisallowInterceptTouchEventForParents(v, false);
 
@@ -615,10 +586,12 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
                                     (int) v.getY() + v.getHeight());
 
                             animateViewShrinking(v);
+
+                            return true;
                         }
                     }
 
-                    return true;
+                    return false;
                 }
             }
 
