@@ -8,6 +8,7 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewParent;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 
@@ -123,13 +124,22 @@ public class MainFeedFragment extends Fragment {
             imageView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
             Picasso.with(getActivity()).load(post.getMediaUrl()).into(imageView);
 
+            imageView.setOnTouchListener(new PostOnTouchListener(post));
+
             mBaseFrameLayout.addView(imageView);
         }
     }
 
-    private final class PostOnTouchListener implements View.OnTouchListener {
+    private class PostOnTouchListener implements View.OnTouchListener {
+
         private float lastTouchX = 0;
         private float lastTouchY = 0;
+
+        private Post mPost;
+
+        public PostOnTouchListener(Post post) {
+            mPost = post;
+        }
 
         @Override
         public boolean onTouch(View v, MotionEvent event) {
@@ -162,11 +172,33 @@ public class MainFeedFragment extends Fragment {
                 }
                 case MotionEvent.ACTION_CANCEL:
                 case MotionEvent.ACTION_UP: {
+                    dismissPost(v);
+                    displayLatestPost();
                     return true;
                 }
             }
 
             return false;
         }
+
+        /**
+         * Call requestDisallowInterceptTouchEvent() on all parents of the view.
+         * @param v The child view.
+         * @param disallowIntercept True to stop the parent from intercepting touch events.
+         * TODO Identical to LeaderboardTabAdapter method!
+         */
+        private void requestDisallowInterceptTouchEventForParents(View v,
+                                                                  boolean disallowIntercept) {
+            ViewParent parent = v.getParent();
+            while (parent != null) {
+                parent.requestDisallowInterceptTouchEvent(disallowIntercept);
+                parent = parent.getParent();
+            }
+
+        }
+    }
+
+    private void dismissPost(View view) {
+        mBaseFrameLayout.removeView(view);
     }
 }
