@@ -1,6 +1,7 @@
 package com.wolfpakapp.wolfpak2.mainfeed;
 
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.MotionEventCompat;
 import android.util.Log;
@@ -132,10 +133,17 @@ public class MainFeedFragment extends Fragment {
 
     private class PostOnTouchListener implements View.OnTouchListener {
 
+        private long touchTime = 0;
+        private float firstTouchX = 0;
+        private float firstTouchY = 0;
+        private final int WAIT_TIME = 50;
+
         private float lastTouchX = 0;
         private float lastTouchY = 0;
 
         private Post mPost;
+
+        private Boolean canSwipe = null;
 
         public PostOnTouchListener(Post post) {
             mPost = post;
@@ -147,8 +155,13 @@ public class MainFeedFragment extends Fragment {
 
             switch (action) {
                 case MotionEvent.ACTION_DOWN: {
-                    lastTouchX = event.getRawX();
-                    lastTouchY = event.getRawY();
+                    touchTime = SystemClock.uptimeMillis();
+
+                    firstTouchX = event.getRawX();
+                    firstTouchY = event.getRawY();
+
+                    lastTouchX = firstTouchX;
+                    lastTouchY = firstTouchY;
 
                     return true;
                 }
@@ -158,6 +171,20 @@ public class MainFeedFragment extends Fragment {
 
                     final float dx = x - lastTouchX;
                     final float dy = y - lastTouchY;
+
+                    if (canSwipe == null && SystemClock.uptimeMillis() - touchTime >= WAIT_TIME) {
+                        float deltax = Math.abs(x - firstTouchX);
+                        float deltay = Math.abs(y - firstTouchY);
+
+                        if (deltax > deltay) {
+                            Log.d("canSwipe", "true");
+                            canSwipe = true;
+                        } else {
+                            Log.d("canSwipe", "false");
+                            canSwipe = false;
+                            requestDisallowInterceptTouchEventForParents(v, true);
+                        }
+                    }
 
                     v.setX(v.getX() + dx);
                     v.setY(v.getY() + dy);
@@ -171,8 +198,12 @@ public class MainFeedFragment extends Fragment {
                     return true;
                 }
                 case MotionEvent.ACTION_UP: {
+                    if (canSwipe != null && !canSwipe) {
+                        requestDisallowInterceptTouchEventForParents(v, false);
+                    }
+
                     displayLatestPost();
-                    dismissPost(v);
+                    dismissPost(mPost, v);
 
                     return true;
                 }
@@ -197,7 +228,13 @@ public class MainFeedFragment extends Fragment {
 
         }
 
-        private void dismissPost(View v) {
+        /**
+         * Dismiss the current post.
+         * @param post
+         * @param v
+         */
+        private void dismissPost(Post post, View v) {
+            post.toString();
             mBaseFrameLayout.removeView(v);
         }
     }
