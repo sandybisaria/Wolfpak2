@@ -133,10 +133,13 @@ public class MainFeedFragment extends Fragment {
 
     private class PostOnTouchListener implements View.OnTouchListener {
 
-        private long touchTime = 0;
-        private float firstTouchX = 0;
-        private float firstTouchY = 0;
+        private long initialTouchTime = 0;
+        private float initialTouchX = 0;
+        private float initialTouchY = 0;
         private final int WAIT_TIME = 50;
+
+        private Float initialViewX = null;
+        private Float initialViewY = null;
 
         private float lastTouchX = 0;
         private float lastTouchY = 0;
@@ -155,13 +158,19 @@ public class MainFeedFragment extends Fragment {
 
             switch (action) {
                 case MotionEvent.ACTION_DOWN: {
-                    touchTime = SystemClock.uptimeMillis();
+                    initialTouchTime = SystemClock.uptimeMillis();
 
-                    firstTouchX = event.getRawX();
-                    firstTouchY = event.getRawY();
+                    initialTouchX = event.getRawX();
+                    initialTouchY = event.getRawY();
 
-                    lastTouchX = firstTouchX;
-                    lastTouchY = firstTouchY;
+                    lastTouchX = initialTouchX;
+                    lastTouchY = initialTouchY;
+
+                    if (initialViewX == null) {
+                        //TODO If the page is swiped and the view moves, reset the view's position!
+                        initialViewX = v.getX();
+                        initialViewY = v.getY();
+                    }
 
                     return true;
                 }
@@ -172,11 +181,11 @@ public class MainFeedFragment extends Fragment {
                     final float dx = x - lastTouchX;
                     final float dy = y - lastTouchY;
 
-                    if (canSwipe == null && SystemClock.uptimeMillis() - touchTime >= WAIT_TIME) {
-                        float deltax = Math.abs(x - firstTouchX);
-                        float deltay = Math.abs(y - firstTouchY);
+                    if (canSwipe == null && SystemClock.uptimeMillis() - initialTouchTime >= WAIT_TIME) {
+                        final float deltaX = Math.abs(x - initialTouchX);
+                        final float deltaY = Math.abs(y - initialTouchY);
 
-                        if (deltax > deltay) {
+                        if (deltaX > deltaY) {
                             Log.d("canSwipe", "true");
                             canSwipe = true;
                         } else {
@@ -202,8 +211,19 @@ public class MainFeedFragment extends Fragment {
                         requestDisallowInterceptTouchEventForParents(v, false);
                     }
 
-                    displayLatestPost();
-                    dismissPost(mPost, v);
+                    try {
+                        final float totalDeltaY = initialTouchY - lastTouchY;
+
+                        if (Math.abs(totalDeltaY) > 500) {
+                            displayLatestPost();
+                            dismissPost(mPost, v);
+                        } else {
+                            v.setX(initialViewX);
+                            v.setY(initialViewY);
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
 
                     return true;
                 }
