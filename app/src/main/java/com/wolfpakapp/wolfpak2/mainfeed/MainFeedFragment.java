@@ -29,6 +29,7 @@ public class MainFeedFragment extends Fragment {
 
     private RequestParams mMainFeedParams;
     private ArrayDeque<Post> mPostQueue;
+    private ArrayDeque<View> mCurrentViewQueue;
 
     private FrameLayout mBaseFrameLayout;
 
@@ -172,7 +173,6 @@ public class MainFeedFragment extends Fragment {
                 }
                 case MotionEvent.ACTION_CANCEL:
                 case MotionEvent.ACTION_UP: {
-                    dismissPost(v);
                     displayLatestPost();
                     return true;
                 }
@@ -196,9 +196,5 @@ public class MainFeedFragment extends Fragment {
             }
 
         }
-    }
-
-    private void dismissPost(View view) {
-        mBaseFrameLayout.removeView(view);
     }
 }
