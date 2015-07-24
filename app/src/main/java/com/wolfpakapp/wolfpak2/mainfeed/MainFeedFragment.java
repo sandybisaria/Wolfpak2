@@ -56,11 +56,14 @@ public class MainFeedFragment extends Fragment {
     public void setUserVisibleHint(boolean isVisibleToUser) {
         super.setUserVisibleHint(isVisibleToUser);
 
+        //TODO If an image was jostled while swiping, move it back to its original position!
+
         if (isVisibleToUser) {
             // The main feed fragment is always fullscreen, so whenever it is visible it dismisses
             // the status bar.
             getActivity().getWindow().getDecorView()
                     .setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN);
+            restoreViews();
         }
     }
 
@@ -73,7 +76,7 @@ public class MainFeedFragment extends Fragment {
 
         //TODO In the "real" app use the device UUID
         String userID = ((MainActivity) getActivity()).getDeviceUUID();
-        mMainFeedParams.add("user_id", "temp_test_id");
+        mMainFeedParams.add("user_id", "temp_test_id2");
 
         mMainFeedParams.add("latitude", "40.518715");
         mMainFeedParams.add("longitude", "-74.412095");
@@ -110,6 +113,9 @@ public class MainFeedFragment extends Fragment {
         });
     }
 
+    /**
+     * Display the latest post in the queue.
+     */
     private void displayLatestPost() {
         // Get the post at the
         Post post = mPostQueue.poll();
@@ -128,9 +134,15 @@ public class MainFeedFragment extends Fragment {
             imageView.setOnTouchListener(new PostOnTouchListener(post));
 
             mBaseFrameLayout.addView(imageView);
+        } else {
+            //TODO Support video (for now, just skip it)
+            displayLatestPost();
         }
     }
 
+    /**
+     * The PostOnTouchListener handles touch events to the main feed post views.
+     */
     private class PostOnTouchListener implements View.OnTouchListener {
 
         private long initialTouchTime = 0;
@@ -247,15 +259,23 @@ public class MainFeedFragment extends Fragment {
             }
 
         }
+    }
 
-        /**
-         * Dismiss the current post.
-         * @param post
-         * @param v
-         */
-        private void dismissPost(Post post, View v) {
-            post.toString();
-            mBaseFrameLayout.removeView(v);
+    /**
+     * Dismiss the current post.
+     * @param post
+     * @param v
+     */
+    private void dismissPost(Post post, View v) {
+        post.toString();
+        mBaseFrameLayout.removeView(v);
+    }
+
+    private void restoreViews() {
+        for (int idx = 0; idx < mBaseFrameLayout.getChildCount(); idx++) {
+            View child = mBaseFrameLayout.getChildAt(idx);
+            child.setX(0f);
+            child.setY(0f);
         }
     }
 }
