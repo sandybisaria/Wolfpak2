@@ -1,6 +1,5 @@
 package com.wolfpakapp.wolfpak2.leaderboard;
 
-import android.location.Location;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -11,11 +10,8 @@ import android.widget.TabHost;
 
 import com.loopj.android.http.RequestParams;
 import com.wolfpakapp.wolfpak2.MainActivity;
-import com.wolfpakapp.wolfpak2.Post;
 import com.wolfpakapp.wolfpak2.R;
 import com.wolfpakapp.wolfpak2.WolfpakTabHost;
-
-import org.json.JSONObject;
 
 import java.util.HashMap;
 
@@ -120,7 +116,7 @@ public class LeaderboardFragment extends Fragment implements TabHost.TabContentF
         RequestParams denParams = new RequestParams();
 
         //TODO In the "real" app use the device UUID
-        String userID = ((MainActivity) getActivity()).getDeviceUUID();
+        String userID = ((MainActivity) getActivity()).getDeviceId();
         localParams.add("user_id", "temp_test_id");
         denParams.add("user_id", "temp_test_id");
 

@@ -33,7 +33,7 @@ public class ServerLikeClient {
             JSONObject jsonObject = new JSONObject();
             jsonObject.put("post", postId);
             //TODO In the "real" app use the device UUID
-            String userID = ((MainActivity) context).getDeviceUUID();
+            String userID = ((MainActivity) context).getDeviceId();
             jsonObject.put("user_liked", "temp_test_id");
             jsonObject.put("status", voteStatus.change);
             StringEntity entity = new StringEntity(jsonObject.toString());

@@ -33,7 +33,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * Retrieve the device's unique UUID from memory (or generate it for a first-time user).
+     * Retrieve the device's ID from memory (or generate one for a first-time user).
      */
     private void retrieveDeviceId() {
         //TODO Store on the phone so you don't have to generate it every time!
@@ -85,7 +85,10 @@ public class MainActivity extends AppCompatActivity {
         return NUM_PAGES;
     }
 
-    public String getDeviceUUID() {
+    /**
+     * @return The device ID.
+     */
+    public String getDeviceId() {
         return mDeviceUUID;
     }
 }

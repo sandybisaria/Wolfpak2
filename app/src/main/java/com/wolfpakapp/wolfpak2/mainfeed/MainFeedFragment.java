@@ -56,14 +56,11 @@ public class MainFeedFragment extends Fragment {
     public void setUserVisibleHint(boolean isVisibleToUser) {
         super.setUserVisibleHint(isVisibleToUser);
 
-        //TODO If an image was jostled while swiping, move it back to its original position!
-
         if (isVisibleToUser) {
             // The main feed fragment is always fullscreen, so whenever it is visible it dismisses
             // the status bar.
             getActivity().getWindow().getDecorView()
                     .setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN);
-            restoreViews();
         }
     }
 
@@ -75,7 +72,7 @@ public class MainFeedFragment extends Fragment {
         mMainFeedParams = new RequestParams();
 
         //TODO In the "real" app use the device UUID
-        String userID = ((MainActivity) getActivity()).getDeviceUUID();
+        String userID = ((MainActivity) getActivity()).getDeviceId();
         mMainFeedParams.add("user_id", "temp_test_id2");
 
         mMainFeedParams.add("latitude", "40.518715");
@@ -269,13 +266,5 @@ public class MainFeedFragment extends Fragment {
     private void dismissPost(Post post, View v) {
         post.toString();
         mBaseFrameLayout.removeView(v);
-    }
-
-    private void restoreViews() {
-        for (int idx = 0; idx < mBaseFrameLayout.getChildCount(); idx++) {
-            View child = mBaseFrameLayout.getChildAt(idx);
-            child.setX(0f);
-            child.setY(0f);
-        }
     }
 }

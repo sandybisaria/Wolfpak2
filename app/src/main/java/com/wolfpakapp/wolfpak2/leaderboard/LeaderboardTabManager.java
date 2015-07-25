@@ -199,7 +199,7 @@ public class LeaderboardTabManager {
                     for (int idx = 0; idx < resArray.length(); idx++) {
                         JSONObject userObject = resArray.getJSONObject(idx);
                         //TODO In the "real" app use the device UUID
-                        String userID = ((MainActivity) getParentActivity()).getDeviceUUID();
+                        String userID = ((MainActivity) getParentActivity()).getDeviceId();
                         if (userObject.optString("user_id").equals("temp_test_id")) {
                             int totalLikes = userObject.getInt("total_likes");
                             karmaTextView.setText(Integer.toString(totalLikes));
