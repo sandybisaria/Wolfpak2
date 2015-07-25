@@ -20,6 +20,8 @@ import com.wolfpakapp.wolfpak2.MainActivity;
 import com.wolfpakapp.wolfpak2.Post;
 import com.wolfpakapp.wolfpak2.R;
 import com.wolfpakapp.wolfpak2.ServerRestClient;
+import com.wolfpakapp.wolfpak2.WolfpakServiceProvider;
+import com.wolfpakapp.wolfpak2.service.UserIdManager;
 
 import org.apache.http.Header;
 import org.json.JSONArray;
@@ -71,9 +73,12 @@ public class MainFeedFragment extends Fragment {
     private void setUpRequestParams() {
         mMainFeedParams = new RequestParams();
 
-        //TODO In the "real" app use the device UUID
-        String userID = ((MainActivity) getActivity()).getDeviceId();
-        mMainFeedParams.add("user_id", "temp_test_id2");
+        UserIdManager userIdManager = (UserIdManager) WolfpakServiceProvider
+                .getServiceManager(WolfpakServiceProvider.USERIDMANAGER);
+        if (userIdManager.isInitialized()) {
+            String userId = userIdManager.getDeviceId();
+            mMainFeedParams.add("user_id", userId);
+        }
 
         mMainFeedParams.add("latitude", "40.518715");
         mMainFeedParams.add("longitude", "-74.412095");

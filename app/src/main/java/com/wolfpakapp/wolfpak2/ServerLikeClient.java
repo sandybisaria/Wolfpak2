@@ -1,9 +1,11 @@
 package com.wolfpakapp.wolfpak2;
 
 import android.content.Context;
+import android.util.Log;
 
 import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.wolfpakapp.wolfpak2.leaderboard.LeaderboardTabAdapter;
+import com.wolfpakapp.wolfpak2.service.UserIdManager;
 
 import org.apache.http.entity.StringEntity;
 import org.apache.http.message.BasicHeader;
@@ -32,8 +34,11 @@ public class ServerLikeClient {
 
             JSONObject jsonObject = new JSONObject();
             jsonObject.put("post", postId);
-            //TODO In the "real" app use the device UUID
-            String userID = ((MainActivity) context).getDeviceId();
+            UserIdManager userIdManager = (UserIdManager) WolfpakServiceProvider
+                    .getServiceManager(WolfpakServiceProvider.USERIDMANAGER);
+            if (userIdManager.isInitialized()) {
+                Log.d("Device Id", userIdManager.getDeviceId());
+            }
             jsonObject.put("user_liked", "temp_test_id");
             jsonObject.put("status", voteStatus.change);
             StringEntity entity = new StringEntity(jsonObject.toString());

@@ -2,6 +2,7 @@ package com.wolfpakapp.wolfpak2.leaderboard;
 
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,7 +12,9 @@ import android.widget.TabHost;
 import com.loopj.android.http.RequestParams;
 import com.wolfpakapp.wolfpak2.MainActivity;
 import com.wolfpakapp.wolfpak2.R;
+import com.wolfpakapp.wolfpak2.WolfpakServiceProvider;
 import com.wolfpakapp.wolfpak2.WolfpakTabHost;
+import com.wolfpakapp.wolfpak2.service.UserIdManager;
 
 import java.util.HashMap;
 
@@ -115,10 +118,13 @@ public class LeaderboardFragment extends Fragment implements TabHost.TabContentF
         RequestParams allTimeParams = new RequestParams();
         RequestParams denParams = new RequestParams();
 
-        //TODO In the "real" app use the device UUID
-        String userID = ((MainActivity) getActivity()).getDeviceId();
-        localParams.add("user_id", "temp_test_id");
-        denParams.add("user_id", "temp_test_id");
+        UserIdManager userIdManager = (UserIdManager) WolfpakServiceProvider
+                .getServiceManager(WolfpakServiceProvider.USERIDMANAGER);
+        if (userIdManager.isInitialized()) {
+            String userId = userIdManager.getDeviceId();
+            localParams.add("user_id", userId);
+            denParams.add("user_id", userId);
+        }
 
         localParams.add("latitude", "40.518715");
         localParams.add("longitude", "-74.412095");

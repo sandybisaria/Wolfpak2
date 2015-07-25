@@ -15,6 +15,8 @@ import com.wolfpakapp.wolfpak2.MainActivity;
 import com.wolfpakapp.wolfpak2.Post;
 import com.wolfpakapp.wolfpak2.R;
 import com.wolfpakapp.wolfpak2.ServerRestClient;
+import com.wolfpakapp.wolfpak2.WolfpakServiceProvider;
+import com.wolfpakapp.wolfpak2.service.UserIdManager;
 
 import org.apache.http.Header;
 import org.json.JSONArray;
@@ -198,11 +200,14 @@ public class LeaderboardTabManager {
                     resArray = new JSONArray(new String(responseBody));
                     for (int idx = 0; idx < resArray.length(); idx++) {
                         JSONObject userObject = resArray.getJSONObject(idx);
-                        //TODO In the "real" app use the device UUID
-                        String userID = ((MainActivity) getParentActivity()).getDeviceId();
-                        if (userObject.optString("user_id").equals("temp_test_id")) {
-                            int totalLikes = userObject.getInt("total_likes");
-                            karmaTextView.setText(Integer.toString(totalLikes));
+                        UserIdManager userIdManager = (UserIdManager) WolfpakServiceProvider
+                                .getServiceManager(WolfpakServiceProvider.USERIDMANAGER);
+                        if (userIdManager.isInitialized()) {
+                            String userId = userIdManager.getDeviceId();
+                            if (userObject.optString("user_id").equals(userId)) {
+                                int totalLikes = userObject.getInt("total_likes");
+                                karmaTextView.setText(Integer.toString(totalLikes));
+                            }
                         }
                     }
                 } catch (Exception e) {

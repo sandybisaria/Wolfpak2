@@ -1,17 +1,12 @@
 package com.wolfpakapp.wolfpak2;
 
-import android.location.Location;
-import android.provider.Settings;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.telephony.TelephonyManager;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
-
-import java.util.UUID;
+import com.wolfpakapp.wolfpak2.service.UserIdManager;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -20,37 +15,28 @@ public class MainActivity extends AppCompatActivity {
     private WolfpakPagerAdapter mPagerAdapter;
     private ViewPager mViewPager;
 
-    private String mDeviceUUID;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        retrieveDeviceId();
-
-        setUpUI();
+        setupManagers();
+        setupUI();
     }
 
     /**
-     * Retrieve the device's ID from memory (or generate one for a first-time user).
+     * Set up the service managers.
      */
-    private void retrieveDeviceId() {
-        //TODO Store on the phone so you don't have to generate it every time!
-        TelephonyManager manager = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
-        String deviceId = manager.getDeviceId();
-        String serialNumber = manager.getSimSerialNumber();
-        String androidId = Settings.Secure.getString(getContentResolver(),
-                Settings.Secure.ANDROID_ID);
-        UUID deviceUUID = new UUID(androidId.hashCode(),
-                ((long) deviceId.hashCode() << 32) | serialNumber.hashCode());
-        mDeviceUUID = deviceUUID.toString();
+    private void setupManagers() {
+        WolfpakServiceProvider.registerServiceManager(WolfpakServiceProvider.USERIDMANAGER,
+                new UserIdManager(this));
     }
 
     /**
-     * Set up the UI (after connecting to the Internet...)
+     * Set up the UI.
      */
-    private void setUpUI() {
+    private void setupUI() {
         mPagerAdapter = new WolfpakPagerAdapter(getSupportFragmentManager());
         mViewPager = (ViewPager) findViewById(R.id.main_activity_view_pager);
         mViewPager.setAdapter(mPagerAdapter);
@@ -83,12 +69,5 @@ public class MainActivity extends AppCompatActivity {
      */
     public static int getNumPages() {
         return NUM_PAGES;
-    }
-
-    /**
-     * @return The device ID.
-     */
-    public String getDeviceId() {
-        return mDeviceUUID;
     }
 }

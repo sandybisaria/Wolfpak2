@@ -1,11 +1,13 @@
 package com.wolfpakapp.wolfpak2;
 
+import com.wolfpakapp.wolfpak2.service.NullManager;
 import com.wolfpakapp.wolfpak2.service.ServiceManager;
 
 import java.util.HashMap;
 
 public class WolfpakServiceProvider {
 
+    private static final String NULLMANAGER = "Wolfpak.NullManager";
     public static final String USERIDMANAGER = "Wolfpak.UserIdManager";
 
     private static HashMap<String, ServiceManager> managerHashMap = new HashMap<>();
@@ -14,7 +16,10 @@ public class WolfpakServiceProvider {
         try {
             return managerHashMap.get(tag);
         } catch (Exception e) {
-            return null;
+            if (!managerHashMap.containsKey(NULLMANAGER)) {
+                managerHashMap.put(NULLMANAGER, new NullManager());
+            }
+            return managerHashMap.get(NULLMANAGER);
         }
 
     }
