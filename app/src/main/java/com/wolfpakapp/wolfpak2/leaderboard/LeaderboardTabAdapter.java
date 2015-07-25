@@ -34,7 +34,8 @@ import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.squareup.picasso.Picasso;
 import com.wolfpakapp.wolfpak2.Post;
 import com.wolfpakapp.wolfpak2.R;
-import com.wolfpakapp.wolfpak2.ServerLikeClient;
+import com.wolfpakapp.wolfpak2.service.ServerRestClient;
+import com.wolfpakapp.wolfpak2.WolfpakServiceProvider;
 
 import org.apache.http.Header;
 
@@ -52,10 +53,15 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
     private boolean isItemSelected = false;
     private boolean isNewDrawingOrderSet = false;
 
+    private ServerRestClient mClient;
+
     public LeaderboardTabAdapter(ArrayList<Post> posts,
                                  LeaderboardTabManager parentManager) {
         mPosts = posts;
         mParentManager = parentManager;
+
+        mClient = (ServerRestClient) WolfpakServiceProvider
+                .getServiceManager(WolfpakServiceProvider.SERVERRESTCLIENT);
     }
 
     @Override
@@ -322,8 +328,8 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
                             newStatus = mPost.getVoteStatus();
                         }
 
-                        ServerLikeClient.updateLikeStatus(LeaderboardTabAdapter.this, mPost.getId(),
-                                newStatus, new AsyncHttpResponseHandler() {
+                        mClient.updateLikeStatus(mPost.getId(), newStatus,
+                                new AsyncHttpResponseHandler() {
                             @Override
                             public void onSuccess(int statusCode, Header[] headers,
                                                   byte[] responseBody) {

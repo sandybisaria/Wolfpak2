@@ -16,10 +16,9 @@ import android.widget.ImageView;
 import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
 import com.squareup.picasso.Picasso;
-import com.wolfpakapp.wolfpak2.MainActivity;
 import com.wolfpakapp.wolfpak2.Post;
 import com.wolfpakapp.wolfpak2.R;
-import com.wolfpakapp.wolfpak2.ServerRestClient;
+import com.wolfpakapp.wolfpak2.service.ServerRestClient;
 import com.wolfpakapp.wolfpak2.WolfpakServiceProvider;
 import com.wolfpakapp.wolfpak2.service.UserIdManager;
 
@@ -35,9 +34,14 @@ public class MainFeedFragment extends Fragment {
 
     private FrameLayout mBaseFrameLayout;
 
+    private ServerRestClient mClient;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        mClient = (ServerRestClient) WolfpakServiceProvider
+                .getServiceManager(WolfpakServiceProvider.SERVERRESTCLIENT);
 
         setUpRequestParams();
         mPostQueue = new ArrayDeque<>();
@@ -89,7 +93,7 @@ public class MainFeedFragment extends Fragment {
      * Retrieve a fresh set of posts from the server.
      */
     private void retrieveNewPosts() {
-        ServerRestClient.get("posts/", mMainFeedParams, new AsyncHttpResponseHandler() {
+        mClient.get("posts/", mMainFeedParams, new AsyncHttpResponseHandler() {
             @Override
             public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
                 final JSONArray resArray;

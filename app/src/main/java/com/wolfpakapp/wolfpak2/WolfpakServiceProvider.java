@@ -11,8 +11,9 @@ import java.util.Map;
 public class WolfpakServiceProvider {
 
     public static final String USERIDMANAGER = "Wolfpak.UserIdManager";
-    private static ServiceManager nullManager = new NullManager();
+    public static final String SERVERRESTCLIENT = "Wolfpak.ServerRestClient";
 
+    private static ServiceManager nullManager = new NullManager();
 
     private static HashMap<String, ServiceManager> managerHashMap = new HashMap<>();
 

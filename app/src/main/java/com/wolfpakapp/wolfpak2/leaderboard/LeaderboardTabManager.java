@@ -11,10 +11,9 @@ import android.view.View;
 import android.widget.TextView;
 
 import com.loopj.android.http.AsyncHttpResponseHandler;
-import com.wolfpakapp.wolfpak2.MainActivity;
 import com.wolfpakapp.wolfpak2.Post;
 import com.wolfpakapp.wolfpak2.R;
-import com.wolfpakapp.wolfpak2.ServerRestClient;
+import com.wolfpakapp.wolfpak2.service.ServerRestClient;
 import com.wolfpakapp.wolfpak2.WolfpakServiceProvider;
 import com.wolfpakapp.wolfpak2.service.UserIdManager;
 
@@ -41,19 +40,14 @@ public class LeaderboardTabManager {
     private LeaderboardFragment mParentFragment;
     private final String tag;
 
+    private ServerRestClient mClient;
+
     public LeaderboardTabManager(final String tag, final LeaderboardFragment mParentFragment) {
         this.tag = tag;
         this.mParentFragment = mParentFragment;
 
         mSwipeRefreshLayout = (SwipeRefreshLayout) LayoutInflater
                 .from(mParentFragment.getActivity()).inflate(R.layout.tab_leaderboard, null);
-
-        // Set up the karma TextView if this is the den tab.
-        if (tag.equals(LeaderboardFragment.DEN_TAG)) {
-            karmaTextView = (TextView) mSwipeRefreshLayout.findViewById(R.id.leaderboard_den_karma_text_view);
-            karmaTextView.setVisibility(View.VISIBLE);
-            refreshKarmaCount();
-        }
 
         mRecyclerView = (RecyclerView) mSwipeRefreshLayout.findViewById(R.id.leaderboard_recycler_view);
         mRecyclerView.setHasFixedSize(false);
@@ -80,8 +74,11 @@ public class LeaderboardTabManager {
 
         mRecyclerView.setAdapter(mTabAdapter);
 
+        mClient = (ServerRestClient) WolfpakServiceProvider
+                .getServiceManager(WolfpakServiceProvider.SERVERRESTCLIENT);
+
         // Retrieve the set of posts from the server.
-        ServerRestClient.get(mParentFragment.getRelativeUrl(tag), mParentFragment.getRequestParams(tag),
+        mClient.get(mParentFragment.getRelativeUrl(tag), mParentFragment.getRequestParams(tag),
                 new AsyncHttpResponseHandler() {
                     @Override
                     public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
@@ -108,7 +105,7 @@ public class LeaderboardTabManager {
         mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                ServerRestClient.get(mParentFragment.getRelativeUrl(tag), mParentFragment.getRequestParams(tag),
+                mClient.get(mParentFragment.getRelativeUrl(tag), mParentFragment.getRequestParams(tag),
                         new AsyncHttpResponseHandler() {
                     @Override
                     public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
@@ -143,6 +140,13 @@ public class LeaderboardTabManager {
                 }
             }
         });
+
+        // Set up the karma TextView if this is the den tab.
+        if (tag.equals(LeaderboardFragment.DEN_TAG)) {
+            karmaTextView = (TextView) mSwipeRefreshLayout.findViewById(R.id.leaderboard_den_karma_text_view);
+            karmaTextView.setVisibility(View.VISIBLE);
+            refreshKarmaCount();
+        }
     }
 
     public SwipeRefreshLayout getTabLayout() {
@@ -188,11 +192,12 @@ public class LeaderboardTabManager {
      * Refresh the karma count. This method does nothing if this is not the den tab.
      */
     private void refreshKarmaCount() {
+        // Just being cautious...
         if (!tag.equals(LeaderboardFragment.DEN_TAG)) {
             return;
         }
         // Retrieve data on users from the server.
-        ServerRestClient.get("users/", null, new AsyncHttpResponseHandler() {
+        mClient.get("users/", null, new AsyncHttpResponseHandler() {
             @Override
             public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
                 final JSONArray resArray;
