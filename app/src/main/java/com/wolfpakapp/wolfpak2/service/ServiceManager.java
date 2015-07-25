@@ -39,6 +39,8 @@ public abstract class ServiceManager {
         for (OnInitializedCallback callback : mCallbacks) {
             callback.onInitialized();
         }
+        // Clear all the callbacks once we are done with them...
+        mCallbacks.clear();
     }
 
     /**

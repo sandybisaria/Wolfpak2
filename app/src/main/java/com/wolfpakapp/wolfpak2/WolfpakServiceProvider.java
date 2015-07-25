@@ -13,9 +13,11 @@ public class WolfpakServiceProvider {
     public static final String USERIDMANAGER = "Wolfpak.UserIdManager";
     private static ServiceManager nullManager = new NullManager();
 
+
     private static HashMap<String, ServiceManager> managerHashMap = new HashMap<>();
 
     private static ArrayList<OnAllInitializedCallback> mCallbacks = new ArrayList<>();
+    private static boolean isAllInitialized = false;
 
     /**
      * Get the requested ServiceManager (or a NullManager if it does not exist).
@@ -42,29 +44,44 @@ public class WolfpakServiceProvider {
         manager.setOnInitializedCallback(new ServiceManager.OnInitializedCallback() {
             @Override
             public void onInitialized() {
+                // Call the isAllInitialized method so that all ServiceManagers can be checked!
                 if (WolfpakServiceProvider.isAllInitialized()) {
                     for (OnAllInitializedCallback callback : mCallbacks) {
                         callback.onAllInitialized();
                     }
+                    // Clear all current callbacks (because there's no need to hold onto them...)
+                    mCallbacks.clear();
                 }
             }
         });
     }
 
     public static void setOnAllInitializedCallback(OnAllInitializedCallback callback) {
-        mCallbacks.add(callback);
+        if (!isAllInitialized()) {
+            mCallbacks.add(callback);
+        } else {
+            callback.onAllInitialized();
+        }
     }
 
+    /**
+     * Check if all registered ServiceManagers are initialized.
+     * @return True if all registered ServiceManagers are initialized.
+     */
     private static boolean isAllInitialized() {
+        // Set isAllInitialized to true; innocent unless proven guilty...
+        isAllInitialized = true;
+
         Iterator iterator = managerHashMap.entrySet().iterator();
         while (iterator.hasNext()) {
             Map.Entry pair = (Map.Entry) iterator.next();
             if (!((ServiceManager) pair.getValue()).isInitialized()) {
-                return false;
+                isAllInitialized = false;
+                break;
             }
         }
 
-        return true;
+        return isAllInitialized;
     }
 
     public interface OnAllInitializedCallback {

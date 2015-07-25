@@ -23,6 +23,8 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // Once all the service managers are initialized, continue with running the app.
+        // This will be useful when we have to check for features like Facebook, Internet, and GPS.
         WolfpakServiceProvider
                 .setOnAllInitializedCallback(new WolfpakServiceProvider.OnAllInitializedCallback() {
             @Override
