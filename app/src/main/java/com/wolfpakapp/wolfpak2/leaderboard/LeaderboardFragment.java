@@ -124,6 +124,7 @@ public class LeaderboardFragment extends Fragment implements TabHost.TabContentF
         localParams.add("user_id", userId);
         denParams.add("user_id", userId);
 
+        //TODO GPS coordinates come from the manager
         localParams.add("latitude", "40.518715");
         localParams.add("longitude", "-74.412095");
 

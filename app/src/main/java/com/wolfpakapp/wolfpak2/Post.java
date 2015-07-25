@@ -73,8 +73,7 @@ public class Post {
             }
             case LeaderboardFragment.DEN_TAG: {
                 // Since the user can't like his own post, the like status takes on a different
-                // meaning...
-                //TODO Color determined by vote count?
+                // meaning. Maybe the color reflects the vote count?
                 likeStatus = 0;
                 break;
             }

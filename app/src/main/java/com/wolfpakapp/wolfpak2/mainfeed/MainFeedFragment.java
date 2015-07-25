@@ -82,6 +82,7 @@ public class MainFeedFragment extends Fragment {
         String userId = userIdManager.getDeviceId();
         mMainFeedParams.add("user_id", userId);
 
+        //TODO GPS coordinates come from the manager
         mMainFeedParams.add("latitude", "40.518715");
         mMainFeedParams.add("longitude", "-74.412095");
 

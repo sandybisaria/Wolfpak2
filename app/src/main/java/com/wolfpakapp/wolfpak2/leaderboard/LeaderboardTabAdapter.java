@@ -186,6 +186,7 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
          * Call requestDisallowInterceptTouchEvent() on all parents of the view.
          * @param v The child view.
          * @param disallowIntercept True to stop the parent from intercepting touch events.
+         * TODO Identical to MainFeedFragment method!
          */
         private void requestDisallowInterceptTouchEventForParents(View v,
                                                                   boolean disallowIntercept) {
