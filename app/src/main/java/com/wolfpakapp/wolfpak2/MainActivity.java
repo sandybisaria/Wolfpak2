@@ -3,9 +3,11 @@ package com.wolfpakapp.wolfpak2;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import com.wolfpakapp.wolfpak2.service.ServiceManager;
 import com.wolfpakapp.wolfpak2.service.UserIdManager;
 
 public class MainActivity extends AppCompatActivity {

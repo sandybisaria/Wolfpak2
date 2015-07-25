@@ -12,6 +12,11 @@ public class WolfpakServiceProvider {
 
     private static HashMap<String, ServiceManager> managerHashMap = new HashMap<>();
 
+    /**
+     * Get the requested ServiceManager (or a NullManager if it does not exist).
+     * @param tag The tag of the service manager.
+     * @return The requested service manager (if null, then a NullManager).
+     */
     public static ServiceManager getServiceManager(String tag) {
         try {
             return managerHashMap.get(tag);
@@ -24,6 +29,11 @@ public class WolfpakServiceProvider {
 
     }
 
+    /**
+     * Register a new ServiceManager.
+     * @param tag The tag of the service manager.
+     * @param manager The initialized service manager.
+     */
     public static void registerServiceManager(String tag, ServiceManager manager) {
         managerHashMap.put(tag, manager);
     }

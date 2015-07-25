@@ -1,6 +1,7 @@
 package com.wolfpakapp.wolfpak2.service;
 
 import android.content.Context;
+import android.os.Handler;
 import android.provider.Settings;
 import android.telephony.TelephonyManager;
 
@@ -30,7 +31,12 @@ public class UserIdManager extends ServiceManager {
         //TODO Remove eventually...
         mDeviceId = "temp_test_id";
 
-        isInitialized = true;
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                initialize();
+            }
+        }, 5000);
     }
 
     /**
