@@ -201,13 +201,11 @@ public class LeaderboardTabManager {
                     for (int idx = 0; idx < resArray.length(); idx++) {
                         JSONObject userObject = resArray.getJSONObject(idx);
                         UserIdManager userIdManager = (UserIdManager) WolfpakServiceProvider
-                                .getServiceManager(WolfpakServiceProvider.USERIDMANAGER);
-                        if (userIdManager.isInitialized()) {
-                            String userId = userIdManager.getDeviceId();
-                            if (userObject.optString("user_id").equals(userId)) {
-                                int totalLikes = userObject.getInt("total_likes");
-                                karmaTextView.setText(Integer.toString(totalLikes));
-                            }
+                            .getServiceManager(WolfpakServiceProvider.USERIDMANAGER);
+                        String userId = userIdManager.getDeviceId();
+                        if (userObject.optString("user_id").equals(userId)) {
+                            int totalLikes = userObject.getInt("total_likes");
+                            karmaTextView.setText(Integer.toString(totalLikes));
                         }
                     }
                 } catch (Exception e) {

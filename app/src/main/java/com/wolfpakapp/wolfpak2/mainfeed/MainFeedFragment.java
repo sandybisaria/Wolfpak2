@@ -75,10 +75,8 @@ public class MainFeedFragment extends Fragment {
 
         UserIdManager userIdManager = (UserIdManager) WolfpakServiceProvider
                 .getServiceManager(WolfpakServiceProvider.USERIDMANAGER);
-        if (userIdManager.isInitialized()) {
-            String userId = userIdManager.getDeviceId();
-            mMainFeedParams.add("user_id", userId);
-        }
+        String userId = userIdManager.getDeviceId();
+        mMainFeedParams.add("user_id", userId);
 
         mMainFeedParams.add("latitude", "40.518715");
         mMainFeedParams.add("longitude", "-74.412095");

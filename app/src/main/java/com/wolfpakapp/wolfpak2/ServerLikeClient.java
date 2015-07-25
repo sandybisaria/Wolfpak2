@@ -36,10 +36,8 @@ public class ServerLikeClient {
             jsonObject.put("post", postId);
             UserIdManager userIdManager = (UserIdManager) WolfpakServiceProvider
                     .getServiceManager(WolfpakServiceProvider.USERIDMANAGER);
-            if (userIdManager.isInitialized()) {
-                Log.d("Device Id", userIdManager.getDeviceId());
-            }
-            jsonObject.put("user_liked", "temp_test_id");
+            String userId = userIdManager.getDeviceId();
+            jsonObject.put("user_liked", userId);
             jsonObject.put("status", voteStatus.change);
             StringEntity entity = new StringEntity(jsonObject.toString());
             String contentType = "application/json";

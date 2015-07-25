@@ -120,11 +120,9 @@ public class LeaderboardFragment extends Fragment implements TabHost.TabContentF
 
         UserIdManager userIdManager = (UserIdManager) WolfpakServiceProvider
                 .getServiceManager(WolfpakServiceProvider.USERIDMANAGER);
-        if (userIdManager.isInitialized()) {
-            String userId = userIdManager.getDeviceId();
-            localParams.add("user_id", userId);
-            denParams.add("user_id", userId);
-        }
+        String userId = userIdManager.getDeviceId();
+        localParams.add("user_id", userId);
+        denParams.add("user_id", userId);
 
         localParams.add("latitude", "40.518715");
         localParams.add("longitude", "-74.412095");

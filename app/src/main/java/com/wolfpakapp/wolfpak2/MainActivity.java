@@ -23,8 +23,14 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        WolfpakServiceProvider
+                .setOnAllInitializedCallback(new WolfpakServiceProvider.OnAllInitializedCallback() {
+            @Override
+            public void onAllInitialized() {
+                setupUI();
+            }
+        });
         setupManagers();
-        setupUI();
     }
 
     /**
