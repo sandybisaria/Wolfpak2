@@ -43,7 +43,7 @@ public class MainFeedFragment extends Fragment {
         mClient = (ServerRestClient) WolfpakServiceProvider
                 .getServiceManager(WolfpakServiceProvider.SERVERRESTCLIENT);
 
-        setUpRequestParams();
+        setupRequestParams();
         mPostQueue = new ArrayDeque<>();
     }
 
@@ -58,10 +58,16 @@ public class MainFeedFragment extends Fragment {
         return baseLayout;
     }
 
+    /**
+     * This method is called whenever the visibility of the fragment changes (true if visible). It
+     * can be used to perform certain actions such as change the visibility of system UI elements.
+     * @param isVisibleToUser
+     */
     @Override
     public void setUserVisibleHint(boolean isVisibleToUser) {
         super.setUserVisibleHint(isVisibleToUser);
 
+        //TODO If the page is swiped and the view moves, reset the view's position.
         if (isVisibleToUser) {
             // The main feed fragment is always fullscreen, so whenever it is visible it dismisses
             // the status bar.
@@ -74,7 +80,7 @@ public class MainFeedFragment extends Fragment {
      * Set up the request parameters that the main feed will use to retrieve posts from the server.
      * TODO Set a limit on the number of incoming posts?
      */
-    private void setUpRequestParams() {
+    private void setupRequestParams() {
         mMainFeedParams = new RequestParams();
 
         UserIdManager userIdManager = (UserIdManager) WolfpakServiceProvider
@@ -184,7 +190,6 @@ public class MainFeedFragment extends Fragment {
                     lastTouchY = initialTouchY;
 
                     if (initialViewX == null) {
-                        //TODO If the page is swiped and the view moves, reset the view's position!
                         initialViewX = v.getX();
                         initialViewY = v.getY();
                     }
@@ -198,6 +203,10 @@ public class MainFeedFragment extends Fragment {
                     final float dx = x - lastTouchX;
                     final float dy = y - lastTouchY;
 
+                    // This is a method I was considering to determine between a swipe (through pages)
+                    // or a "drag" of the post. Basically, during a small fraction of time, if the
+                    // user moved horizontally more than vertically, we can assume that he will
+                    // likely want to swipe and thus permit him to do so.
                     if (canSwipe == null && SystemClock.uptimeMillis() - initialTouchTime >= WAIT_TIME) {
                         final float deltaX = Math.abs(x - initialTouchX);
                         final float deltaY = Math.abs(y - initialTouchY);
@@ -208,6 +217,7 @@ public class MainFeedFragment extends Fragment {
                         } else {
                             Log.d("canSwipe", "false");
                             canSwipe = false;
+                            // This function disables the swipe between pages.
                             requestDisallowInterceptTouchEventForParents(v, true);
                         }
                     }
@@ -224,6 +234,7 @@ public class MainFeedFragment extends Fragment {
                     return true;
                 }
                 case MotionEvent.ACTION_UP: {
+                    // Reset the disallowInterceptTouchEvent for the parents (if it was previously set.
                     if (canSwipe != null && !canSwipe) {
                         requestDisallowInterceptTouchEventForParents(v, false);
                     }
@@ -272,7 +283,7 @@ public class MainFeedFragment extends Fragment {
      * @param v
      */
     private void dismissPost(Post post, View v) {
-        post.toString();
+        //TODO Determine whether to upvote or downvote (requires additional parameters...)
         mBaseFrameLayout.removeView(v);
     }
 }

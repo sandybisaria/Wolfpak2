@@ -8,6 +8,10 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+/**
+ * The WolfpakServiceProvider provides a way for different classes in the project to access common
+ * services such as the REST client, GPS provider, and user ID manager.
+ */
 public class WolfpakServiceProvider {
 
     public static final String USERIDMANAGER = "Wolfpak.UserIdManager";
@@ -57,10 +61,16 @@ public class WolfpakServiceProvider {
         });
     }
 
+    /**
+     * Set a callback for when all registered ServiceManagera have finished initialization.
+     * @param callback The callback to be invoked.
+     */
     public static void setOnAllInitializedCallback(OnAllInitializedCallback callback) {
         if (!isAllInitialized()) {
+            // If not all currently registered ServiceManagers are initialized, add the callback.
             mCallbacks.add(callback);
         } else {
+            // Invoke the callback immediately.
             callback.onAllInitialized();
         }
     }
@@ -85,6 +95,10 @@ public class WolfpakServiceProvider {
         return isAllInitialized;
     }
 
+    /**
+     * The OnAllInitializedCallback is an interface for a callback that wants to be called when all
+     * registered ServiceManagers have finished initialization.
+     */
     public interface OnAllInitializedCallback {
         void onAllInitialized();
     }

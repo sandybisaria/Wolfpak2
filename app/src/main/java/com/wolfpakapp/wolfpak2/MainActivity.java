@@ -24,6 +24,8 @@ public class MainActivity extends AppCompatActivity {
 
         // Once all the service managers are initialized, continue with running the app.
         // This will be useful when we have to check for features like Facebook, Internet, and GPS.
+        // If any service is not available, then the ServiceManagers can prompt the user to enable
+        // them (the exact behavior depends on the manager).
         WolfpakServiceProvider
                 .setOnAllInitializedCallback(new WolfpakServiceProvider.OnAllInitializedCallback() {
                     @Override
@@ -45,7 +47,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * Set up the UI.
+     * Set up the user interface elements.
      */
     private void setupUI() {
         mPagerAdapter = new WolfpakPagerAdapter(getSupportFragmentManager());
