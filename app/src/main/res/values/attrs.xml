@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="ColorPickerView">
+        <attr name="sliderColor" format="color|reference" />
+        <attr name="borderColor" format="color|reference" />
+    </declare-styleable>
+</resources>

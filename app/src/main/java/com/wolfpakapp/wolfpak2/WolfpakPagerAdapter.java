@@ -4,6 +4,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 
+import com.wolfpakapp.wolfpak2.camera.preview.CameraFragment;
 import com.wolfpakapp.wolfpak2.leaderboard.LeaderboardFragment;
 import com.wolfpakapp.wolfpak2.mainfeed.MainFeedFragment;
 
@@ -24,6 +25,7 @@ public class WolfpakPagerAdapter extends FragmentStatePagerAdapter {
      * <ul>
      *     <li>0 - {@link LeaderboardFragment}</li>
      *     <li>1 - {@link MainFeedFragment}</li>
+     *     <li>2 - {@link CameraFragment}</li>
      * </ul>
      * @param i The index of the Fragment to get.
      * @return The requested Fragment.
@@ -31,14 +33,10 @@ public class WolfpakPagerAdapter extends FragmentStatePagerAdapter {
     @Override
     public Fragment getItem(int i) {
         switch (i) {
-            case 0: {
-                return new LeaderboardFragment();
-            }
-            case 1: {
-                return new MainFeedFragment();
-            }
+            case 0: return new LeaderboardFragment();
+            case 1: return new MainFeedFragment();
+            case 2: return new CameraFragment();
         }
-
         return null;
     }
 

@@ -5,4 +5,8 @@
     <color name="leaderboard_view_count_background_green">#00FF00</color>
     <color name="leaderboard_view_count_background_red">#FF0000</color>
     <color name="leaderboard_karma_background_red">#F04446</color>
+
+
+    <color name="black_overlay">#66000000</color>
+    <color name="white">#FFFFFF</color>
 </resources>
