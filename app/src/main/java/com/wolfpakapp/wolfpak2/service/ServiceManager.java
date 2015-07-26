@@ -32,7 +32,9 @@ public abstract class ServiceManager {
     }
 
     /**
-     * Finish the ServiceManager initialization and notify all callbacks.
+     * Finish the ServiceManager initialization and notify all callbacks. This function should be
+     * invoked within the constructor so that the application can be notified if the manager has
+     * initialized.
      */
     protected final void finishInitialize() {
         isInitialized = true;

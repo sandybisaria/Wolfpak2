@@ -27,6 +27,10 @@ public class ServerRestClient extends ServiceManager {
     private AsyncHttpClient mClient;
     private Context mContext;
 
+    /**
+     * Start the ServerRestClient service.
+     * @param context The context of the activity constructing the manager.
+     */
     public ServerRestClient(Context context) {
         mClient = new AsyncHttpClient(true, 80, 443);
         mContext = context;
