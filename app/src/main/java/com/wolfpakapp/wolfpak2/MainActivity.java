@@ -1,5 +1,7 @@
 package com.wolfpakapp.wolfpak2;
 
+import android.app.Activity;
+import android.content.Intent;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -12,11 +14,12 @@ import com.wolfpakapp.wolfpak2.service.UserIdManager;
 
 public class MainActivity extends AppCompatActivity {
 
+    public static final int REQUEST_CHECK_SETTINGS = 123;
+
     private static final int NUM_PAGES = 2;
 
     private WolfpakPagerAdapter mPagerAdapter;
     private ViewPager mViewPager;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,6 +82,28 @@ public class MainActivity extends AppCompatActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        switch (requestCode) {
+            case REQUEST_CHECK_SETTINGS:
+                switch (resultCode) {
+                    case Activity.RESULT_OK:
+                        // All required changes were successfully made
+                        ((LocationProvider) WolfpakServiceProvider
+                                .getServiceManager(WolfpakServiceProvider.LOCATIONPROVIDER))
+                                .retrieveLocation();
+                        break;
+                    case Activity.RESULT_CANCELED:
+                        // The user was asked to change settings, but chose not to
+                        break;
+                    default:
+                        break;
+                }
+                break;
+        }
     }
 
     /**
