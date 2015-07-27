@@ -1,6 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
-    android:layout_height="match_parent" android:clickable="true">
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:clickable="true"
+    android:focusable="true"
+    android:focusableInTouchMode="true">
 
     <com.wolfpakapp.wolfpak2.camera.preview.AutoFitTextureView
         android:id="@+id/texture"
@@ -18,6 +22,22 @@
         android:progress="0"
         android:progressDrawable="@drawable/custom_progress_bar"
         style="@android:style/Widget.ProgressBar.Horizontal"/>
+
+    <VideoView
+        android:id="@+id/video_player"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:visibility="gone" />
+
+    <TextureView
+        android:id="@+id/edit_texture"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:visibility="gone" />
 
     <ImageButton
         android:id="@+id/btn_switch"
@@ -60,5 +80,117 @@
         android:background="@drawable/btn_capture"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"/>
+    <!-- Picture Editor Components-->
+    <com.wolfpakapp.wolfpak2.camera.editor.EditableOverlay
+        android:id="@+id/overlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:visibility="gone"/>
+
+    <com.wolfpakapp.wolfpak2.camera.editor.TextOverlay
+        android:id="@+id/text_overlay"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:inputType="text"
+        android:textSize="30sp"
+        android:textColor="@color/white"
+        android:gravity="center"
+        android:focusableInTouchMode="true"
+        android:layout_centerVertical="true"
+        android:layout_centerHorizontal="true"
+        android:visibility="gone" />
+
+    <ImageButton
+        android:id="@+id/btn_undo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/undo"
+        android:background="#00000000"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentLeft="true"
+        android:layout_marginTop="@dimen/activity_global_padding"
+        android:layout_marginLeft="@dimen/activity_global_padding"
+        android:visibility="gone" />
+
+    <ImageButton
+        android:id="@+id/btn_draw"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/draw"
+        android:background="#00000000"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentRight="true"
+        android:layout_marginTop="@dimen/activity_global_padding"
+        android:layout_marginRight="@dimen/activity_global_padding"
+        android:visibility="gone" />
+
+    <com.wolfpakapp.wolfpak2.camera.editor.colorpicker.ColorPickerView
+        android:id="@+id/color_picker_view"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_below="@id/btn_draw"
+        style="@style/ColorPickerViewStyle"
+        android:visibility="gone" />
+
+    <ImageButton
+        android:id="@+id/btn_blur"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/blur"
+        android:background="#00000000"
+        android:layout_alignParentTop="true"
+        android:layout_toLeftOf="@id/btn_draw"
+        android:layout_marginTop="@dimen/activity_global_padding"
+        android:layout_marginRight="@dimen/activity_global_padding"
+        android:visibility="gone" />
+
+    <ImageButton
+        android:id="@+id/btn_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/text"
+        android:background="#00000000"
+        android:layout_alignParentTop="true"
+        android:layout_toLeftOf="@id/btn_blur"
+        android:layout_marginTop="@dimen/activity_global_padding"
+        android:layout_marginRight="@dimen/activity_global_padding"
+        android:visibility="gone" />
+
+    <ImageButton
+        android:id="@+id/btn_back"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/back"
+        android:background="#00000000"
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="@dimen/activity_global_padding"
+        android:layout_marginLeft="@dimen/activity_global_padding"
+        android:visibility="gone" />
+
+    <ImageButton
+        android:id="@+id/btn_download"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/download"
+        android:background="#00000000"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="@dimen/activity_global_padding"
+        android:visibility="gone" />
+
+    <ImageButton
+        android:id="@+id/btn_upload"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/upload"
+        android:background="#00000000"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        android:layout_marginBottom="@dimen/activity_global_padding"
+        android:layout_marginRight="@dimen/activity_global_padding"
+        android:visibility="gone" />
 
 </RelativeLayout>

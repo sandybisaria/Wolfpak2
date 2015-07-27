@@ -160,13 +160,13 @@ public class MediaSaver {
                 // initialize server params here
                 mMap.put("handle", dialog.getHandle());
                 mMap.put("is_nsfw", dialog.isNsfw() ? "true" : "false");
-                mMap.put("is_image", PictureEditorFragment.isImage() ? "true" : "false");
+                mMap.put("is_image", PictureEditorLayout.isImage() ? "true" : "false");
                 mMap.put("user", "temp_test_id");
                 mMap.put("latitude", DeviceLocator.getLatitude());
                 mMap.put("longitude", DeviceLocator.getLongitude());
                 // show a progress dialog to user until sent
 
-                if (PictureEditorFragment.isImage()) {
+                if (PictureEditorLayout.isImage()) {
                     // initialize the file to be sent
                     try {
                         mFileToServer = createImageFile();
@@ -195,7 +195,7 @@ public class MediaSaver {
     private void sendToServer() {
         Log.i(TAG, "Sending to Server");
 
-        if(PictureEditorFragment.isImage()) {
+        if(PictureEditorLayout.isImage()) {
         } // otherwise video is already initialized or this function wouldn't be called
 
         if(mFileToServer != null)    {
@@ -252,7 +252,7 @@ public class MediaSaver {
     /**
      * Downloads user edited media into corresponding directory in phone.
      * Calls {@link #saveImage()} or {@link #saveVideo()} depending on whether
-     * {@link PictureEditorFragment} holds an image or video
+     * {@link PictureEditorLayout} holds an image or video
      */
     public void downloadMedia() {
 
@@ -271,7 +271,7 @@ public class MediaSaver {
             @Override
             protected Void doInBackground(Void... arg0) {
                 try {
-                    if (PictureEditorFragment.isImage()) {
+                    if (PictureEditorLayout.isImage()) {
                         saveImage();
                     } else {
                         saveVideo();
@@ -285,7 +285,7 @@ public class MediaSaver {
 
             @Override
             protected void onPostExecute(Void result) {
-                if ( mProgressDialog!=null && PictureEditorFragment.isImage()) {
+                if ( mProgressDialog!=null && PictureEditorLayout.isImage()) {
                     mProgressDialog.dismiss(); // dismiss dialog if image
                 } // let video ffmpeg dismiss dialog for video saving
             }
@@ -371,15 +371,15 @@ public class MediaSaver {
             // rotates 90 degrees to vertical orientation (transpose)
             // and compresses video (qscale)
             String cmd = null;
-            if(CameraFragment.getFace() == CameraCharacteristics.LENS_FACING_FRONT) {
+            if(CameraLayout.getFace() == CameraCharacteristics.LENS_FACING_FRONT) {
                 // need to flip video too (option 3 does rotation and flip)
-                cmd = "-y -i " + PictureEditorFragment.getVideoPath() +
+                cmd = "-y -i " + PictureEditorLayout.getVideoPath() +
                         " -i " + tempImgFile.getCanonicalPath() +
                         " -strict -2 -qp 31 -filter_complex [0:v][1:v]overlay=0:0,transpose=3[out]" +
                         " -map [out] -map 0:a -codec:v mpeg4 -codec:a copy " +
                         tempfile.getCanonicalPath();
             } else {// back facing camera
-                cmd = "-y -i " + PictureEditorFragment.getVideoPath() +
+                cmd = "-y -i " + PictureEditorLayout.getVideoPath() +
                         " -i " + tempImgFile.getCanonicalPath() +
                         " -strict -2 -qp 31 -filter_complex [0:v][1:v]overlay=0:0,transpose=1[out]" +
                         " -map [out] -map 0:a -codec:v mpeg4 -codec:a copy " +
@@ -410,8 +410,9 @@ public class MediaSaver {
 
                     @Override
                     public void onFinish() {
-                        if(!serverSending) // ICK this is disgusting but idk i need to get this done...
+                        if(!serverSending) {// ICK this is disgusting but idk i need to get this done...
                             mProgressDialog.dismiss();
+                        }
                         else {
                             mFileToServer = new File(mFinalVideoPath);
                             sendToServer();

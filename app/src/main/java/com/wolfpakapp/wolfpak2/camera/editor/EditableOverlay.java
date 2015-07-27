@@ -11,6 +11,7 @@ import android.util.Log;
 import android.util.TypedValue;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
+import android.view.TextureView;
 import android.view.View;
 
 /**
@@ -20,6 +21,8 @@ import android.view.View;
 public class EditableOverlay extends View {
 
     private static final String TAG = "EditableOverlay";
+
+    private TextureView mTextureView;
 
     private Bitmap mBitmap;
     private Canvas mCanvas;
@@ -99,7 +102,8 @@ public class EditableOverlay extends View {
     /**
      * Initializes the paint components for the overlay
      */
-    public void init(TextOverlay textOverlay) {
+    public void init(TextureView textureView, TextOverlay textOverlay) {
+        Log.d(TAG, "initing overlay");
         setSaveEnabled(true);
         mState = STATE_IDLE;
 
@@ -119,6 +123,8 @@ public class EditableOverlay extends View {
 
         mTextOverlay = textOverlay;
         mTextOverlay.init();
+
+        mTextureView = textureView;
 
         mScaleDetector = new ScaleGestureDetector(getContext(), mOnScaleListener);
         mRotationDetector = new RotationGestureDetector(mOnRotationListener);
@@ -197,8 +203,6 @@ public class EditableOverlay extends View {
                 mX = x;
                 mY = y;
                 break;
-            case STATE_TEXT:
-                break;
         }
     }
 
@@ -213,8 +217,6 @@ public class EditableOverlay extends View {
                     mY = y;
                 }
                 break;
-            case STATE_TEXT:
-                break;
         }
     }
 
@@ -226,19 +228,24 @@ public class EditableOverlay extends View {
                 mCanvas.drawPath(mPath, mPaint);
                 // kill this so we don't double draw
                 mPath.reset();
-                if(PictureEditorFragment.isImage()) { // if image, save overlay and textureview
-                    Bitmap screen = Bitmap.createBitmap(PictureEditorFragment.getBitmap());
-                    Canvas c = new Canvas(screen);
-                    c.drawBitmap(mBitmap, 0, 0, null);
-                    UndoManager.addScreenState(screen);
-                    PictureEditorFragment.setBitmap(screen);
+                if(PictureEditorLayout.isImage()) {
+                    // if image, combine overlay and textureview onto textureview surface
+                    //Bitmap screen = Bitmap.createBitmap(mTextureView.getBitmap());
+                    //Canvas c = new Canvas(screen);
+                    //c.drawBitmap(mBitmap, 0, 0, null);
+                    //canvas.drawBitmap(screen, 0, 0, null);
+
+                    Canvas canvas = mTextureView.lockCanvas();
+                    canvas.drawBitmap(mTextureView.getBitmap(), 0, 0, null);
+                    canvas.drawBitmap(mBitmap, 0, 0, null);
+                    mTextureView.unlockCanvasAndPost(canvas);
+                    UndoManager.addScreenState(mTextureView.getBitmap()); // save state
+
                     clearBitmap();
                     //screen.recycle();
                 } else  { // if not image, only save overlay
                     UndoManager.addScreenState(Bitmap.createBitmap(mBitmap));
                 }
-                break;
-            case STATE_TEXT:
                 break;
         }
     }
@@ -264,6 +271,7 @@ public class EditableOverlay extends View {
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
+        Log.d(TAG, "Overlay Event");
         if(mState == STATE_IDLE) return false;// don't even do anything
 
         mScaleDetector.onTouchEvent(event);
@@ -274,6 +282,7 @@ public class EditableOverlay extends View {
 
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
+                Log.d(TAG, "Action Down");
             case MotionEvent.ACTION_MOVE:
             case MotionEvent.ACTION_UP:
                 return performTouchEvent(event, mState);
@@ -295,37 +304,6 @@ public class EditableOverlay extends View {
         mBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
         mCanvas = new Canvas(mBitmap);
     }
-
-    /*@Override
-    public Parcelable onSaveInstanceState()
-    {
-        Bundle bundle = new Bundle();
-        bundle.putParcelable(EXTRA_STATE, super.onSaveInstanceState());
-        bundle.putParcelableArrayList(EXTRA_EVENT_LIST, eventList);
-        bundle.putIntegerArrayList(EXTRA_STATE_LIST, stateList);
-
-        return bundle;
-    }*/
-
-    /*@Override
-    public void onRestoreInstanceState(Parcelable state)
-    {
-        if (state instanceof Bundle)
-        {
-            Bundle bundle = (Bundle) state;
-            super.onRestoreInstanceState(bundle.getParcelable(EXTRA_STATE));
-            eventList = bundle.getParcelableArrayList(EXTRA_EVENT_LIST);
-            stateList = bundle.getIntegerArrayList(EXTRA_STATE_LIST);
-            if (eventList == null) {
-                eventList = new ArrayList<MotionEvent>(100);
-            }
-            for(int i = 0; i < eventList.size(); i++)   {
-                performTouchEvent(eventList.get(i), stateList.get(i));
-            }
-            return;
-        }
-        super.onRestoreInstanceState(state);
-    }*/
 
     public static class RotationGestureDetector {
         private static final int INVALID_POINTER_ID = -1;

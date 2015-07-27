@@ -11,7 +11,6 @@ import android.util.Log;
 import android.util.TypedValue;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.RelativeLayout;
 
@@ -140,15 +139,16 @@ public class TextOverlay extends EditText {
                 setVisibility(View.INVISIBLE);
                 break;
             case TEXT_STATE_DEFAULT:
+                Log.d(TAG, "Making Text Visible");
                 setVisibility(View.VISIBLE);
                 setRotation(0f); // set horizontal
                 setTextSize(TypedValue.COMPLEX_UNIT_SP, 30); // reset text size
                 setTextColor(Color.WHITE); // use plain white for default
                 requestFocus();
                 // resume center position
-                setX(centerX);
+                //setX(centerX);
                 //setY(centerY);
-                Log.d(TAG, "Recentering: " + centerX + ", " + centerY);
+                //Log.d(TAG, "Recentering: " + centerX + ", " + centerY);
                 setBackgroundResource(R.drawable.text_bar);
                 break;
             case TEXT_STATE_VERTICAL:
@@ -227,9 +227,9 @@ public class TextOverlay extends EditText {
         decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_FULLSCREEN);
         // decide when to show color picker
         if(focused && (mState == TEXT_STATE_VERTICAL || mState == TEXT_STATE_FREE)) {
-            PictureEditorFragment.getColorPicker().setVisibility(View.VISIBLE);
+            PictureEditorLayout.getColorPicker().setVisibility(View.VISIBLE);
         } else  {
-            PictureEditorFragment.getColorPicker().setVisibility(View.GONE);
+            PictureEditorLayout.getColorPicker().setVisibility(View.GONE);
         }
     }
 

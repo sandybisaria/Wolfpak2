@@ -12,6 +12,9 @@ import android.view.MotionEvent;
  * They should not impact the functionality of the application.
  */
 public class WolfpakPager extends ViewPager{
+
+    private static boolean active = true;
+
     public WolfpakPager(Context context) {
         super(context);
     }
@@ -22,11 +25,21 @@ public class WolfpakPager extends ViewPager{
 
     @Override
     public boolean onInterceptTouchEvent(MotionEvent ev) {
-        try {
-            return super.onInterceptTouchEvent(ev);
-        } catch (Exception e) {
-            e.printStackTrace();
+        if(active) {
+            try {
+                return super.onInterceptTouchEvent(ev);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
         return false;
+    }
+
+    public static boolean isActive()   {
+        return active;
+    }
+
+    public static void setActive(boolean a)   {
+        active = a;
     }
 }

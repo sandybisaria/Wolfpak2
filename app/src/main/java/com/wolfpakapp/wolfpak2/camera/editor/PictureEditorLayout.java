@@ -1,9 +1,9 @@
 package com.wolfpakapp.wolfpak2.camera.editor;
 
-import android.app.Activity;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.PorterDuff;
@@ -13,14 +13,11 @@ import android.graphics.RectF;
 import android.graphics.SurfaceTexture;
 import android.hardware.camera2.CameraCharacteristics;
 import android.media.MediaPlayer;
-import android.os.Bundle;
 import android.renderscript.Allocation;
 import android.renderscript.Element;
 import android.renderscript.RenderScript;
 import android.renderscript.ScriptIntrinsicBlur;
-import android.support.v4.app.Fragment;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.Surface;
 import android.view.TextureView;
@@ -28,9 +25,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.Toast;
+import android.widget.VideoView;
 
 import com.wolfpakapp.wolfpak2.R;
 import com.wolfpakapp.wolfpak2.camera.editor.colorpicker.ColorPickerView;
+import com.wolfpakapp.wolfpak2.camera.preview.AutoFitTextureView;
 import com.wolfpakapp.wolfpak2.camera.preview.CameraFragment;
 
 import java.nio.ByteBuffer;
@@ -39,13 +38,17 @@ import java.nio.ByteBuffer;
  * A fragment that displays a captured image or loops video for the user to edit
  * @author Roland Fong
  */
-public class PictureEditorFragment extends Fragment
-        implements View.OnClickListener, View.OnTouchListener {
+public class PictureEditorLayout {
 
-    private static final String TAG = "PictureEditorFragment";
+    private static final String TAG = "PictureEditorLayout";
 
-    private static TextureView mTextureView;
+    /**
+     * The Fragment container
+     */
+    private CameraFragment mFragment;
     private static boolean isImage;
+
+    private boolean mIsTextureReady = false;
 
     private static String mVideoPath;
 
@@ -60,77 +63,76 @@ public class PictureEditorFragment extends Fragment
     private Bitmap mBlurredBitmap = null;
     private Canvas blurCanvas = null;
 
+    // buttons
+    private ImageButton mBackButton;
+    private ImageButton mDownloadButton;
+    private ImageButton mUploadButton;
+    private ImageButton mUndoButton;
+    private ImageButton mTextButton;
+    private ImageButton mBlurButton;
+    private ImageButton mDrawButton;
+
+    private VideoView mVideoView;
     private MediaPlayer mMediaPlayer;
 
     private EditableOverlay mOverlay;
     private static ColorPickerView mColorPicker;
-    private ImageButton mDrawButton;
+
+    private TextureView mTextureView;
 
     /**
      * Handles lifecycle events on {@link TextureView}
      */
     private final TextureView.SurfaceTextureListener mSurfaceTextureListener
             = new TextureView.SurfaceTextureListener()  {
-        @Override
-        public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
-            mTextureView.setTransform(new Matrix());
-            displayMedia();
-        }
+                @Override
+                public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
+                    Log.d(TAG, "Edit Texture Avail");
+                    mIsTextureReady = true;
+                    mTextureView.setTransform(new Matrix());
+                    displayMedia();
+                }
 
-        @Override
-        public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {}
+                @Override
+                public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {}
 
-        @Override
-        public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
-            return true;
-        }
+                @Override
+                public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
+                    return true;
+                }
 
-        @Override
-        public void onSurfaceTextureUpdated(SurfaceTexture surface) {}
-    };
+                @Override
+                public void onSurfaceTextureUpdated(SurfaceTexture surface) {}
+            };
 
-    /**
-     * Creates a new instance of fragment
-     * @return A new instance of fragment PictureEditorFragment.
-     */
-    public static PictureEditorFragment newInstance() {
-        PictureEditorFragment fragment = new PictureEditorFragment();
-        return fragment;
-    }
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-    }
-
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_picture_editor, container, false);
-    }
-
-    @Override
-    public void onViewCreated(View view, Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
+    public PictureEditorLayout(CameraFragment fragment, View view) {
         // set up texture view
+        mFragment = fragment;
         mTextureView = (TextureView) view.findViewById(R.id.edit_texture);
         mTextureView.setSurfaceTextureListener(mSurfaceTextureListener);
-        mTextureView.setOnTouchListener(this);
+
         // set up bitmap overlay (drawing and text)
         mOverlay = (EditableOverlay) view.findViewById(R.id.overlay);
-        mOverlay.init((TextOverlay) view.findViewById(R.id.text_overlay));
-        // set up buttons
-        view.findViewById(R.id.btn_back).setOnClickListener(this);
-        view.findViewById(R.id.btn_download).setOnClickListener(this);
-        view.findViewById(R.id.btn_upload).setOnClickListener(this);
-        view.findViewById(R.id.btn_undo).setOnClickListener(this);
-        view.findViewById(R.id.btn_text).setOnClickListener(this);
-        view.findViewById(R.id.btn_blur).setOnClickListener(this);
+        mOverlay.init(mTextureView, (TextOverlay) view.findViewById(R.id.text_overlay));
+        // init buttons
+        mBackButton = (ImageButton) view.findViewById(R.id.btn_back);
+        mDownloadButton = (ImageButton) view.findViewById(R.id.btn_download);
+        mUploadButton = (ImageButton) view.findViewById(R.id.btn_upload);
+        mUndoButton = (ImageButton) view.findViewById(R.id.btn_undo);
+        mTextButton = (ImageButton) view.findViewById(R.id.btn_text);
+        mBlurButton = (ImageButton) view.findViewById(R.id.btn_blur);
         mDrawButton = (ImageButton) view.findViewById(R.id.btn_draw);
-        mDrawButton.setOnClickListener(this);
+        // add button click listeners
+        mBackButton.setOnClickListener(fragment);
+        mDownloadButton.setOnClickListener(fragment);
+        mUploadButton.setOnClickListener(fragment);
+        mUndoButton.setOnClickListener(fragment);
+        mTextButton.setOnClickListener(fragment);
+        mBlurButton.setOnClickListener(fragment);
+        mDrawButton.setOnClickListener(fragment);
+
         // set up blurring scripts
-        mBlurScript = RenderScript.create(getActivity());
+        mBlurScript = RenderScript.create(fragment.getActivity());
         mIntrinsicScript = ScriptIntrinsicBlur.create(mBlurScript, Element.U8_4(mBlurScript));
         // set up color picker
         mColorPicker = (ColorPickerView)
@@ -139,10 +141,10 @@ public class PictureEditorFragment extends Fragment
 
             @Override
             public void onColorChanged(int newColor) {
-                if(mOverlay.getState() == EditableOverlay.STATE_DRAW) {
+                if (mOverlay.getState() == EditableOverlay.STATE_DRAW) {
                     mDrawButton.setBackgroundColor(newColor);
                     mOverlay.setColor(newColor);
-                } else if(mOverlay.getState() == EditableOverlay.STATE_TEXT)    {
+                } else if (mOverlay.getState() == EditableOverlay.STATE_TEXT) {
                     mOverlay.getTextOverlay().setTextColor(newColor);
                     mOverlay.getTextOverlay().setmTextColor(newColor);
                 }
@@ -150,18 +152,9 @@ public class PictureEditorFragment extends Fragment
         });
         mColorPicker.setVisibility(View.GONE);
 
-        mMediaSaver = new MediaSaver(getActivity(), mOverlay, mTextureView);
+        mMediaSaver = new MediaSaver(fragment.getActivity(), mOverlay, mTextureView);
 
-        if(CameraFragment.getImage() != null) {
-            isImage = true;
-        } else if(CameraFragment.getVideoPath() != null)    {
-            isImage = false;
-        } else {
-            Log.e(TAG, "Unknown File Type");
-            // This should never happen but if it does, just go back to camera
-            Toast.makeText(getActivity(), "Sorry, editor encountered an error", Toast.LENGTH_SHORT);
-            getFragmentManager().popBackStack();
-        }
+        mVideoView = (VideoView) view.findViewById(R.id.video_player);
     }
 
     /**
@@ -182,28 +175,36 @@ public class PictureEditorFragment extends Fragment
      * Displays media onto textureview
      */
     private void displayMedia() {
+        Log.d(TAG, "FILE TYPE: " + mFragment.getFileType());
+        if(mFragment.getFileType() == CameraFragment.FILE_TYPE_IMAGE) {
+            isImage = true;
+        } else if(mFragment.getFileType() == CameraFragment.FILE_TYPE_VIDEO)    {
+            isImage = false;
+        }
+
         if(isImage) {
-            if(CameraFragment.getImage() != null) {
+            if(mFragment.getImage() != null) {
                 Canvas canvas = mTextureView.lockCanvas();
                 // put image info from camera into buffer
-                ByteBuffer buffer = CameraFragment.getImage().getPlanes()[0].getBuffer();
+                ByteBuffer buffer = mFragment.getImage().getPlanes()[0].getBuffer();
                 byte[] bytes = new byte[buffer.remaining()];
                 buffer.get(bytes);
 
                 Bitmap src = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-                CameraFragment.getImage().close(); // don't forget to close the image buffer!
-                CameraFragment.setImage(null); // so we know to skip initing image upon resume
+                mFragment.getImage().close(); // don't forget to close the image buffer!
+                mFragment.setImage(null); // so we know to skip initing image upon resume
                 // resize horizontally oriented images
                 if (src.getWidth() > src.getHeight()) {
                     // transformation matrix that scales and rotates
                     Matrix matrix = new Matrix();
-                    if(CameraFragment.getFace() == CameraCharacteristics.LENS_FACING_FRONT)  {
+                    if(CameraLayout.getFace() == CameraCharacteristics.LENS_FACING_FRONT)  {
                         matrix.setScale(-1, 1);
                     }
                     matrix.postRotate(90);
                     matrix.postScale(((float) canvas.getWidth()) / src.getHeight(),
                             ((float) canvas.getHeight()) / src.getWidth());
-                    Bitmap resizedBitmap = Bitmap.createBitmap(src, 0, 0, src.getWidth(), src.getHeight(), matrix, true);
+                    Bitmap resizedBitmap = Bitmap.createBitmap(
+                            src, 0, 0, src.getWidth(), src.getHeight(), matrix, true);
                     canvas.drawBitmap(resizedBitmap, 0, 0, null);
                     UndoManager.addScreenState(resizedBitmap); // initial state
                 }
@@ -215,21 +216,34 @@ public class PictureEditorFragment extends Fragment
                 mTextureView.unlockCanvasAndPost(c);
             }
         } else  {
-            if(CameraFragment.getVideoPath() != null) {
-                mVideoPath = CameraFragment.getVideoPath();
-                UndoManager.addScreenState(Bitmap.createBitmap(mOverlay.getBitmap()));// initial state
-                CameraFragment.setVideoPath(null); // so we know to skip initing upon resume
+            if(mFragment.getVideoPath() != null) {
+                mVideoPath = mFragment.getVideoPath();
+                try {
+                    UndoManager.addScreenState(Bitmap.createBitmap(mOverlay.getBitmap()));// initial state
+                } catch(NullPointerException e) {
+                    e.printStackTrace(); // screw that... just let the user wonder why he can't undo to first move
+                }
+                mFragment.setVideoPath(null); // so we know to skip initing upon resume
             } else  { // device likely resumed, so restore previous session
                 mOverlay.setBitmap(UndoManager.getLastScreenState());
             }
-            Matrix matrix = new Matrix();
-            if(CameraFragment.getFace() == CameraCharacteristics.LENS_FACING_FRONT)  {
+            if(CameraLayout.getFace() == CameraCharacteristics.LENS_FACING_FRONT)   {
+                Matrix matrix = new Matrix();
                 matrix.setScale(1, -1, 0, mTextureView.getHeight() / 2);
+                mTextureView.setTransform(matrix);
             }
-            mTextureView.setTransform(matrix);
             // play the video
             try {
-                mMediaPlayer = new MediaPlayer();
+                Log.d(TAG, "Playing Video");
+                mVideoView.setVideoPath(mVideoPath);
+                mVideoView.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+                    @Override
+                    public void onPrepared(MediaPlayer mp) {
+                        mp.setLooping(true);
+                    }
+                });
+                mVideoView.start();
+                /*mMediaPlayer = new MediaPlayer();
                 mMediaPlayer.setDataSource(mVideoPath);
                 mMediaPlayer.setSurface(new Surface(mTextureView.getSurfaceTexture()));
                 mMediaPlayer.setLooping(true);
@@ -238,9 +252,10 @@ public class PictureEditorFragment extends Fragment
                 mMediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
                     @Override
                     public void onPrepared(MediaPlayer mediaPlayer) {
+                        Log.d(TAG, "Starting vid");
                         mediaPlayer.start();
                     }
-                });
+                });*/
 
             } catch (Exception e) {
                 e.printStackTrace();
@@ -256,20 +271,10 @@ public class PictureEditorFragment extends Fragment
     }
 
     /**
-     * @return the bitmap of ONLY the textureview
-     */
-    public static Bitmap getBitmap()   {
-        return mTextureView.getBitmap();
-    }
-
-    /**
      * Sets the bitmap on TextureView
      * @param bitmap
      */
-    public static void setBitmap(Bitmap bitmap)    {
-        Canvas c = mTextureView.lockCanvas();
-        c.drawBitmap(bitmap, 0, 0, null);
-        mTextureView.unlockCanvasAndPost(c);
+    public void setBitmap(Bitmap bitmap)    {
     }
 
     /**
@@ -366,20 +371,23 @@ public class PictureEditorFragment extends Fragment
         }
     }
 
-    @Override
+    public void onSurfaceTextureAvailable() {
+        mTextureView.setTransform(new Matrix());
+        displayMedia();
+    }
+
     public void onPause() {
-        super.onPause();
         if(!isImage) {
-            closeMediaPlayer();
+            mVideoView.stopPlayback();
+            mVideoView.suspend();
+            //closeMediaPlayer();
         }
     }
 
-    @Override
-    public void onClick(View v) {
-        switch(v.getId()) {
+    public void onClick(int id) {
+        switch(id) {
             case R.id.btn_back:
-                UndoManager.clearStates();
-                getFragmentManager().popBackStack();
+                startCamera();
                 break;
             case R.id.btn_download:
                 mMediaSaver.downloadMedia();
@@ -402,7 +410,7 @@ public class PictureEditorFragment extends Fragment
                         mOverlay.setBitmap(UndoManager.undoScreenState());
                     }
                 } else  {
-                    Toast.makeText(getActivity(), "Cannot Undo", Toast.LENGTH_SHORT);
+                    Toast.makeText(mFragment.getActivity(), "Cannot Undo", Toast.LENGTH_SHORT);
                 }
                 break;
             case R.id.btn_draw:
@@ -439,6 +447,7 @@ public class PictureEditorFragment extends Fragment
                 }
                 break;
             case R.id.btn_text:
+                Log.d(TAG, "Clicked on text");
                 if(mOverlay.getState() == EditableOverlay.STATE_DRAW)   {
                     mColorPicker.setVisibility(View.GONE);
                     mDrawButton.setBackgroundColor(0x00000000);
@@ -459,10 +468,10 @@ public class PictureEditorFragment extends Fragment
         }
     }
 
-    @Override
-    public boolean onTouch(View v, MotionEvent event) {
-        switch(v.getId())   {
-            case R.id.edit_texture:
+    public boolean onTouch(int id, MotionEvent event) {
+        switch(id)   {
+            case R.id.texture:
+                Log.d(TAG, "Action Down");
                 if(mOverlay.getState() == EditableOverlay.STATE_BLUR) {
                     blurImage(event.getAction(), event.getX(), event.getY());
                 }
@@ -471,7 +480,66 @@ public class PictureEditorFragment extends Fragment
         return true;
     }
 
-    // Required empty public constructor
-    public PictureEditorFragment() {}
+    public void startCamera()   {
+        onPause();
+        mFragment.switchLayouts();
+    }
 
+    /**
+     * Hides all the editor icons
+     */
+    public void hide()  {
+        mFragment.getActivity().runOnUiThread(new Runnable() {
+              @Override
+              public void run() {
+                  onPause();
+                  mOverlay.setVisibility(View.GONE);
+                  mOverlay.getTextOverlay().setVisibility(View.GONE);
+                  mColorPicker.setVisibility(View.GONE);
+                  mVideoView.setVisibility(View.GONE);
+                  mTextureView.setVisibility(View.GONE);
+                  mUndoButton.setVisibility(View.GONE);
+                  mTextButton.setVisibility(View.GONE);
+                  mBlurButton.setVisibility(View.GONE);
+                  mDrawButton.setBackgroundColor(Color.argb(255, 0, 0, 0));
+                  mDrawButton.setVisibility(View.GONE);
+                  mBackButton.setVisibility(View.GONE);
+                  mDownloadButton.setVisibility(View.GONE);
+                  mUploadButton.setVisibility(View.GONE);
+              }
+          });
+    }
+
+    /**
+     * Shows all the editor icons
+     */
+    public void show()  {
+        mFragment.getActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Log.d(TAG, "Showing Editor");
+                mOverlay.setVisibility(View.VISIBLE);
+                mUndoButton.setVisibility(View.VISIBLE);
+                mTextButton.setVisibility(View.VISIBLE);
+                mBlurButton.setVisibility(View.VISIBLE);
+                mDrawButton.setVisibility(View.VISIBLE);
+                mBackButton.setVisibility(View.VISIBLE);
+                mDownloadButton.setVisibility(View.VISIBLE);
+                mUploadButton.setVisibility(View.VISIBLE);
+
+                if(mFragment.getFileType() == CameraFragment.FILE_TYPE_IMAGE) {
+                    Log.d(TAG, "Showing TextureView");
+                    mTextureView.setVisibility(View.VISIBLE);
+                    if (mIsTextureReady) {
+                        onSurfaceTextureAvailable();
+                    }
+                }
+                else {
+                    Log.d(TAG, "Showing VidView");
+                    mVideoView.setVisibility(View.VISIBLE);
+                    displayMedia();
+                }
+            }
+        });
+    }
 }
