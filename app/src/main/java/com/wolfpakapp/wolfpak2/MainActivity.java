@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import com.wolfpakapp.wolfpak2.service.LocationProvider;
 import com.wolfpakapp.wolfpak2.service.ServerRestClient;
 import com.wolfpakapp.wolfpak2.service.UserIdManager;
 
@@ -27,13 +28,6 @@ public class MainActivity extends AppCompatActivity {
         // If any service is not available, then the ServiceManagers can prompt the user to enable
         // them (the exact behavior depends on the manager).
         DeviceLocator.setActivity(this); // TODO delete when location services is complete
-        WolfpakServiceProvider
-                .setOnAllInitializedCallback(new WolfpakServiceProvider.OnAllInitializedCallback() {
-                    @Override
-                    public void onAllInitialized() {
-                        setupUI();
-                    }
-                });
         setupManagers();
     }
 
@@ -45,6 +39,16 @@ public class MainActivity extends AppCompatActivity {
                 new UserIdManager(this));
         WolfpakServiceProvider.registerServiceManager(WolfpakServiceProvider.SERVERRESTCLIENT,
                 new ServerRestClient(this));
+        WolfpakServiceProvider.registerServiceManager(WolfpakServiceProvider.LOCATIONPROVIDER,
+                new LocationProvider(this));
+        WolfpakServiceProvider
+                .setOnAllInitializedCallback(new WolfpakServiceProvider.OnAllInitializedCallback() {
+                    @Override
+                    public void onAllInitialized() {
+                        setupUI();
+                    }
+                });
+        WolfpakServiceProvider.startWaiting();
     }
 
     /**

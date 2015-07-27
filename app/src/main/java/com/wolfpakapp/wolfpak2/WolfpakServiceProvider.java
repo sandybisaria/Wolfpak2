@@ -16,10 +16,12 @@ public class WolfpakServiceProvider {
 
     public static final String USERIDMANAGER = "Wolfpak.UserIdManager";
     public static final String SERVERRESTCLIENT = "Wolfpak.ServerRestClient";
+    public static final String LOCATIONPROVIDER = "Wolfpak.LocationProvider";
 
     private static ServiceManager nullManager = new NullManager();
 
     private static HashMap<String, ServiceManager> managerHashMap = new HashMap<>();
+    private static HashMap<String, Boolean> initializedHashMap = new HashMap<>();
 
     private static ArrayList<OnAllInitializedCallback> mCallbacks = new ArrayList<>();
     private static boolean isAllInitialized = false;
@@ -46,19 +48,7 @@ public class WolfpakServiceProvider {
      */
     public static void registerServiceManager(String tag, ServiceManager manager) {
         managerHashMap.put(tag, manager);
-        manager.setOnInitializedCallback(new ServiceManager.OnInitializedCallback() {
-            @Override
-            public void onInitialized() {
-                // Call the isAllInitialized method so that all ServiceManagers can be checked!
-                if (WolfpakServiceProvider.isAllInitialized()) {
-                    for (OnAllInitializedCallback callback : mCallbacks) {
-                        callback.onAllInitialized();
-                    }
-                    // Clear all current callbacks (because there's no need to hold onto them...)
-                    mCallbacks.clear();
-                }
-            }
-        });
+        initializedHashMap.put(tag, false);
     }
 
     /**
@@ -66,12 +56,38 @@ public class WolfpakServiceProvider {
      * @param callback The callback to be invoked.
      */
     public static void setOnAllInitializedCallback(OnAllInitializedCallback callback) {
-        if (!isAllInitialized()) {
+        if (!isAllInitialized) {
             // If not all currently registered ServiceManagers are initialized, add the callback.
             mCallbacks.add(callback);
         } else {
             // Invoke the callback immediately.
             callback.onAllInitialized();
+        }
+    }
+
+    /**
+     * Start waiting for the ServiceManagers to be initialized.
+     */
+    public static void startWaiting() {
+        Iterator iterator = managerHashMap.entrySet().iterator();
+        while (iterator.hasNext()) {
+            final Map.Entry pair = (Map.Entry) iterator.next();
+            ServiceManager manager = (ServiceManager) pair.getValue();
+            manager.setOnInitializedCallback(new ServiceManager.OnInitializedCallback() {
+                @Override
+                public void onInitialized() {
+                    initializedHashMap.put((String) pair.getKey(), true);
+
+                    // Call the isAllInitialized method so that all ServiceManagers can be checked!
+                    if (WolfpakServiceProvider.isAllInitialized()) {
+                        for (OnAllInitializedCallback callback : mCallbacks) {
+                            callback.onAllInitialized();
+                        }
+                        // Clear all current callbacks (because there's no need to hold onto them...)
+                        mCallbacks.clear();
+                    }
+                }
+            });
         }
     }
 
@@ -83,10 +99,10 @@ public class WolfpakServiceProvider {
         // Set isAllInitialized to true; innocent unless proven guilty...
         isAllInitialized = true;
 
-        Iterator iterator = managerHashMap.entrySet().iterator();
+        Iterator iterator = initializedHashMap.entrySet().iterator();
         while (iterator.hasNext()) {
             Map.Entry pair = (Map.Entry) iterator.next();
-            if (!((ServiceManager) pair.getValue()).isInitialized()) {
+            if (!(Boolean) pair.getValue()) {
                 isAllInitialized = false;
                 break;
             }
