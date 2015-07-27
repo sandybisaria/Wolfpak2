@@ -97,8 +97,9 @@ public class CameraLayout {
     private static int mFace; // which direction camera is facing
     private static boolean mFlash; // true if flash is on
     private static boolean mSound; // true if sound is on
-    private static boolean mIsRecordingVideo;
     private static boolean mLockingForEditor; // true if about to switch to picture editor
+    private static boolean mIsRecordingVideo;
+    private boolean mMediaRecorderLock; // true if media recorder only just started and should not be stopped
 
     private Button mCaptureButton;
     private ImageButton mSwitchButton;
@@ -267,7 +268,7 @@ public class CameraLayout {
                 stopRecordingVideo();
             }
         };
-
+        mMediaRecorderLock = true;
     }
 
     /**
@@ -313,7 +314,7 @@ public class CameraLayout {
                 if(event.getAction() == MotionEvent.ACTION_DOWN)   {
                     startTouchHandler();
                     Log.d(TAG, "Action Down");
-                    mTouchHandler.postDelayed(videoRunner, 500); // if hold lasts 0.5s, record video
+                    mTouchHandler.postDelayed(videoRunner, 600); // if hold lasts 0.6s, record video
                 }
                 else if(event.getAction() == MotionEvent.ACTION_UP) {
                     Log.d(TAG, "Action Up");
@@ -321,7 +322,6 @@ public class CameraLayout {
                     stopTouchHandler();
                     if(mIsRecordingVideo)   { // if indeed held for 1s, mIsRecordingVideo should be true
                         mCountDownTimer.cancel(); // needed if finished before 10s
-                        // handle stopping in different thread so UI is not interfered
                         stopRecordingVideo();
                     } else if (!mLockingForEditor)  {
                         // else mIsRecordingVideo is false, so take picture if not going to editor (from video)
@@ -628,6 +628,22 @@ public class CameraLayout {
      * Starts video Recording
      */
     private void startRecordingVideo() {
+        mMediaRecorderLock = true;
+        Log.d(TAG, "MediaRecorderLocked");
+        (new Thread((new Runnable()  {
+            @Override
+            public void run() {
+                try {
+                    Log.d(TAG, "Wait");
+                    Thread.sleep(1500); // wait 1.5s before allowing media player to stop
+                    Log.d(TAG, "Finished Waiting");
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                mMediaRecorderLock = false;
+                Log.d(TAG, "MediaRecorderUnLocked");
+            }
+        }))).start();
         mIsRecordingVideo = true;
         Log.d(TAG, "Setting file type to video");
         mFragment.setFileType(CameraFragment.FILE_TYPE_VIDEO);
@@ -647,6 +663,15 @@ public class CameraLayout {
     private void stopRecordingVideo() {
         mIsRecordingVideo = false;
         mLockingForEditor = true; // prevent action_up from accidentally taking picture
+        while(mMediaRecorderLock)  {
+            //Log.d(TAG, "Waiting unlock"); // wait for it to unlock (i.e. just wait 1s)
+        }
+        mMediaRecorder.stop();// Stop recording
+        mMediaRecorder.reset();
+        mProgressBar.setProgress(0);
+        count=0;
+        startEditor();
+        /*
         // set up async task to close camera in case of crash
         AsyncTask<Void, Void, Void> task = new AsyncTask<Void, Void, Void>() {
             @Override
@@ -665,7 +690,7 @@ public class CameraLayout {
             }
 
         };
-        task.execute((Void[]) null);
+        task.execute((Void[]) null);*/
     }
 
     /**

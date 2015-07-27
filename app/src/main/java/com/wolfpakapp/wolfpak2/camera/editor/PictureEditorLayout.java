@@ -501,7 +501,7 @@ public class PictureEditorLayout {
                   mUndoButton.setVisibility(View.GONE);
                   mTextButton.setVisibility(View.GONE);
                   mBlurButton.setVisibility(View.GONE);
-                  mDrawButton.setBackgroundColor(Color.argb(255, 0, 0, 0));
+                  mDrawButton.setBackgroundColor(Color.argb(0, 0, 0, 0));
                   mDrawButton.setVisibility(View.GONE);
                   mBackButton.setVisibility(View.GONE);
                   mDownloadButton.setVisibility(View.GONE);
