@@ -230,19 +230,15 @@ public class EditableOverlay extends View {
                 mPath.reset();
                 if(PictureEditorLayout.isImage()) {
                     // if image, combine overlay and textureview onto textureview surface
-                    //Bitmap screen = Bitmap.createBitmap(mTextureView.getBitmap());
-                    //Canvas c = new Canvas(screen);
-                    //c.drawBitmap(mBitmap, 0, 0, null);
-                    //canvas.drawBitmap(screen, 0, 0, null);
-
                     Canvas canvas = mTextureView.lockCanvas();
+                    Bitmap b = Bitmap.createBitmap(mTextureView.getBitmap());
+                    Canvas canvas2 = new Canvas(b); // for saving undo state
                     canvas.drawBitmap(mTextureView.getBitmap(), 0, 0, null);
                     canvas.drawBitmap(mBitmap, 0, 0, null);
+                    canvas2.drawBitmap(mBitmap, 0, 0, null);
                     mTextureView.unlockCanvasAndPost(canvas);
-                    UndoManager.addScreenState(mTextureView.getBitmap()); // save state
-
+                    UndoManager.addScreenState(b); // save state
                     clearBitmap();
-                    //screen.recycle();
                 } else  { // if not image, only save overlay
                     UndoManager.addScreenState(Bitmap.createBitmap(mBitmap));
                 }
