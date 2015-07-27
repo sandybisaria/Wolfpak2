@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
@@ -88,22 +89,34 @@ public class MainActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         switch (requestCode) {
-            case REQUEST_CHECK_SETTINGS:
+            case REQUEST_CHECK_SETTINGS: {
                 switch (resultCode) {
-                    case Activity.RESULT_OK:
-                        // All required changes were successfully made
+                    case Activity.RESULT_OK: {
+                        // All required changes were successfully made, so retrieve the location
                         ((LocationProvider) WolfpakServiceProvider
                                 .getServiceManager(WolfpakServiceProvider.LOCATIONPROVIDER))
                                 .retrieveLocation();
                         break;
-                    case Activity.RESULT_CANCELED:
+                    }
+                    case Activity.RESULT_CANCELED: {
                         // The user was asked to change settings, but chose not to
+                        //TODO Define app behaviors when required services aren't available!
+//                        returnHome();
                         break;
-                    default:
+                    }
+                    default: {
                         break;
+                    }
                 }
                 break;
+            }
         }
+    }
+
+    public void returnHome() {
+        Intent homeIntent = new Intent(Intent.ACTION_MAIN);
+        homeIntent.addCategory(Intent.CATEGORY_HOME);
+        startActivity(homeIntent);
     }
 
     /**
