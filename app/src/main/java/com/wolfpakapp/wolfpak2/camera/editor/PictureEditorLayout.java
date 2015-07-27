@@ -73,7 +73,6 @@ public class PictureEditorLayout {
     private ImageButton mDrawButton;
 
     private VideoView mVideoView;
-    private MediaPlayer mMediaPlayer;
 
     private EditableOverlay mOverlay;
     private static ColorPickerView mColorPicker;
@@ -243,19 +242,6 @@ public class PictureEditorLayout {
                     }
                 });
                 mVideoView.start();
-                /*mMediaPlayer = new MediaPlayer();
-                mMediaPlayer.setDataSource(mVideoPath);
-                mMediaPlayer.setSurface(new Surface(mTextureView.getSurfaceTexture()));
-                mMediaPlayer.setLooping(true);
-                mMediaPlayer.prepareAsync();
-                // Play video when the media source is ready for playback.
-                mMediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
-                    @Override
-                    public void onPrepared(MediaPlayer mediaPlayer) {
-                        Log.d(TAG, "Starting vid");
-                        mediaPlayer.start();
-                    }
-                });*/
 
             } catch (Exception e) {
                 e.printStackTrace();
@@ -360,17 +346,6 @@ public class PictureEditorLayout {
 
     }
 
-    /**
-     * Closes the media player
-     */
-    private void closeMediaPlayer() {
-        if (mMediaPlayer != null) {
-            mMediaPlayer.stop();
-            mMediaPlayer.release();
-            mMediaPlayer = null;
-        }
-    }
-
     public void onSurfaceTextureAvailable() {
         mTextureView.setTransform(new Matrix());
         displayMedia();
@@ -380,7 +355,6 @@ public class PictureEditorLayout {
         if(!isImage) {
             mVideoView.stopPlayback();
             mVideoView.suspend();
-            //closeMediaPlayer();
         }
     }
 
@@ -409,8 +383,6 @@ public class PictureEditorLayout {
                     } else {
                         mOverlay.setBitmap(UndoManager.undoScreenState());
                     }
-                } else  {
-                    Toast.makeText(mFragment.getActivity(), "Cannot Undo", Toast.LENGTH_SHORT);
                 }
                 break;
             case R.id.btn_draw:
