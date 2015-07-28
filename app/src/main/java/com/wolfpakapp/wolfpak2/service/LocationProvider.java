@@ -1,6 +1,7 @@
 package com.wolfpakapp.wolfpak2.service;
 
 import android.content.Context;
+import android.content.IntentSender;
 import android.location.Location;
 import android.os.Bundle;
 import android.util.Log;
@@ -14,8 +15,8 @@ import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.LocationSettingsResult;
-import com.google.android.gms.location.LocationSettingsStates;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
+import com.wolfpakapp.wolfpak2.MainActivity;
 
 /**
  * The LocationProvider gives access to the user's location information.
@@ -23,11 +24,14 @@ import com.google.android.gms.location.LocationSettingsStatusCodes;
 public class LocationProvider extends ServiceManager
         implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
 
+    private Context mContext;
     private GoogleApiClient mClient;
-
     private Location mLastLocation;
 
+    private boolean canObtainLocation = false;
+
     public LocationProvider(Context context) {
+        mContext = context;
         mClient = new GoogleApiClient.Builder(context)
                 .addApi(LocationServices.API)
                 .addConnectionCallbacks(this)
@@ -52,23 +56,22 @@ public class LocationProvider extends ServiceManager
                     case LocationSettingsStatusCodes.SUCCESS: {
                         // All location settings are satisfied. The client can initialize location
                         // requests here.
-                        mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mClient);
-                        Log.d("Location!", mLastLocation.toString());
-                        finishInitialize();
+                        canObtainLocation = true;
+                        retrieveLocation();
                         break;
                     }
                     case LocationSettingsStatusCodes.RESOLUTION_REQUIRED: {
                         // Location settings are not satisfied. But could be fixed by showing the user
                         // a dialog.
-//                        try {
-//                            // Show the dialog by calling startResolutionForResult(),
-//                            // and check the result in onActivityResult().
-//                            status.startResolutionForResult(
-//                                    OuterClass.this,
-//                                    REQUEST_CHECK_SETTINGS);
-//                        } catch (SendIntentException e) {
-//                            // Ignore the error.
-//                        }
+                        try {
+                            // Show the dialog by calling startResolutionForResult(),
+                            // and check the result in onActivityResult().
+                            canObtainLocation = true;
+                            status.startResolutionForResult((MainActivity) mContext,
+                                    MainActivity.REQUEST_CHECK_SETTINGS);
+                        } catch (IntentSender.SendIntentException e) {
+                            // Ignore the error.
+                        }
                         break;
                     }
                     case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE: {
@@ -80,6 +83,18 @@ public class LocationProvider extends ServiceManager
             }
         });
 
+    }
+
+    /**
+     * Signify that the LocationProvider can start getting the last user location. Note that this
+     * method will only work under the appropriate situation.
+     */
+    public void retrieveLocation() {
+        if (canObtainLocation) {
+            //TODO Set a timer to wait for the user location to be obtained (not always instant)
+            mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mClient);
+            finishInitialize();
+        }
     }
 
     @Override
@@ -95,4 +110,5 @@ public class LocationProvider extends ServiceManager
     public Location getLastLocation() {
         return mLastLocation;
     }
+
 }
