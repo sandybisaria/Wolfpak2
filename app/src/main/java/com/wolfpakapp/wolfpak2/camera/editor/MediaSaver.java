@@ -25,8 +25,7 @@ import com.github.hiteshsondhi88.libffmpeg.exceptions.FFmpegNotSupportedExceptio
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
-import com.wolfpakapp.wolfpak2.DeviceLocator;
-import com.wolfpakapp.wolfpak2.camera.preview.CameraFragment;
+import com.wolfpakapp.wolfpak2.service.LocationProvider;
 
 import org.apache.http.Header;
 
@@ -162,8 +161,8 @@ public class MediaSaver {
                 mMap.put("is_nsfw", dialog.isNsfw() ? "true" : "false");
                 mMap.put("is_image", PictureEditorLayout.isImage() ? "true" : "false");
                 mMap.put("user", "temp_test_id");
-                mMap.put("latitude", DeviceLocator.getLatitude());
-                mMap.put("longitude", DeviceLocator.getLongitude());
+                mMap.put("latitude", LocationProvider.getLastLocation().getLatitude());
+                mMap.put("longitude", LocationProvider.getLastLocation().getLongitude());
                 // show a progress dialog to user until sent
 
                 if (PictureEditorLayout.isImage()) {

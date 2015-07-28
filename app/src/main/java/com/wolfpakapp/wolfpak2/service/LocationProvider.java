@@ -17,7 +17,7 @@ public class LocationProvider extends ServiceManager
 
     private GoogleApiClient mClient;
 
-    private Location mLastLocation;
+    private static Location mLastLocation;
 
     public LocationProvider(Context context) {
         mClient = new GoogleApiClient.Builder(context)
@@ -47,7 +47,7 @@ public class LocationProvider extends ServiceManager
 
     }
 
-    public Location getLastLocation() {
+    public static Location getLastLocation() {
         return mLastLocation;
     }
 }

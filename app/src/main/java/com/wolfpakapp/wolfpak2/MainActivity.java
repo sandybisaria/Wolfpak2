@@ -27,7 +27,6 @@ public class MainActivity extends AppCompatActivity {
         // This will be useful when we have to check for features like Facebook, Internet, and GPS.
         // If any service is not available, then the ServiceManagers can prompt the user to enable
         // them (the exact behavior depends on the manager).
-        DeviceLocator.setActivity(this); // TODO delete when location services is complete
         setupManagers();
     }
 
