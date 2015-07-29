@@ -636,6 +636,9 @@ public class CameraLayout {
             mMediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
         int rotation = activity.getWindowManager().getDefaultDisplay().getRotation();
         int orientation = ORIENTATIONS.get(rotation);
+        if(mFace == CameraCharacteristics.LENS_FACING_FRONT)    {
+            orientation += 180; // hopefully this will cause video to save right side up
+        }
         mMediaRecorder.setOrientationHint(orientation);
         mMediaRecorder.prepare();
     }
