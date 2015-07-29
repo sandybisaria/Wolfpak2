@@ -19,17 +19,13 @@ import android.renderscript.RenderScript;
 import android.renderscript.ScriptIntrinsicBlur;
 import android.util.Log;
 import android.view.MotionEvent;
-import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.ImageButton;
-import android.widget.Toast;
 import android.widget.VideoView;
 
 import com.wolfpakapp.wolfpak2.R;
 import com.wolfpakapp.wolfpak2.camera.editor.colorpicker.ColorPickerView;
-import com.wolfpakapp.wolfpak2.camera.preview.AutoFitTextureView;
 import com.wolfpakapp.wolfpak2.camera.preview.CameraFragment;
 
 import java.nio.ByteBuffer;
@@ -109,7 +105,23 @@ public class PictureEditorLayout {
         mFragment = fragment;
         mTextureView = (TextureView) view.findViewById(R.id.edit_texture);
         mTextureView.setSurfaceTextureListener(mSurfaceTextureListener);
+        // set up color picker
+        mColorPicker = (ColorPickerView)
+                view.findViewById(R.id.color_picker_view);
+        mColorPicker.setOnColorChangedListener(new ColorPickerView.OnColorChangedListener() {
 
+            @Override
+            public void onColorChanged(int newColor) {
+                if (mOverlay.getState() == EditableOverlay.STATE_DRAW) {
+                    mDrawButton.setBackgroundColor(newColor);
+                    mOverlay.setColor(newColor);
+                } else if (mOverlay.getState() == EditableOverlay.STATE_TEXT) {
+                    mOverlay.getTextOverlay().setTextColor(newColor);
+                    mOverlay.getTextOverlay().setmTextColor(newColor);
+                }
+            }
+        });
+        mColorPicker.setVisibility(View.GONE);
         // set up bitmap overlay (drawing and text)
         mOverlay = (EditableOverlay) view.findViewById(R.id.overlay);
         mOverlay.init(mTextureView, (TextOverlay) view.findViewById(R.id.text_overlay));
@@ -133,23 +145,6 @@ public class PictureEditorLayout {
         // set up blurring scripts
         mBlurScript = RenderScript.create(fragment.getActivity());
         mIntrinsicScript = ScriptIntrinsicBlur.create(mBlurScript, Element.U8_4(mBlurScript));
-        // set up color picker
-        mColorPicker = (ColorPickerView)
-                view.findViewById(R.id.color_picker_view);
-        mColorPicker.setOnColorChangedListener(new ColorPickerView.OnColorChangedListener() {
-
-            @Override
-            public void onColorChanged(int newColor) {
-                if (mOverlay.getState() == EditableOverlay.STATE_DRAW) {
-                    mDrawButton.setBackgroundColor(newColor);
-                    mOverlay.setColor(newColor);
-                } else if (mOverlay.getState() == EditableOverlay.STATE_TEXT) {
-                    mOverlay.getTextOverlay().setTextColor(newColor);
-                    mOverlay.getTextOverlay().setmTextColor(newColor);
-                }
-            }
-        });
-        mColorPicker.setVisibility(View.GONE);
 
         mMediaSaver = new MediaSaver(fragment.getActivity(), mOverlay, mTextureView);
 
