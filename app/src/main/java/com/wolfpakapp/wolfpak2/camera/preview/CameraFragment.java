@@ -23,7 +23,7 @@ import com.wolfpakapp.wolfpak2.R;
 public class CameraFragment extends Fragment
         implements View.OnClickListener, View.OnTouchListener {
 
-    private static final String TAG = "CameraFragment";
+    private static final String TAG = "TAG-CameraFragment";
 
     /* CAMERA AND EDITING STATES */
     private static int mGlobalState;
@@ -147,7 +147,12 @@ public class CameraFragment extends Fragment
                 WolfpakPager.setActive(false);
                 Log.d(TAG, "Hiding camera, showing editor");
                 mCameraLayout.hide();
-                mCameraLayout.onPause();
+                (new Thread(new Runnable()  {
+                    @Override
+                    public void run() {
+                        mCameraLayout.onPause(); // takes time... run off UI thread
+                    }
+                })).start();
                 mPictureEditorLayout.show();
                 break;
             case GLOBAL_STATE_EDITOR:

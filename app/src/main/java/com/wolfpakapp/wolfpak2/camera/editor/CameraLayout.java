@@ -58,7 +58,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class CameraLayout {
 
-    private static final String TAG = "CameraLayout";
+    private static final String TAG = "TAG-CameraLayout";
 
     /* CAMERA STILL CAPTURE STATES*/
     private static final int STATE_PREVIEW = 0;
@@ -167,6 +167,7 @@ public class CameraLayout {
             = new ImageReader.OnImageAvailableListener() {
         @Override
         public void onImageAvailable(ImageReader reader) {
+            Log.d(TAG, "Image Avail and set");
             mFragment.setImage(reader.acquireNextImage());
         }
     };
@@ -181,6 +182,7 @@ public class CameraLayout {
             switch(mState)  {
                 case STATE_PREVIEW: break;
                 case STATE_WAITING_LOCK:
+                    Log.d(TAG, "In STATE_WAITING_LOCK");
                     int afState = result.get(CaptureResult.CONTROL_AF_STATE);
                     // front camera is always autofocused, so ignore focus if front camera
                     if (CaptureResult.CONTROL_AF_STATE_FOCUSED_LOCKED == afState ||
@@ -198,6 +200,7 @@ public class CameraLayout {
                     }
                     break;
                 case STATE_WAITING_PRECAPTURE:
+                    Log.d(TAG, "In STATE_WAITING_PRECAP");
                     Integer aeState = result.get(CaptureResult.CONTROL_AE_STATE);
                     if (aeState == null ||
                             aeState == CaptureResult.CONTROL_AE_STATE_PRECAPTURE ||
@@ -206,6 +209,7 @@ public class CameraLayout {
                     }
                     break;
                 case STATE_WAITING_NON_PRECAPTURE:
+                    Log.d(TAG, "In STATE_WAITING_NON_PRECAP");
                     Integer aeState1 = result.get(CaptureResult.CONTROL_AE_STATE);
                     if (aeState1 == null || aeState1 != CaptureResult.CONTROL_AE_STATE_PRECAPTURE) {
                         mState = STATE_PICTURE_TAKEN;
@@ -313,11 +317,11 @@ public class CameraLayout {
             case R.id.btn_takepicture:
                 if(event.getAction() == MotionEvent.ACTION_DOWN)   {
                     startTouchHandler();
-                    Log.d(TAG, "Action Down");
+                    Log.d(TAG, "Take Picture Action Down");
                     mTouchHandler.postDelayed(videoRunner, 600); // if hold lasts 0.6s, record video
                 }
                 else if(event.getAction() == MotionEvent.ACTION_UP) {
-                    Log.d(TAG, "Action Up");
+                    Log.d(TAG, "Take Picture Action Up");
                     mTouchHandler.removeCallbacks(videoRunner);
                     stopTouchHandler();
                     if(mIsRecordingVideo)   { // if indeed held for 0.6s, mIsRecordingVideo should be true
@@ -325,6 +329,7 @@ public class CameraLayout {
                         stopRecordingVideo();
                     } else if (!mLockingForEditor)  {
                         // else mIsRecordingVideo is false, so take picture if not going to editor (from video)
+                        Log.d(TAG, "About to call takePicture");
                         takePicture();
                     }
                 }
@@ -704,11 +709,13 @@ public class CameraLayout {
      */
     private void lockFocus() {
         try {
+            Log.d(TAG, "Previewrequestbuilder lock focus");
             // This is how to tell the camera to lock focus.
             mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER,
                     CameraMetadata.CONTROL_AF_TRIGGER_START);
             // Tell #mCaptureCallback to wait for the lock.
             mState = STATE_WAITING_LOCK;
+            Log.d(TAG, "STATE_WAITING_LOCK, Repeating Request set");
             mCaptureSession.setRepeatingRequest(mPreviewRequestBuilder.build(), mCaptureCallback,
                     mBackgroundHandler);
         } catch (CameraAccessException e) {
@@ -785,11 +792,13 @@ public class CameraLayout {
      * {@link #mCaptureCallback} from both {@link #lockFocus()}.
      */
     private void captureStillPicture() {
+        Log.d(TAG, "About to cap still pic");
         try {
             final Activity activity = mFragment.getActivity();
             if (null == activity || null == mCameraDevice) {
                 return;
             }
+            Log.d(TAG, "Building still pic request");
             // This is the CaptureRequest.Builder that we use to take a picture.
             final CaptureRequest.Builder captureBuilder =
                     mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE);
@@ -798,6 +807,7 @@ public class CameraLayout {
             // Use the same AE and AF modes as the preview.
             captureBuilder.set(CaptureRequest.CONTROL_AF_MODE,
                     CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
+
             if(mFlash) {
                 captureBuilder.set(CaptureRequest.CONTROL_AE_MODE,
                         CaptureRequest.CONTROL_AE_MODE_ON_ALWAYS_FLASH);
@@ -822,6 +832,7 @@ public class CameraLayout {
             };
 
             mCaptureSession.stopRepeating();
+            Log.d(TAG, "About to capture");
             mCaptureSession.capture(captureBuilder.build(), CaptureCallback, null);
         } catch (CameraAccessException e) {
             e.printStackTrace();
@@ -832,6 +843,7 @@ public class CameraLayout {
      * Unlock the focus. This method should be called when still image capture sequence is finished.
      */
     private void unlockFocus() {
+        Log.d(TAG, "unlocking focus");
         try {
             // Reset the autofucos trigger
             mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER,
@@ -868,6 +880,7 @@ public class CameraLayout {
 
     private void startEditor()   {
         //closeCamera();
+        Log.d(TAG, "Starting editor function");
         mFragment.getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {

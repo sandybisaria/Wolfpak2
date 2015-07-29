@@ -36,7 +36,7 @@ import java.nio.ByteBuffer;
  */
 public class PictureEditorLayout {
 
-    private static final String TAG = "PictureEditorLayout";
+    private static final String TAG = "TAG-PictureEditorLayout";
 
     /**
      * The Fragment container
@@ -183,10 +183,12 @@ public class PictureEditorLayout {
                 ByteBuffer buffer = mFragment.getImage().getPlanes()[0].getBuffer();
                 byte[] bytes = new byte[buffer.remaining()];
                 buffer.get(bytes);
-
+                Log.d(TAG, "Decoding Bitmap");
                 Bitmap src = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+                Log.d(TAG, "Finished decoding Bitmap");
                 mFragment.getImage().close(); // don't forget to close the image buffer!
                 mFragment.setImage(null); // so we know to skip initing image upon resume
+                Log.d(TAG, "Closed Image buffers");
                 // resize horizontally oriented images
                 if (src.getWidth() > src.getHeight()) {
                     // transformation matrix that scales and rotates
@@ -197,13 +199,16 @@ public class PictureEditorLayout {
                     matrix.postRotate(90);
                     matrix.postScale(((float) canvas.getWidth()) / src.getHeight(),
                             ((float) canvas.getHeight()) / src.getWidth());
+                    Log.d(TAG, "Creating resized bitmap");
                     Bitmap resizedBitmap = Bitmap.createBitmap(
                             src, 0, 0, src.getWidth(), src.getHeight(), matrix, true);
                     canvas.drawBitmap(resizedBitmap, 0, 0, null);
+                    Log.d(TAG, "Drew resized bitmap");
                     UndoManager.addScreenState(resizedBitmap); // initial state
                 }
 
                 mTextureView.unlockCanvasAndPost(canvas);
+                Log.d(TAG, "Pic posted should be visible");
             } else { // device likely resumed,  so restore previous session
                 Canvas c = mTextureView.lockCanvas();
                 c.drawBitmap(UndoManager.getLastScreenState(), 0, 0, null);
