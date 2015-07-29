@@ -5,9 +5,12 @@ import android.app.ProgressDialog;
 import android.content.ContentValues;
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Matrix;
 import android.hardware.camera2.CameraCharacteristics;
+import android.media.MediaFormat;
+import android.media.ThumbnailUtils;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
@@ -211,8 +214,13 @@ public class MediaSaver {
             for(String key : keys) {
                 if (key != "media") params.put(key, mMap.get(key));
             }
+
             // for some reason media has to be sent separately
             try {
+                // put thumbnail for video
+                if(!PictureEditorLayout.isImage())
+                    params.put("thumbnail", createVideoThumbnail(mFileToServer.getAbsolutePath()));
+
                 params.put("media", mFileToServer);
             } catch(FileNotFoundException e)    {
                 e.printStackTrace();
@@ -342,6 +350,19 @@ public class MediaSaver {
                 storageDir      /* directory */
         );
         return video;
+    }
+
+    private File createVideoThumbnail(String vPath) {
+        try {
+            File thumb = new File(mActivity.getExternalFilesDir(null), "vthumb.jpeg");
+            FileOutputStream out = new FileOutputStream(thumb);
+            (ThumbnailUtils.createVideoThumbnail(vPath, MediaStore.Video.Thumbnails.MINI_KIND))
+                    .compress(Bitmap.CompressFormat.JPEG, 100, out);
+            return thumb;
+        } catch(FileNotFoundException e)    {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     /**

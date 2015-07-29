@@ -537,7 +537,6 @@ public class CameraLayout {
 
                         @Override
                         public void onConfigured(CameraCaptureSession cameraCaptureSession) {
-                            Log.d(TAG, "OnCONFIGURED");
                             // The camera is already closed
                             if (null == mCameraDevice) {
                                 return;
@@ -645,16 +644,13 @@ public class CameraLayout {
      * Starts video Recording
      */
     private void startRecordingVideo() {
-        Log.d(TAG, "Entered start recording");
         mIsRecordingVideo = true;
-        Log.d(TAG, "Setting file type to video");
         mFragment.setFileType(CameraFragment.FILE_TYPE_VIDEO);
         mMediaRecorder.reset();
         createCameraPreviewSession(); // open preview outside thread!
         mCountDownTimer.start();
 
         startVideoStarterThread();
-        Log.d(TAG, "Started VideoStarterThread");
         mVideoStarterHandler.post(new Runnable() {
             @Override
             public void run() {
@@ -662,7 +658,6 @@ public class CameraLayout {
                     mMediaRecorder.start();// Start recording
                     Thread.sleep(1000); // make sure the video lasts at least a second
                     mVideoStarterThread.quitSafely();
-                    Log.d(TAG, "Completed starting video");
                 } catch (IllegalStateException e) {
                     e.printStackTrace();
                 } catch (InterruptedException e1) {
@@ -676,15 +671,13 @@ public class CameraLayout {
      * Stops video recording in separate thread to avoid disrupting UI in event of hang
      */
     private void stopRecordingVideo() {
-        Log.d(TAG, "Entered stop recording function");
         try {
             mVideoStarterThread.join(); // wait for video recording starting to finish!
         } catch(InterruptedException e) {
             e.printStackTrace();
         }
-        Log.d(TAG, "About to stop video starter thread");
         stopVideoStarterThread();
-        Log.d(TAG, "About to stop video recording");
+
         mIsRecordingVideo = false;
         mLockingForEditor = true; // prevent action_up from accidentally taking picture
 
