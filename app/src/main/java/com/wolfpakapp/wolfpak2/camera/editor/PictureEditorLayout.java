@@ -4,6 +4,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.ImageFormat;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.PorterDuff;
@@ -11,12 +12,16 @@ import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.SurfaceTexture;
+import android.graphics.YuvImage;
 import android.hardware.camera2.CameraCharacteristics;
+import android.media.Image;
 import android.media.MediaPlayer;
 import android.renderscript.Allocation;
 import android.renderscript.Element;
 import android.renderscript.RenderScript;
 import android.renderscript.ScriptIntrinsicBlur;
+import android.renderscript.ScriptIntrinsicYuvToRGB;
+import android.renderscript.Type;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.TextureView;
@@ -28,6 +33,7 @@ import com.wolfpakapp.wolfpak2.R;
 import com.wolfpakapp.wolfpak2.camera.editor.colorpicker.ColorPickerView;
 import com.wolfpakapp.wolfpak2.camera.preview.CameraFragment;
 
+import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
 
 /**
@@ -179,8 +185,13 @@ public class PictureEditorLayout {
         if(isImage) {
             if(mFragment.getImage() != null) {
                 Canvas canvas = mTextureView.lockCanvas();
+
+                Image img = mFragment.getImage();
+                int width = img.getWidth();
+                int height = img.getHeight();
+
                 // put image info from camera into buffer
-                ByteBuffer buffer = mFragment.getImage().getPlanes()[0].getBuffer();
+                ByteBuffer buffer = img.getPlanes()[0].getBuffer();
                 byte[] bytes = new byte[buffer.remaining()];
                 buffer.get(bytes);
                 Log.d(TAG, "Decoding Bitmap");
@@ -190,18 +201,18 @@ public class PictureEditorLayout {
                 mFragment.setImage(null); // so we know to skip initing image upon resume
                 Log.d(TAG, "Closed Image buffers");
                 // resize horizontally oriented images
-                if (src.getWidth() > src.getHeight()) {
+                if (width > height) {
                     // transformation matrix that scales and rotates
                     Matrix matrix = new Matrix();
                     if(CameraLayout.getFace() == CameraCharacteristics.LENS_FACING_FRONT)  {
                         matrix.setScale(-1, 1);
                     }
                     matrix.postRotate(90);
-                    matrix.postScale(((float) canvas.getWidth()) / src.getHeight(),
-                            ((float) canvas.getHeight()) / src.getWidth());
+                    /*matrix.postScale(((float) canvas.getWidth()) / src.getHeight(),
+                            ((float) canvas.getHeight()) / src.getWidth());*/
                     Log.d(TAG, "Creating resized bitmap");
                     Bitmap resizedBitmap = Bitmap.createBitmap(
-                            src, 0, 0, src.getWidth(), src.getHeight(), matrix, true);
+                            src, 0, 0, width, height, matrix, true);
                     canvas.drawBitmap(resizedBitmap, 0, 0, null);
                     Log.d(TAG, "Drew resized bitmap");
                     UndoManager.addScreenState(resizedBitmap); // initial state
@@ -469,7 +480,7 @@ public class PictureEditorLayout {
                   mOverlay.getTextOverlay().setVisibility(View.GONE);
                   mColorPicker.setVisibility(View.GONE);
                   mVideoView.setVisibility(View.GONE);
-                  mTextureView.setVisibility(View.GONE);
+                  mTextureView.setVisibility(View.INVISIBLE);
                   mUndoButton.setVisibility(View.GONE);
                   mTextButton.setVisibility(View.GONE);
                   mBlurButton.setVisibility(View.GONE);

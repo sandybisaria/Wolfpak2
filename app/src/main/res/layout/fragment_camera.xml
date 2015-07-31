@@ -37,7 +37,7 @@
         android:layout_height="match_parent"
         android:layout_alignParentStart="true"
         android:layout_alignParentTop="true"
-        android:visibility="gone" />
+        android:visibility="invisible" />
 
     <ImageButton
         android:id="@+id/btn_switch"
@@ -192,5 +192,12 @@
         android:layout_marginBottom="@dimen/activity_global_padding"
         android:layout_marginRight="@dimen/activity_global_padding"
         android:visibility="gone" />
+
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/screen_flash"
+        android:src="@drawable/screen_flash"
+        android:visibility="gone"/>
 
 </RelativeLayout>

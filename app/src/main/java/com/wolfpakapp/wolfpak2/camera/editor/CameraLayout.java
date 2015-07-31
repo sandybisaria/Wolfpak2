@@ -29,8 +29,11 @@ import android.util.SparseIntArray;
 import android.view.MotionEvent;
 import android.view.Surface;
 import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.Transformation;
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
 
 import com.wolfpakapp.wolfpak2.R;
@@ -105,6 +108,7 @@ public class CameraLayout {
     private ImageButton mFlashButton;
     private ImageButton mSoundButton;
     private ProgressBar mProgressBar;
+    private ImageView mScreenFlash;
 
     private CountDownTimer mCountDownTimer; // to limit video recording to 10s
     private int count;
@@ -192,7 +196,7 @@ public class CameraLayout {
                         if (aeState == null ||
                                 aeState == CaptureResult.CONTROL_AE_STATE_CONVERGED) {
                             mState = STATE_WAITING_NON_PRECAPTURE;
-                            mState = STATE_PICTURE_TAKEN;
+                            //mState = STATE_PICTURE_TAKEN;
                             captureStillPicture();
                         } else {
                             runPrecaptureSequence();
@@ -257,6 +261,9 @@ public class CameraLayout {
         mSoundButton = (ImageButton) view.findViewById(R.id.btn_sound); // sound button
         mSoundButton.setOnClickListener(fragment);
         mSound = true; // set to sound on default;
+
+        mScreenFlash = (ImageView) view.findViewById(R.id.screen_flash);
+
         // progress bar and timer for video recording
         mProgressBar = (ProgressBar) view.findViewById(R.id.progress_bar); // progress bar for video
         count = 0;
@@ -391,10 +398,10 @@ public class CameraLayout {
                 Size largest = Collections.max(
                         Arrays.asList(map.getOutputSizes(ImageFormat.JPEG)),
                         new CompareSizesByArea());
-                mImageReader = ImageReader.newInstance(largest.getWidth(), largest.getHeight(),
-                        ImageFormat.JPEG, /*maxImages*/2);
-                mImageReader.setOnImageAvailableListener(
-                        mOnImageAvailableListener, mBackgroundHandler);
+//                mImageReader = ImageReader.newInstance(largest.getWidth(), largest.getHeight(),
+//                        ImageFormat.JPEG, /*maxImages*/2);
+//                mImageReader.setOnImageAvailableListener(
+//                        mOnImageAvailableListener, mBackgroundHandler);
 
                 mPreviewSize = chooseOptimalSize(map.getOutputSizes(SurfaceTexture.class),
                         width, height, largest);
@@ -403,6 +410,11 @@ public class CameraLayout {
                 // if app ever will support landscape, aspect ratio needs to be changed here.
                 mTextureView.setAspectRatio(
                         mPreviewSize.getHeight(), mPreviewSize.getWidth());
+                // set image size to be size of screen
+                mImageReader = ImageReader.newInstance(mPreviewSize.getWidth(), mPreviewSize.getHeight(),
+                        ImageFormat.JPEG, /*maxImages*/2);
+                mImageReader.setOnImageAvailableListener(
+                        mOnImageAvailableListener, mBackgroundHandler);
 
                 mCameraId = cameraId;
                 return;
@@ -792,6 +804,7 @@ public class CameraLayout {
      * {@link #mCaptureCallback} from both {@link #lockFocus()}.
      */
     private void captureStillPicture() {
+
         Log.d(TAG, "About to cap still pic");
         try {
             final Activity activity = mFragment.getActivity();
@@ -826,6 +839,8 @@ public class CameraLayout {
                 @Override
                 public void onCaptureCompleted(CameraCaptureSession session, CaptureRequest request,
                                                TotalCaptureResult result) {
+                    if(mFlash)// if camera flashed, do screen flash here
+                        startFlashAnimation();
                     unlockFocus();
                     startEditor();
                 }
@@ -834,6 +849,9 @@ public class CameraLayout {
             mCaptureSession.stopRepeating();
             Log.d(TAG, "About to capture");
             mCaptureSession.capture(captureBuilder.build(), CaptureCallback, null);
+            // flash the screen like a camera, stall for time since capture tends to take a while
+            if(!mFlash) // if camera flash is used, don't screenflash now b/c it'll be too early!
+                startFlashAnimation();
         } catch (CameraAccessException e) {
             e.printStackTrace();
         }
@@ -864,6 +882,69 @@ public class CameraLayout {
         } catch (CameraAccessException e) {
             e.printStackTrace();
         }
+    }
+
+    /**
+     * Mimics a camera flash on the screen by fading in and out a white rectangular border,
+     * like the existing camera app.  Runs asynchronously
+     */
+    public void startFlashAnimation()   {
+        mFragment.getActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Handler flashHandler = new Handler();
+                // fade in
+                flashHandler.post(new Runnable()    {
+                    @Override
+                    public void run() {
+                        fade(0, 255, 300, true);
+                    }
+                });
+                // fade out
+                flashHandler.post(new Runnable()    {
+                    @Override
+                    public void run() {
+                        fade(255, 0, 600, false);
+                    }
+                });
+            }
+        });
+    }
+
+    private void fade(final int begin_alpha, final int end_alpha, int time,
+                              final boolean fadein) {
+
+        mScreenFlash.setImageAlpha(begin_alpha);
+
+        if (fadein) {
+            mScreenFlash.setVisibility(View.VISIBLE);
+        }
+
+        Animation a = new Animation() {
+            @Override
+            protected void applyTransformation(float interpolatedTime,
+                                               Transformation t) {
+                if (interpolatedTime == 1) {
+                    mScreenFlash.setImageAlpha(end_alpha);
+
+                    if (!fadein) {
+                        mScreenFlash.setVisibility(View.GONE);
+                    }
+                } else {
+                    int new_alpha = (int) (begin_alpha + (interpolatedTime * (end_alpha - begin_alpha)));
+                    mScreenFlash.setImageAlpha(new_alpha);
+                    mScreenFlash.requestLayout();
+                }
+            }
+
+            @Override
+            public boolean willChangeBounds() {
+                return true;
+            }
+        };
+
+        a.setDuration(time);
+        mScreenFlash.startAnimation(a);
     }
 
     public static int getFace()    {
