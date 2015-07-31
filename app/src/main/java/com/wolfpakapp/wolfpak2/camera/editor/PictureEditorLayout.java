@@ -153,6 +153,19 @@ public class PictureEditorLayout {
         mIntrinsicScript = ScriptIntrinsicBlur.create(mBlurScript, Element.U8_4(mBlurScript));
 
         mMediaSaver = new MediaSaver(fragment.getActivity(), mOverlay, mTextureView);
+        mMediaSaver.setMediaSaverListener(new MediaSaver.MediaSaverListener() {
+            @Override
+            public void onDownloadCompleted() {
+                // image/video save completed
+            }
+
+            @Override
+            public void onUploadCompleted() {
+                // restart preview process
+                UndoManager.clearStates();
+                startCamera();
+            }
+        });
 
         mVideoView = (VideoView) view.findViewById(R.id.video_player);
     }
@@ -194,12 +207,9 @@ public class PictureEditorLayout {
                 ByteBuffer buffer = img.getPlanes()[0].getBuffer();
                 byte[] bytes = new byte[buffer.remaining()];
                 buffer.get(bytes);
-                Log.d(TAG, "Decoding Bitmap");
                 Bitmap src = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-                Log.d(TAG, "Finished decoding Bitmap");
                 mFragment.getImage().close(); // don't forget to close the image buffer!
                 mFragment.setImage(null); // so we know to skip initing image upon resume
-                Log.d(TAG, "Closed Image buffers");
                 // resize horizontally oriented images
                 if (width > height) {
                     // transformation matrix that scales and rotates
@@ -210,11 +220,9 @@ public class PictureEditorLayout {
                     matrix.postRotate(90);
                     /*matrix.postScale(((float) canvas.getWidth()) / src.getHeight(),
                             ((float) canvas.getHeight()) / src.getWidth());*/
-                    Log.d(TAG, "Creating resized bitmap");
                     Bitmap resizedBitmap = Bitmap.createBitmap(
                             src, 0, 0, width, height, matrix, true);
                     canvas.drawBitmap(resizedBitmap, 0, 0, null);
-                    Log.d(TAG, "Drew resized bitmap");
                     UndoManager.addScreenState(resizedBitmap); // initial state
                 }
 
@@ -372,6 +380,7 @@ public class PictureEditorLayout {
     public void onClick(int id) {
         switch(id) {
             case R.id.btn_back:
+                UndoManager.clearStates();
                 startCamera();
                 break;
             case R.id.btn_download:
@@ -379,10 +388,6 @@ public class PictureEditorLayout {
                 break;
             case R.id.btn_upload:
                 mMediaSaver.uploadMedia();
-                // go back to camera after uploading
-                //TODO go back to camera
-                //UndoManager.clearStates();
-                //getFragmentManager().popBackStack();
                 break;
             case R.id.btn_undo:
                 if(UndoManager.getNumberOfStates() > 1) {
