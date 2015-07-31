@@ -120,10 +120,20 @@ public class TextOverlay extends EditText {
         return Bitmap.createBitmap(b, 0, 0, b.getWidth(), b.getHeight(), rotator, true);
     }
 
+    /**
+     * Set whether user can edit text overlay
+     * If true, user can change, transform, or recolor text
+     * @param edit
+     */
     public void setEditable(boolean edit)   {
         canEdit = edit;
+        if(!edit)   // also hide colorpicker
+            PictureEditorLayout.getColorPicker().setVisibility(View.GONE);
     }
 
+    /**
+     * @return canEdit
+     */
     public boolean isEditable() {
         return canEdit;
     }
@@ -136,22 +146,27 @@ public class TextOverlay extends EditText {
     // TODO various restoration features have been commented out due to serious bugs
         switch(state)   {
             case TEXT_STATE_HIDDEN:
+                PictureEditorLayout.getColorPicker().setVisibility(View.GONE); // hide color picker
                 setVisibility(View.INVISIBLE);
                 break;
             case TEXT_STATE_DEFAULT:
-                Log.d(TAG, "Making Text Visible");
                 setVisibility(View.VISIBLE);
+                setCursorVisible(true);
+                setFocusableInTouchMode(true); // can edit in default mode
                 setRotation(0f); // set horizontal
                 setTextSize(TypedValue.COMPLEX_UNIT_SP, 30); // reset text size
                 setTextColor(Color.WHITE); // use plain white for default
                 requestFocus();
                 // resume center position
-                //setX(centerX);
+                setX(0);
                 //setY(centerY);
                 //Log.d(TAG, "Recentering: " + centerX + ", " + centerY);
                 setBackgroundResource(R.drawable.text_bar);
                 break;
             case TEXT_STATE_VERTICAL:
+                setCursorVisible(false);
+                setFocusableInTouchMode(false); // cannot edit when transforming, moving, etc.
+                PictureEditorLayout.getColorPicker().setVisibility(View.VISIBLE); // also show color picker
                 setRotation(mRotation); // change back to whatever rotation it had
                 //setTextSize(TypedValue.COMPLEX_UNIT_PX, getTextSize() * mScale); // restore scale
                 setTextColor(mTextColor); // restore color
@@ -225,12 +240,6 @@ public class TextOverlay extends EditText {
         // status bar always seems to come back up, so hide it again
         View decorView = ((Activity) context).getWindow().getDecorView();
         decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_FULLSCREEN);
-        // decide when to show color picker
-        if(focused && (mState == TEXT_STATE_VERTICAL || mState == TEXT_STATE_FREE)) {
-            PictureEditorLayout.getColorPicker().setVisibility(View.VISIBLE);
-        } else  {
-            PictureEditorLayout.getColorPicker().setVisibility(View.GONE);
-        }
     }
 
     @Override

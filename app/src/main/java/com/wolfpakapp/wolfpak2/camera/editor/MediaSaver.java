@@ -5,9 +5,12 @@ import android.app.ProgressDialog;
 import android.content.ContentValues;
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Matrix;
 import android.hardware.camera2.CameraCharacteristics;
+import android.media.MediaFormat;
+import android.media.ThumbnailUtils;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
@@ -43,7 +46,7 @@ import java.util.HashMap;
  */
 public class MediaSaver {
 
-    private static final String TAG = "MediaSaver";
+    private static final String TAG = "TAG-MediaSaver";
     private static final String SERVER_URL = "http://ec2-52-4-176-1.compute-1.amazonaws.com/posts/";
 
     private Activity mActivity;
@@ -78,6 +81,12 @@ public class MediaSaver {
      * TODO get rid of this disastrous implementation...
      */
     private boolean serverSending;
+
+    public interface MediaSaverListener {
+        public void onDownloadCompleted();
+        public void onUploadCompleted();
+    };
+    private MediaSaverListener mMediaSaverListener;
 
     /**
      * Constructor for MediaSaver
@@ -114,6 +123,14 @@ public class MediaSaver {
             // Handle if FFmpeg is not supported by device
         }
         serverSending = false;
+    }
+
+    /**
+     * Sets the MediaSaverListener
+     * @param mediaSaverListener
+     */
+    public void setMediaSaverListener(MediaSaverListener mediaSaverListener)  {
+        mMediaSaverListener = mediaSaverListener;
     }
 
     /**
@@ -211,8 +228,13 @@ public class MediaSaver {
             for(String key : keys) {
                 if (key != "media") params.put(key, mMap.get(key));
             }
+
             // for some reason media has to be sent separately
             try {
+                // put thumbnail for video
+                if(!PictureEditorLayout.isImage())
+                    params.put("thumbnail", createVideoThumbnail(mFileToServer.getAbsolutePath()));
+
                 params.put("media", mFileToServer);
             } catch(FileNotFoundException e)    {
                 e.printStackTrace();
@@ -229,12 +251,14 @@ public class MediaSaver {
                 public void onSuccess(int statusCode, Header[] headers, byte[] response) {
                     Log.d(TAG, "Upload Success " + statusCode);
                     mProgressDialog.dismiss();
+                    mMediaSaverListener.onUploadCompleted();
                 }
 
                 @Override
                 public void onFailure(int statusCode, Header[] headers, byte[] errorResponse, Throwable e) {
                     Log.e(TAG, "Upload Failure " + statusCode);
                     mProgressDialog.dismiss();
+                    mMediaSaverListener.onUploadCompleted();
                 }
 
                 @Override
@@ -286,6 +310,7 @@ public class MediaSaver {
             protected void onPostExecute(Void result) {
                 if ( mProgressDialog!=null && PictureEditorLayout.isImage()) {
                     mProgressDialog.dismiss(); // dismiss dialog if image
+                    mMediaSaverListener.onDownloadCompleted();
                 } // let video ffmpeg dismiss dialog for video saving
             }
 
@@ -344,6 +369,19 @@ public class MediaSaver {
         return video;
     }
 
+    private File createVideoThumbnail(String vPath) {
+        try {
+            File thumb = new File(mActivity.getExternalFilesDir(null), "vthumb.jpeg");
+            FileOutputStream out = new FileOutputStream(thumb);
+            (ThumbnailUtils.createVideoThumbnail(vPath, MediaStore.Video.Thumbnails.MINI_KIND))
+                    .compress(Bitmap.CompressFormat.JPEG, 100, out);
+            return thumb;
+        } catch(FileNotFoundException e)    {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     /**
      * Writes video data into file system
      */
@@ -380,8 +418,8 @@ public class MediaSaver {
             } else {// back facing camera
                 cmd = "-y -i " + PictureEditorLayout.getVideoPath() +
                         " -i " + tempImgFile.getCanonicalPath() +
-                        " -strict -2 -qp 31 -filter_complex [0:v][1:v]overlay=0:0,transpose=1[out]" +
-                        " -map [out] -map 0:a -codec:v mpeg4 -codec:a copy " +
+                        " -strict -2 -qp 28 -filter_complex [0:v][1:v]overlay=0:0,transpose=1[out]" +
+                        " -map [out] -map 0:a -codec:v libx264 -preset ultrafast -codec:a copy  -b 100k " +
                         tempfile.getCanonicalPath();
             }
             Log.d(TAG, "COMMAND: " + cmd);
@@ -411,6 +449,7 @@ public class MediaSaver {
                     public void onFinish() {
                         if(!serverSending) {// ICK this is disgusting but idk i need to get this done...
                             mProgressDialog.dismiss();
+                            mMediaSaverListener.onDownloadCompleted();
                         }
                         else {
                             mFileToServer = new File(mFinalVideoPath);
@@ -425,49 +464,5 @@ public class MediaSaver {
         } catch(Exception e)    {
             e.printStackTrace();
         }
-    }
-
-    /**
-     * Vertically flips upside down video taken from front facing camera
-     * @param path
-     * @return the path of flipped video
-     */
-    public String flipVideo(String path)    {
-        //TODO write command to flip video vertically
-        // see http://superuser.com/questions/578321/how-to-flip-a-video-180%C2%B0-vertical-upside-down-with-ffmpeg
-        String cmd = "-y -i " + path +
-            " -strict -2 -qp 31 -filter_complex [0:v][1:v]overlay=0:0,transpose=1[out]" +
-            " -map [out] -map 0:a -codec:v mpeg4 -codec:a copy " +
-            path;
-        Log.d(TAG, "COMMAND: " + cmd);
-        try {
-            mFfmpeg.execute(cmd, new ExecuteBinaryResponseHandler() {
-
-                @Override
-                public void onStart() {}
-
-                @Override
-                public void onProgress(String message) {
-                    Log.d(TAG, "Progress: " + message);
-                }
-
-                @Override
-                public void onFailure(String message) {
-                    Log.d(TAG, "Failure: " + message);
-                }
-
-                @Override
-                public void onSuccess(String message) {
-                    Log.d(TAG, "Success: " + message);
-                }
-
-                @Override
-                public void onFinish() {
-                }
-            });
-        } catch (FFmpegCommandAlreadyRunningException e) {
-            // Handle if FFmpeg is already running
-        }
-        return null;
     }
 }

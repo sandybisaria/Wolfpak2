@@ -4,6 +4,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.ImageFormat;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.PorterDuff;
@@ -11,27 +12,28 @@ import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.SurfaceTexture;
+import android.graphics.YuvImage;
 import android.hardware.camera2.CameraCharacteristics;
+import android.media.Image;
 import android.media.MediaPlayer;
 import android.renderscript.Allocation;
 import android.renderscript.Element;
 import android.renderscript.RenderScript;
 import android.renderscript.ScriptIntrinsicBlur;
+import android.renderscript.ScriptIntrinsicYuvToRGB;
+import android.renderscript.Type;
 import android.util.Log;
 import android.view.MotionEvent;
-import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.ImageButton;
-import android.widget.Toast;
 import android.widget.VideoView;
 
 import com.wolfpakapp.wolfpak2.R;
 import com.wolfpakapp.wolfpak2.camera.editor.colorpicker.ColorPickerView;
-import com.wolfpakapp.wolfpak2.camera.preview.AutoFitTextureView;
 import com.wolfpakapp.wolfpak2.camera.preview.CameraFragment;
 
+import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
 
 /**
@@ -40,7 +42,7 @@ import java.nio.ByteBuffer;
  */
 public class PictureEditorLayout {
 
-    private static final String TAG = "PictureEditorLayout";
+    private static final String TAG = "TAG-PictureEditorLayout";
 
     /**
      * The Fragment container
@@ -109,7 +111,23 @@ public class PictureEditorLayout {
         mFragment = fragment;
         mTextureView = (TextureView) view.findViewById(R.id.edit_texture);
         mTextureView.setSurfaceTextureListener(mSurfaceTextureListener);
+        // set up color picker
+        mColorPicker = (ColorPickerView)
+                view.findViewById(R.id.color_picker_view);
+        mColorPicker.setOnColorChangedListener(new ColorPickerView.OnColorChangedListener() {
 
+            @Override
+            public void onColorChanged(int newColor) {
+                if (mOverlay.getState() == EditableOverlay.STATE_DRAW) {
+                    mDrawButton.setBackgroundColor(newColor);
+                    mOverlay.setColor(newColor);
+                } else if (mOverlay.getState() == EditableOverlay.STATE_TEXT) {
+                    mOverlay.getTextOverlay().setTextColor(newColor);
+                    mOverlay.getTextOverlay().setmTextColor(newColor);
+                }
+            }
+        });
+        mColorPicker.setVisibility(View.GONE);
         // set up bitmap overlay (drawing and text)
         mOverlay = (EditableOverlay) view.findViewById(R.id.overlay);
         mOverlay.init(mTextureView, (TextOverlay) view.findViewById(R.id.text_overlay));
@@ -133,25 +151,21 @@ public class PictureEditorLayout {
         // set up blurring scripts
         mBlurScript = RenderScript.create(fragment.getActivity());
         mIntrinsicScript = ScriptIntrinsicBlur.create(mBlurScript, Element.U8_4(mBlurScript));
-        // set up color picker
-        mColorPicker = (ColorPickerView)
-                view.findViewById(R.id.color_picker_view);
-        mColorPicker.setOnColorChangedListener(new ColorPickerView.OnColorChangedListener() {
-
-            @Override
-            public void onColorChanged(int newColor) {
-                if (mOverlay.getState() == EditableOverlay.STATE_DRAW) {
-                    mDrawButton.setBackgroundColor(newColor);
-                    mOverlay.setColor(newColor);
-                } else if (mOverlay.getState() == EditableOverlay.STATE_TEXT) {
-                    mOverlay.getTextOverlay().setTextColor(newColor);
-                    mOverlay.getTextOverlay().setmTextColor(newColor);
-                }
-            }
-        });
-        mColorPicker.setVisibility(View.GONE);
 
         mMediaSaver = new MediaSaver(fragment.getActivity(), mOverlay, mTextureView);
+        mMediaSaver.setMediaSaverListener(new MediaSaver.MediaSaverListener() {
+            @Override
+            public void onDownloadCompleted() {
+                // image/video save completed
+            }
+
+            @Override
+            public void onUploadCompleted() {
+                // restart preview process
+                UndoManager.clearStates();
+                startCamera();
+            }
+        });
 
         mVideoView = (VideoView) view.findViewById(R.id.video_player);
     }
@@ -184,31 +198,36 @@ public class PictureEditorLayout {
         if(isImage) {
             if(mFragment.getImage() != null) {
                 Canvas canvas = mTextureView.lockCanvas();
+
+                Image img = mFragment.getImage();
+                int width = img.getWidth();
+                int height = img.getHeight();
+
                 // put image info from camera into buffer
-                ByteBuffer buffer = mFragment.getImage().getPlanes()[0].getBuffer();
+                ByteBuffer buffer = img.getPlanes()[0].getBuffer();
                 byte[] bytes = new byte[buffer.remaining()];
                 buffer.get(bytes);
-
                 Bitmap src = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
                 mFragment.getImage().close(); // don't forget to close the image buffer!
                 mFragment.setImage(null); // so we know to skip initing image upon resume
                 // resize horizontally oriented images
-                if (src.getWidth() > src.getHeight()) {
+                if (width > height) {
                     // transformation matrix that scales and rotates
                     Matrix matrix = new Matrix();
                     if(CameraLayout.getFace() == CameraCharacteristics.LENS_FACING_FRONT)  {
                         matrix.setScale(-1, 1);
                     }
                     matrix.postRotate(90);
-                    matrix.postScale(((float) canvas.getWidth()) / src.getHeight(),
-                            ((float) canvas.getHeight()) / src.getWidth());
+                    /*matrix.postScale(((float) canvas.getWidth()) / src.getHeight(),
+                            ((float) canvas.getHeight()) / src.getWidth());*/
                     Bitmap resizedBitmap = Bitmap.createBitmap(
-                            src, 0, 0, src.getWidth(), src.getHeight(), matrix, true);
+                            src, 0, 0, width, height, matrix, true);
                     canvas.drawBitmap(resizedBitmap, 0, 0, null);
                     UndoManager.addScreenState(resizedBitmap); // initial state
                 }
 
                 mTextureView.unlockCanvasAndPost(canvas);
+                Log.d(TAG, "Pic posted should be visible");
             } else { // device likely resumed,  so restore previous session
                 Canvas c = mTextureView.lockCanvas();
                 c.drawBitmap(UndoManager.getLastScreenState(), 0, 0, null);
@@ -361,6 +380,7 @@ public class PictureEditorLayout {
     public void onClick(int id) {
         switch(id) {
             case R.id.btn_back:
+                UndoManager.clearStates();
                 startCamera();
                 break;
             case R.id.btn_download:
@@ -368,10 +388,6 @@ public class PictureEditorLayout {
                 break;
             case R.id.btn_upload:
                 mMediaSaver.uploadMedia();
-                // go back to camera after uploading
-                //TODO go back to camera
-                //UndoManager.clearStates();
-                //getFragmentManager().popBackStack();
                 break;
             case R.id.btn_undo:
                 if(UndoManager.getNumberOfStates() > 1) {
@@ -469,7 +485,7 @@ public class PictureEditorLayout {
                   mOverlay.getTextOverlay().setVisibility(View.GONE);
                   mColorPicker.setVisibility(View.GONE);
                   mVideoView.setVisibility(View.GONE);
-                  mTextureView.setVisibility(View.GONE);
+                  mTextureView.setVisibility(View.INVISIBLE);
                   mUndoButton.setVisibility(View.GONE);
                   mTextButton.setVisibility(View.GONE);
                   mBlurButton.setVisibility(View.GONE);

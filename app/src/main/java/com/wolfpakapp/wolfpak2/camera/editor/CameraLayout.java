@@ -29,8 +29,11 @@ import android.util.SparseIntArray;
 import android.view.MotionEvent;
 import android.view.Surface;
 import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.Transformation;
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
 
 import com.wolfpakapp.wolfpak2.R;
@@ -58,7 +61,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class CameraLayout {
 
-    private static final String TAG = "CameraLayout";
+    private static final String TAG = "TAG-CameraLayout";
 
     /* CAMERA STILL CAPTURE STATES*/
     private static final int STATE_PREVIEW = 0;
@@ -99,13 +102,13 @@ public class CameraLayout {
     private static boolean mSound; // true if sound is on
     private static boolean mLockingForEditor; // true if about to switch to picture editor
     private static boolean mIsRecordingVideo;
-    private boolean mMediaRecorderLock; // true if media recorder only just started and should not be stopped
 
     private Button mCaptureButton;
     private ImageButton mSwitchButton;
     private ImageButton mFlashButton;
     private ImageButton mSoundButton;
     private ProgressBar mProgressBar;
+    private ImageView mScreenFlash;
 
     private CountDownTimer mCountDownTimer; // to limit video recording to 10s
     private int count;
@@ -148,6 +151,8 @@ public class CameraLayout {
 
     /*THREAD & IMAGE HANDLING*/
     private Handler mTouchHandler;
+    private HandlerThread mVideoStarterThread;
+    private Handler mVideoStarterHandler;
     private HandlerThread mBackgroundThread;
     private Handler mBackgroundHandler;
     private ImageReader mImageReader;
@@ -166,6 +171,7 @@ public class CameraLayout {
             = new ImageReader.OnImageAvailableListener() {
         @Override
         public void onImageAvailable(ImageReader reader) {
+            Log.d(TAG, "Image Avail and set");
             mFragment.setImage(reader.acquireNextImage());
         }
     };
@@ -189,7 +195,7 @@ public class CameraLayout {
                         if (aeState == null ||
                                 aeState == CaptureResult.CONTROL_AE_STATE_CONVERGED) {
                             mState = STATE_WAITING_NON_PRECAPTURE;
-                            mState = STATE_PICTURE_TAKEN;
+                            //mState = STATE_PICTURE_TAKEN;
                             captureStillPicture();
                         } else {
                             runPrecaptureSequence();
@@ -252,6 +258,9 @@ public class CameraLayout {
         mSoundButton = (ImageButton) view.findViewById(R.id.btn_sound); // sound button
         mSoundButton.setOnClickListener(fragment);
         mSound = true; // set to sound on default;
+
+        mScreenFlash = (ImageView) view.findViewById(R.id.screen_flash);
+
         // progress bar and timer for video recording
         mProgressBar = (ProgressBar) view.findViewById(R.id.progress_bar); // progress bar for video
         count = 0;
@@ -268,7 +277,6 @@ public class CameraLayout {
                 stopRecordingVideo();
             }
         };
-        mMediaRecorderLock = true;
     }
 
     /**
@@ -313,14 +321,13 @@ public class CameraLayout {
             case R.id.btn_takepicture:
                 if(event.getAction() == MotionEvent.ACTION_DOWN)   {
                     startTouchHandler();
-                    Log.d(TAG, "Action Down");
                     mTouchHandler.postDelayed(videoRunner, 600); // if hold lasts 0.6s, record video
                 }
                 else if(event.getAction() == MotionEvent.ACTION_UP) {
-                    Log.d(TAG, "Action Up");
+                    Log.d(TAG, "Take Picture Action Up");
                     mTouchHandler.removeCallbacks(videoRunner);
                     stopTouchHandler();
-                    if(mIsRecordingVideo)   { // if indeed held for 1s, mIsRecordingVideo should be true
+                    if(mIsRecordingVideo)   { // if indeed held for 0.6s, mIsRecordingVideo should be true
                         mCountDownTimer.cancel(); // needed if finished before 10s
                         stopRecordingVideo();
                     } else if (!mLockingForEditor)  {
@@ -386,10 +393,10 @@ public class CameraLayout {
                 Size largest = Collections.max(
                         Arrays.asList(map.getOutputSizes(ImageFormat.JPEG)),
                         new CompareSizesByArea());
-                mImageReader = ImageReader.newInstance(largest.getWidth(), largest.getHeight(),
-                        ImageFormat.JPEG, /*maxImages*/2);
-                mImageReader.setOnImageAvailableListener(
-                        mOnImageAvailableListener, mBackgroundHandler);
+//                mImageReader = ImageReader.newInstance(largest.getWidth(), largest.getHeight(),
+//                        ImageFormat.JPEG, /*maxImages*/2);
+//                mImageReader.setOnImageAvailableListener(
+//                        mOnImageAvailableListener, mBackgroundHandler);
 
                 mPreviewSize = chooseOptimalSize(map.getOutputSizes(SurfaceTexture.class),
                         width, height, largest);
@@ -398,6 +405,11 @@ public class CameraLayout {
                 // if app ever will support landscape, aspect ratio needs to be changed here.
                 mTextureView.setAspectRatio(
                         mPreviewSize.getHeight(), mPreviewSize.getWidth());
+                // set image size to be size of screen
+                mImageReader = ImageReader.newInstance(mPreviewSize.getWidth(), mPreviewSize.getHeight(),
+                        ImageFormat.JPEG, /*maxImages*/2);
+                mImageReader.setOnImageAvailableListener(
+                        mOnImageAvailableListener, mBackgroundHandler);
 
                 mCameraId = cameraId;
                 return;
@@ -483,6 +495,23 @@ public class CameraLayout {
         }
     }
 
+    private void startVideoStarterThread()  {
+        mVideoStarterThread = new HandlerThread("VideoStarter");
+        mVideoStarterThread.start();
+        mVideoStarterHandler = new Handler(mVideoStarterThread.getLooper());
+    }
+
+    private void stopVideoStarterThread()   {
+        try {
+            mVideoStarterThread.quitSafely();
+            mVideoStarterThread.join();
+            mVideoStarterThread = null;
+            mVideoStarterHandler = null;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     /**
      * Creates a new {@link CameraCaptureSession} for camera preview.
      */
@@ -520,7 +549,6 @@ public class CameraLayout {
 
                         @Override
                         public void onConfigured(CameraCaptureSession cameraCaptureSession) {
-                            Log.d(TAG, "OnCONFIGURED");
                             // The camera is already closed
                             if (null == mCameraDevice) {
                                 return;
@@ -543,7 +571,6 @@ public class CameraLayout {
 
                                 // Finally, we start displaying the camera preview.
                                 mPreviewRequest = mPreviewRequestBuilder.build();
-                                Log.d(TAG, "Starting Preview Req");
                                 mCaptureSession.setRepeatingRequest(mPreviewRequest,
                                         mCaptureCallback, mBackgroundHandler);
                             } catch (CameraAccessException e) {
@@ -613,13 +640,16 @@ public class CameraLayout {
         mFragment.setVideoPath((new File(activity.getExternalFilesDir(null), "video.mp4")).getAbsolutePath());
         mMediaRecorder.setOutputFile(mFragment.getVideoPath());
         mMediaRecorder.setVideoEncodingBitRate(10000000);
-        mMediaRecorder.setVideoFrameRate(30);
+        mMediaRecorder.setVideoFrameRate(24);
         mMediaRecorder.setVideoSize(mVideoSize.getWidth(), mVideoSize.getHeight());
         mMediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.DEFAULT);
         if(mSound)
             mMediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
         int rotation = activity.getWindowManager().getDefaultDisplay().getRotation();
         int orientation = ORIENTATIONS.get(rotation);
+        if(mFace == CameraCharacteristics.LENS_FACING_FRONT)    {
+            orientation += 180; // hopefully this will cause video to save right side up
+        }
         mMediaRecorder.setOrientationHint(orientation);
         mMediaRecorder.prepare();
     }
@@ -628,69 +658,48 @@ public class CameraLayout {
      * Starts video Recording
      */
     private void startRecordingVideo() {
-        mMediaRecorderLock = true;
-        Log.d(TAG, "MediaRecorderLocked");
-        (new Thread((new Runnable()  {
+        mIsRecordingVideo = true;
+        mFragment.setFileType(CameraFragment.FILE_TYPE_VIDEO);
+        mMediaRecorder.reset();
+        createCameraPreviewSession(); // open preview outside thread!
+        mCountDownTimer.start();
+
+        startVideoStarterThread();
+        mVideoStarterHandler.post(new Runnable() {
             @Override
             public void run() {
                 try {
-                    Log.d(TAG, "Wait");
-                    Thread.sleep(1500); // wait 1.5s before allowing media player to stop
-                    Log.d(TAG, "Finished Waiting");
-                } catch (InterruptedException e) {
+                    mMediaRecorder.start();// Start recording
+                    Thread.sleep(1000); // make sure the video lasts at least a second
+                    mVideoStarterThread.quitSafely();
+                } catch (IllegalStateException e) {
                     e.printStackTrace();
+                } catch (InterruptedException e1) {
+                    e1.printStackTrace();
                 }
-                mMediaRecorderLock = false;
-                Log.d(TAG, "MediaRecorderUnLocked");
             }
-        }))).start();
-        mIsRecordingVideo = true;
-        Log.d(TAG, "Setting file type to video");
-        mFragment.setFileType(CameraFragment.FILE_TYPE_VIDEO);
-        mMediaRecorder.reset();
-        createCameraPreviewSession();
-        mCountDownTimer.start();
-        try {
-            mMediaRecorder.start();// Start recording
-        } catch (IllegalStateException e) {
-            e.printStackTrace();
-        }
+        });
     }
 
     /**
      * Stops video recording in separate thread to avoid disrupting UI in event of hang
      */
     private void stopRecordingVideo() {
+        try {
+            mVideoStarterThread.join(); // wait for video recording starting to finish!
+        } catch(InterruptedException e) {
+            e.printStackTrace();
+        }
+        stopVideoStarterThread();
+
         mIsRecordingVideo = false;
         mLockingForEditor = true; // prevent action_up from accidentally taking picture
-        while(mMediaRecorderLock)  {
-            //Log.d(TAG, "Waiting unlock"); // wait for it to unlock (i.e. just wait 1s)
-        }
+
         mMediaRecorder.stop();// Stop recording
         mMediaRecorder.reset();
         mProgressBar.setProgress(0);
         count=0;
         startEditor();
-        /*
-        // set up async task to close camera in case of crash
-        AsyncTask<Void, Void, Void> task = new AsyncTask<Void, Void, Void>() {
-            @Override
-            protected Void doInBackground(Void... params) {
-                mMediaRecorder.stop();// Stop recording
-                mMediaRecorder.reset();
-                mProgressBar.setProgress(0);
-                count=0;
-                return null;
-            }
-
-            @Override
-            protected void onPostExecute(Void aVoid) {
-                startEditor();
-                super.onPostExecute(aVoid);
-            }
-
-        };
-        task.execute((Void[]) null);*/
     }
 
     /**
@@ -787,6 +796,7 @@ public class CameraLayout {
      * {@link #mCaptureCallback} from both {@link #lockFocus()}.
      */
     private void captureStillPicture() {
+
         try {
             final Activity activity = mFragment.getActivity();
             if (null == activity || null == mCameraDevice) {
@@ -800,6 +810,7 @@ public class CameraLayout {
             // Use the same AE and AF modes as the preview.
             captureBuilder.set(CaptureRequest.CONTROL_AF_MODE,
                     CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
+
             if(mFlash) {
                 captureBuilder.set(CaptureRequest.CONTROL_AE_MODE,
                         CaptureRequest.CONTROL_AE_MODE_ON_ALWAYS_FLASH);
@@ -818,6 +829,8 @@ public class CameraLayout {
                 @Override
                 public void onCaptureCompleted(CameraCaptureSession session, CaptureRequest request,
                                                TotalCaptureResult result) {
+                    if(mFlash)// if camera flashed, do screen flash here
+                        startFlashAnimation();
                     unlockFocus();
                     startEditor();
                 }
@@ -825,6 +838,9 @@ public class CameraLayout {
 
             mCaptureSession.stopRepeating();
             mCaptureSession.capture(captureBuilder.build(), CaptureCallback, null);
+            // flash the screen like a camera, stall for time since capture tends to take a while
+            if(!mFlash) // if camera flash is used, don't screenflash now b/c it'll be too early!
+                startFlashAnimation();
         } catch (CameraAccessException e) {
             e.printStackTrace();
         }
@@ -856,6 +872,69 @@ public class CameraLayout {
         }
     }
 
+    /**
+     * Mimics a camera flash on the screen by fading in and out a white rectangular border,
+     * like the existing camera app.  Runs asynchronously
+     */
+    public void startFlashAnimation()   {
+        mFragment.getActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Handler flashHandler = new Handler();
+                // fade in
+                flashHandler.post(new Runnable()    {
+                    @Override
+                    public void run() {
+                        fade(0, 255, 300, true);
+                    }
+                });
+                // fade out
+                flashHandler.post(new Runnable()    {
+                    @Override
+                    public void run() {
+                        fade(255, 0, 600, false);
+                    }
+                });
+            }
+        });
+    }
+
+    private void fade(final int begin_alpha, final int end_alpha, int time,
+                              final boolean fadein) {
+
+        mScreenFlash.setImageAlpha(begin_alpha);
+
+        if (fadein) {
+            mScreenFlash.setVisibility(View.VISIBLE);
+        }
+
+        Animation a = new Animation() {
+            @Override
+            protected void applyTransformation(float interpolatedTime,
+                                               Transformation t) {
+                if (interpolatedTime == 1) {
+                    mScreenFlash.setImageAlpha(end_alpha);
+
+                    if (!fadein) {
+                        mScreenFlash.setVisibility(View.GONE);
+                    }
+                } else {
+                    int new_alpha = (int) (begin_alpha + (interpolatedTime * (end_alpha - begin_alpha)));
+                    mScreenFlash.setImageAlpha(new_alpha);
+                    mScreenFlash.requestLayout();
+                }
+            }
+
+            @Override
+            public boolean willChangeBounds() {
+                return true;
+            }
+        };
+
+        a.setDuration(time);
+        mScreenFlash.startAnimation(a);
+    }
+
     public static int getFace()    {
         return mFace;
     }
@@ -870,6 +949,7 @@ public class CameraLayout {
 
     private void startEditor()   {
         //closeCamera();
+        Log.d(TAG, "Starting editor function");
         mFragment.getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {
