@@ -12,7 +12,6 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.wolfpakapp.wolfpak2.WolfpakPager;
-import com.wolfpakapp.wolfpak2.camera.editor.CameraLayout;
 import com.wolfpakapp.wolfpak2.camera.editor.PictureEditorLayout;
 import com.wolfpakapp.wolfpak2.R;
 

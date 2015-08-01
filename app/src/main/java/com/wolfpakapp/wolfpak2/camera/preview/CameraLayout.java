@@ -1,4 +1,4 @@
-package com.wolfpakapp.wolfpak2.camera.editor;
+package com.wolfpakapp.wolfpak2.camera.preview;
 
 import android.app.Activity;
 import android.content.Context;
@@ -934,9 +934,13 @@ public class CameraLayout {
         a.setDuration(time);
         mScreenFlash.startAnimation(a);
     }
-
+    // todo change to "isFrontCamera" for more clarity
     public static int getFace()    {
         return mFace;
+    }
+
+    public static boolean isSound() {
+        return mSound;
     }
 
     public void startTouchHandler() {

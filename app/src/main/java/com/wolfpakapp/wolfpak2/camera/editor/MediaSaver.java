@@ -2,14 +2,11 @@ package com.wolfpakapp.wolfpak2.camera.editor;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
-import android.content.ContentValues;
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Matrix;
 import android.hardware.camera2.CameraCharacteristics;
-import android.media.MediaFormat;
 import android.media.ThumbnailUtils;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -28,6 +25,7 @@ import com.github.hiteshsondhi88.libffmpeg.exceptions.FFmpegNotSupportedExceptio
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
+import com.wolfpakapp.wolfpak2.camera.preview.CameraLayout;
 import com.wolfpakapp.wolfpak2.service.LocationProvider;
 
 import org.apache.http.Header;
@@ -78,7 +76,7 @@ public class MediaSaver {
 
     /**
      * Bool to let everything know a server communication is taking place
-     * TODO get rid of this disastrous implementation...
+     * TODO get rid of this disastrous implementation... perhaps use the mediasaverlistener?
      */
     private boolean serverSending;
 
@@ -319,36 +317,20 @@ public class MediaSaver {
     }
 
     /**
-     * Writes image data into file system
+     * Writes image data into file system, ensuring it appears in gallery
      */
     private void saveImage()    {
-        FileOutputStream output = null;
-        File tempfile = null;
-        try {
-            tempfile = createImageFile();
+        // Create an image file name
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        String imageFileName = "JPEG_" + timeStamp + "_" + ".jpeg";
 
-            ContentValues values = new ContentValues();
-            values.put(MediaStore.Images.Media.DATE_TAKEN, System.currentTimeMillis());
-            values.put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg");
-            values.put(MediaStore.MediaColumns.DATA, tempfile.getAbsolutePath());
+        // combines overlay and textureview
+        Bitmap finalImage = Bitmap.createBitmap(mTextureView.getBitmap());
+        Canvas c = new Canvas(finalImage);
+        c.drawBitmap(mOverlay.getBitmap(), 0, 0, null);
 
-            mActivity.getContentResolver().insert(
-                    MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
-            // stores the image with other image media (accessible through Files > Images)
-            MediaStore.Images.Media.insertImage(mActivity.getContentResolver(),
-                    tempfile.getAbsolutePath(), tempfile.getName(), "No Description");
-        } catch (IOException e) {
-            Toast.makeText(mActivity, "Save encountered an error", Toast.LENGTH_SHORT);
-            e.printStackTrace();
-        } finally {
-            if (null != output) {
-                try {
-                    output.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
+        CapturePhotoUtils.insertImage(mActivity.getContentResolver(),
+                finalImage, imageFileName, "No Description");
     }
 
     /**
@@ -408,7 +390,22 @@ public class MediaSaver {
             // rotates 90 degrees to vertical orientation (transpose)
             // and compresses video (qscale)
             String cmd = null;
-            if(CameraLayout.getFace() == CameraCharacteristics.LENS_FACING_FRONT) {
+            String transpose;
+            String audio;
+            String speed;
+            transpose = (CameraLayout.getFace() ==
+                    CameraCharacteristics.LENS_FACING_FRONT) ? "3" : "1";
+            audio = (CameraLayout.isSound()) ? "-map 0:a " : "";
+            speed = serverSending ? "slow" : "ultrafast"; // server needs more compression so go slow
+            // todo save video without compression, send video to server with compression
+            cmd = "-y -i " + PictureEditorLayout.getVideoPath() +
+                    " -i " + tempImgFile.getCanonicalPath() +
+                    " -strict -2 -qp 29 -filter_complex" +
+                    " [0:v][1:v]overlay=0:0,transpose=" + transpose +
+                    "[out] -map [out] " + audio + "-codec:v libx264 -preset " + speed +
+                    " -codec:a copy -b 100k " + tempfile.getCanonicalPath();
+
+            /*if(CameraLayout.getFace() == CameraCharacteristics.LENS_FACING_FRONT) {
                 // need to flip video too (option 3 does rotation and flip)
                 cmd = "-y -i " + PictureEditorLayout.getVideoPath() +
                         " -i " + tempImgFile.getCanonicalPath() +
@@ -419,9 +416,9 @@ public class MediaSaver {
                 cmd = "-y -i " + PictureEditorLayout.getVideoPath() +
                         " -i " + tempImgFile.getCanonicalPath() +
                         " -strict -2 -qp 28 -filter_complex [0:v][1:v]overlay=0:0,transpose=1[out]" +
-                        " -map [out] -map 0:a -codec:v libx264 -preset ultrafast -codec:a copy  -b 100k " +
+                        " -map [out] -map 0:a -codec:v libx264 -preset ultrafast -codec:a copy -b 100k " +
                         tempfile.getCanonicalPath();
-            }
+            }*/
             Log.d(TAG, "COMMAND: " + cmd);
             try {
                 mFfmpeg.execute(cmd, new ExecuteBinaryResponseHandler() {
