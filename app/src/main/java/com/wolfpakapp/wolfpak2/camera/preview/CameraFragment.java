@@ -171,6 +171,8 @@ public class CameraFragment extends Fragment
         // Hide the status bar.
         decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_FULLSCREEN);
         mCameraLayout.onResume();
+        if(mGlobalState == GLOBAL_STATE_EDITOR)
+            mPictureEditorLayout.onResume();
 
         if(!mTextureView.isAvailable())
             mTextureView.setSurfaceTextureListener(mSurfaceTextureListener);

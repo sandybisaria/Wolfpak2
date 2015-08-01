@@ -396,14 +396,14 @@ public class MediaSaver {
             transpose = (CameraLayout.getFace() ==
                     CameraCharacteristics.LENS_FACING_FRONT) ? "3" : "1";
             audio = (CameraLayout.isSound()) ? "-map 0:a " : "";
-            speed = serverSending ? "slow" : "ultrafast"; // server needs more compression so go slow
+            speed = serverSending ? "fast" : "ultrafast"; // server needs more compression so go slower
             // todo save video without compression, send video to server with compression
             cmd = "-y -i " + PictureEditorLayout.getVideoPath() +
                     " -i " + tempImgFile.getCanonicalPath() +
                     " -strict -2 -qp 29 -filter_complex" +
-                    " [0:v][1:v]overlay=0:0,transpose=" + transpose +
-                    "[out] -map [out] " + audio + "-codec:v libx264 -preset " + speed +
-                    " -codec:a copy -b 100k " + tempfile.getCanonicalPath();
+                    " [0:v][1:v]overlay=0:0,scale=-1:720,transpose=" + transpose +
+                    "[out] -map [out] " + audio + "-threads 5 -codec:v libx264 -preset " + speed +
+                    " -codec:a copy " + tempfile.getCanonicalPath();
 
             /*if(CameraLayout.getFace() == CameraCharacteristics.LENS_FACING_FRONT) {
                 // need to flip video too (option 3 does rotation and flip)

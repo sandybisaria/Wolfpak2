@@ -152,7 +152,10 @@ public class PictureEditorLayout {
         mMediaSaver.setMediaSaverListener(new MediaSaver.MediaSaverListener() {
             @Override
             public void onDownloadCompleted() {
-                // image/video save completed
+                if(!isImage) {
+                    mVideoView.resume();
+                    Log.d(TAG, "Resuming Video");
+                }
             }
 
             @Override
@@ -368,8 +371,13 @@ public class PictureEditorLayout {
 
     public void onPause() {
         if(!isImage) {
-            mVideoView.stopPlayback();
-            mVideoView.suspend();
+            mVideoView.pause();
+        }
+    }
+
+    public void onResume()  {
+        if(!isImage)    {
+            mVideoView.resume();
         }
     }
 
@@ -380,9 +388,13 @@ public class PictureEditorLayout {
                 startCamera();
                 break;
             case R.id.btn_download:
+                if(!isImage)
+                    mVideoView.pause();
                 mMediaSaver.downloadMedia();
                 break;
             case R.id.btn_upload:
+                if(!isImage)
+                    mVideoView.pause();
                 mMediaSaver.uploadMedia();
                 break;
             case R.id.btn_undo:
@@ -465,7 +477,6 @@ public class PictureEditorLayout {
     }
 
     public void startCamera()   {
-        onPause();
         mFragment.switchLayouts();
     }
 
@@ -476,7 +487,8 @@ public class PictureEditorLayout {
         mFragment.getActivity().runOnUiThread(new Runnable() {
               @Override
               public void run() {
-                  onPause();
+                  mVideoView.stopPlayback();
+                  mVideoView.suspend();
                   mOverlay.setVisibility(View.GONE);
                   mOverlay.getTextOverlay().setVisibility(View.GONE);
                   mColorPicker.setVisibility(View.GONE);
