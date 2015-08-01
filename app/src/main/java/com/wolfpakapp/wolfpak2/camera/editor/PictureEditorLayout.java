@@ -4,7 +4,6 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.ImageFormat;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.PorterDuff;
@@ -12,7 +11,6 @@ import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.SurfaceTexture;
-import android.graphics.YuvImage;
 import android.hardware.camera2.CameraCharacteristics;
 import android.media.Image;
 import android.media.MediaPlayer;
@@ -20,8 +18,6 @@ import android.renderscript.Allocation;
 import android.renderscript.Element;
 import android.renderscript.RenderScript;
 import android.renderscript.ScriptIntrinsicBlur;
-import android.renderscript.ScriptIntrinsicYuvToRGB;
-import android.renderscript.Type;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.TextureView;
@@ -32,8 +28,8 @@ import android.widget.VideoView;
 import com.wolfpakapp.wolfpak2.R;
 import com.wolfpakapp.wolfpak2.camera.editor.colorpicker.ColorPickerView;
 import com.wolfpakapp.wolfpak2.camera.preview.CameraFragment;
+import com.wolfpakapp.wolfpak2.camera.preview.CameraLayout;
 
-import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
 
 /**
