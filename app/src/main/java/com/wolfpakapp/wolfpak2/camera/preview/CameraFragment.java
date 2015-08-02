@@ -15,7 +15,10 @@ import com.github.hiteshsondhi88.libffmpeg.FFmpeg;
 import com.github.hiteshsondhi88.libffmpeg.LoadBinaryResponseHandler;
 import com.github.hiteshsondhi88.libffmpeg.exceptions.FFmpegNotSupportedException;
 import com.wolfpakapp.wolfpak2.WolfpakPager;
+<<<<<<< HEAD
 import com.wolfpakapp.wolfpak2.camera.editor.MediaSaver;
+=======
+>>>>>>> Video compress changes and moved CameraLayout
 import com.wolfpakapp.wolfpak2.camera.editor.PictureEditorLayout;
 import com.wolfpakapp.wolfpak2.R;
 

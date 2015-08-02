@@ -2,7 +2,6 @@ package com.wolfpakapp.wolfpak2.camera.editor;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -73,12 +72,20 @@ public class MediaSaver {
     private static FFmpeg mFfmpeg;
     private static Activity mActivity;
 
+<<<<<<< HEAD
     public static final String VIDEO_PATH = "Video Path";
     public static final String OVERLAY_PATH = "Overlay Path";
     public static final String OUTPUT_PATH = "Output Path";
     public static final String IS_UPLOADING = "Is Uploading";
 
     private static ProgressDialog progressDialog;
+=======
+    /**
+     * Bool to let everything know a server communication is taking place
+     * TODO get rid of this disastrous implementation... perhaps use the mediasaverlistener?
+     */
+    private boolean serverSending;
+>>>>>>> Video compress changes and moved CameraLayout
 
     public interface MediaSaverListener {
         public void onDownloadCompleted();
@@ -455,11 +462,33 @@ public class MediaSaver {
                     upload(listener, isImage);
             }
 
+<<<<<<< HEAD
             @Override
             public void onDialogNegativeClick(UploadDialog dialog) {
             }
         });
         uploadDialog.show(mActivity.getFragmentManager(), "UploadDialog");
+=======
+        };
+        task.execute((Void[])null);
+    }
+
+    /**
+     * Writes image data into file system, ensuring it appears in gallery
+     */
+    private void saveImage()    {
+        // Create an image file name
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        String imageFileName = "JPEG_" + timeStamp + "_" + ".jpeg";
+
+        // combines overlay and textureview
+        Bitmap finalImage = Bitmap.createBitmap(mTextureView.getBitmap());
+        Canvas c = new Canvas(finalImage);
+        c.drawBitmap(mOverlay.getBitmap(), 0, 0, null);
+
+        CapturePhotoUtils.insertImage(mActivity.getContentResolver(),
+                finalImage, imageFileName, "No Description");
+>>>>>>> Video compress changes and moved CameraLayout
     }
 
     /**
@@ -484,9 +513,70 @@ public class MediaSaver {
      * Returns upload request params for video saving service access
      * @return params the request parameters
      */
+<<<<<<< HEAD
     public static RequestParams getRequestParams()  {
         return params;
     }
+=======
+    private void saveVideo()    {
+        FileOutputStream output = null;
+        File tempfile = null;
+        try {
+            // Construct and save image overlay
+            // only png supports transparency
+            File tempImgFile = new File(mActivity.getExternalFilesDir(null), "overlay.png");
+            output = new FileOutputStream(tempImgFile);
+            // blits overlay onto textureview
+            Bitmap finalImage = Bitmap.createBitmap(mOverlay.getBitmap());
+            Log.d(TAG, "Final Image Size: " + finalImage.getWidth() + ", " + finalImage.getHeight());
+            Matrix matrix = new Matrix(); // used to rotate the overlay 90 degrees because god knows why...
+            matrix.postRotate(-90);
+            Bitmap resizedBitmap = Bitmap.createBitmap(finalImage, 0, 0, finalImage.getWidth(), finalImage.getHeight(), matrix, true);
+            // compresses whatever textureview and overlay have
+            resizedBitmap.compress(Bitmap.CompressFormat.PNG, 60, output);
+            // Construct a final video file
+            tempfile = createVideoFile();
+            mFinalVideoPath = tempfile.getAbsolutePath();
+            // overlays image (overlay)
+            // rotates 90 degrees to vertical orientation (transpose)
+            // and compresses video (qscale)
+            String cmd = null;
+            String transpose;
+            String audio;
+            String speed;
+            transpose = (CameraLayout.getFace() ==
+                    CameraCharacteristics.LENS_FACING_FRONT) ? "3" : "1";
+            audio = (CameraLayout.isSound()) ? "-map 0:a " : "";
+            speed = serverSending ? "slow" : "ultrafast"; // server needs more compression so go slow
+            // todo save video without compression, send video to server with compression
+            cmd = "-y -i " + PictureEditorLayout.getVideoPath() +
+                    " -i " + tempImgFile.getCanonicalPath() +
+                    " -strict -2 -qp 29 -filter_complex" +
+                    " [0:v][1:v]overlay=0:0,transpose=" + transpose +
+                    "[out] -map [out] " + audio + "-codec:v libx264 -preset " + speed +
+                    " -codec:a copy -b 100k " + tempfile.getCanonicalPath();
+
+            /*if(CameraLayout.getFace() == CameraCharacteristics.LENS_FACING_FRONT) {
+                // need to flip video too (option 3 does rotation and flip)
+                cmd = "-y -i " + PictureEditorLayout.getVideoPath() +
+                        " -i " + tempImgFile.getCanonicalPath() +
+                        " -strict -2 -qp 31 -filter_complex [0:v][1:v]overlay=0:0,transpose=3[out]" +
+                        " -map [out] -map 0:a -codec:v mpeg4 -codec:a copy " +
+                        tempfile.getCanonicalPath();
+            } else {// back facing camera
+                cmd = "-y -i " + PictureEditorLayout.getVideoPath() +
+                        " -i " + tempImgFile.getCanonicalPath() +
+                        " -strict -2 -qp 28 -filter_complex [0:v][1:v]overlay=0:0,transpose=1[out]" +
+                        " -map [out] -map 0:a -codec:v libx264 -preset ultrafast -codec:a copy -b 100k " +
+                        tempfile.getCanonicalPath();
+            }*/
+            Log.d(TAG, "COMMAND: " + cmd);
+            try {
+                mFfmpeg.execute(cmd, new ExecuteBinaryResponseHandler() {
+
+                    @Override
+                    public void onStart() {}
+>>>>>>> Video compress changes and moved CameraLayout
 
     /**
      * @return mFfmpeg the Ffmpeg
