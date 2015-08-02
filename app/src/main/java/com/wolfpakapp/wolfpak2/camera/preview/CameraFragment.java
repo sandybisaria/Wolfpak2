@@ -11,7 +11,11 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.github.hiteshsondhi88.libffmpeg.FFmpeg;
+import com.github.hiteshsondhi88.libffmpeg.LoadBinaryResponseHandler;
+import com.github.hiteshsondhi88.libffmpeg.exceptions.FFmpegNotSupportedException;
 import com.wolfpakapp.wolfpak2.WolfpakPager;
+import com.wolfpakapp.wolfpak2.camera.editor.MediaSaver;
 import com.wolfpakapp.wolfpak2.camera.editor.PictureEditorLayout;
 import com.wolfpakapp.wolfpak2.R;
 
@@ -95,6 +99,24 @@ public class CameraFragment extends Fragment
         // init camera layout and picture editor layout
         mCameraLayout = new CameraLayout(this, view);
         mPictureEditorLayout = new PictureEditorLayout(this, view);
+
+        MediaSaver.setActivity(getActivity());
+        // init FFmpeg
+        MediaSaver.setFfmpeg(FFmpeg.getInstance(getActivity()));
+        try {
+            MediaSaver.getFfmpeg().loadBinary(new LoadBinaryResponseHandler() {
+                @Override
+                public void onStart() {}
+                @Override
+                public void onFailure() {}
+                @Override
+                public void onSuccess() {}
+                @Override
+                public void onFinish() {}
+            });
+        } catch (FFmpegNotSupportedException e) {
+            // Handle if FFmpeg is not supported by device
+        }
     }
 
     @Override
