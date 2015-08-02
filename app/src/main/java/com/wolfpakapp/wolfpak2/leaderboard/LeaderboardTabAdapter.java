@@ -445,7 +445,7 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
                     VideoView expandedVideoView = new VideoView(mParentManager.getParentActivity());
                     expandedVideoView.setVisibility(View.GONE);
                     expandedVideoView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN);
-                    expandedVideoView.setVideoURI(Uri.parse(mPost.getMediaUrl()));
+                    expandedVideoView.setVideoPath(mPost.getMediaUrl());
 
                     baseFrameLayout.addView(expandedVideoView);
 

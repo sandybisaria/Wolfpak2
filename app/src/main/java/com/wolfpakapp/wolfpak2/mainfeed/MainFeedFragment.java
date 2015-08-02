@@ -12,6 +12,7 @@ import android.view.ViewGroup;
 import android.view.ViewParent;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.VideoView;
 
 import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
@@ -31,6 +32,7 @@ public class MainFeedFragment extends Fragment {
 
     private RequestParams mMainFeedParams;
     private ArrayDeque<Post> mPostQueue;
+    private ArrayDeque<View> mVisibleViewQueue;
 
     private FrameLayout mBaseFrameLayout;
 
@@ -45,6 +47,7 @@ public class MainFeedFragment extends Fragment {
 
         setupRequestParams();
         mPostQueue = new ArrayDeque<>();
+        mVisibleViewQueue = new ArrayDeque<>();
     }
 
     @Override
@@ -67,12 +70,18 @@ public class MainFeedFragment extends Fragment {
     public void setUserVisibleHint(boolean isVisibleToUser) {
         super.setUserVisibleHint(isVisibleToUser);
 
-        //TODO If the page is swiped and the view moves, reset the view's position.
         if (isVisibleToUser) {
             // The main feed fragment is always fullscreen, so whenever it is visible it dismisses
             // the status bar.
             getActivity().getWindow().getDecorView()
                     .setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN);
+        } else {
+            if (mVisibleViewQueue != null) {
+                for (View view : mVisibleViewQueue) {
+                    view.setX(0);
+                    view.setY(0);
+                }
+            }
         }
     }
 
@@ -145,9 +154,18 @@ public class MainFeedFragment extends Fragment {
             imageView.setOnTouchListener(new PostOnTouchListener(post));
 
             mBaseFrameLayout.addView(imageView);
+            mVisibleViewQueue.add(imageView);
         } else {
-            //TODO Support video (for now, just skip it)
-            displayLatestPost();
+            VideoView videoView = new VideoView(getActivity());
+
+            videoView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
+            videoView.setVideoPath(post.getMediaUrl());
+            videoView.start();
+
+            videoView.setOnTouchListener(new PostOnTouchListener(post));
+
+            mBaseFrameLayout.addView(videoView);
+            mVisibleViewQueue.add(videoView);
         }
     }
 
@@ -221,9 +239,10 @@ public class MainFeedFragment extends Fragment {
                             requestDisallowInterceptTouchEventForParents(v, true);
                         }
                     }
-
-                    v.setX(v.getX() + dx);
-                    v.setY(v.getY() + dy);
+                    if (canSwipe != null && !canSwipe) {
+                        v.setX(v.getX() + dx);
+                        v.setY(v.getY() + dy);
+                    }
 
                     lastTouchX = x;
                     lastTouchY = y;
@@ -284,6 +303,7 @@ public class MainFeedFragment extends Fragment {
      */
     private void dismissPost(Post post, View v) {
         //TODO Determine whether to upvote or downvote (requires additional parameters...)
+        mVisibleViewQueue.remove(v);
         mBaseFrameLayout.removeView(v);
     }
 }
