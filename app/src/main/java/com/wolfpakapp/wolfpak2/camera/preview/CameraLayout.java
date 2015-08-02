@@ -1,4 +1,4 @@
-package com.wolfpakapp.wolfpak2.camera.editor;
+package com.wolfpakapp.wolfpak2.camera.preview;
 
 import android.app.Activity;
 import android.content.Context;
@@ -16,6 +16,7 @@ import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.CaptureResult;
 import android.hardware.camera2.TotalCaptureResult;
 import android.hardware.camera2.params.StreamConfigurationMap;
+import android.media.CamcorderProfile;
 import android.media.Image;
 import android.media.ImageReader;
 import android.media.MediaRecorder;
@@ -640,9 +641,9 @@ public class CameraLayout {
         mFragment.setVideoPath((new File(activity.getExternalFilesDir(null), "video.mp4")).getAbsolutePath());
         mMediaRecorder.setOutputFile(mFragment.getVideoPath());
         mMediaRecorder.setVideoEncodingBitRate(10000000);
-        mMediaRecorder.setVideoFrameRate(24);
+        mMediaRecorder.setVideoFrameRate(16);
         mMediaRecorder.setVideoSize(mVideoSize.getWidth(), mVideoSize.getHeight());
-        mMediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.DEFAULT);
+        mMediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.H264);
         if(mSound)
             mMediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
         int rotation = activity.getWindowManager().getDefaultDisplay().getRotation();
@@ -934,9 +935,13 @@ public class CameraLayout {
         a.setDuration(time);
         mScreenFlash.startAnimation(a);
     }
-
+    // todo change to "isFrontCamera" for more clarity
     public static int getFace()    {
         return mFace;
+    }
+
+    public static boolean isSound() {
+        return mSound;
     }
 
     public void startTouchHandler() {

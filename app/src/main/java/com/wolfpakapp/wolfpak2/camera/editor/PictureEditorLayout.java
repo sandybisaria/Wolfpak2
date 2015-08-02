@@ -4,7 +4,6 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.ImageFormat;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.PorterDuff;
@@ -12,7 +11,6 @@ import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.SurfaceTexture;
-import android.graphics.YuvImage;
 import android.hardware.camera2.CameraCharacteristics;
 import android.media.Image;
 import android.media.MediaPlayer;
@@ -20,8 +18,6 @@ import android.renderscript.Allocation;
 import android.renderscript.Element;
 import android.renderscript.RenderScript;
 import android.renderscript.ScriptIntrinsicBlur;
-import android.renderscript.ScriptIntrinsicYuvToRGB;
-import android.renderscript.Type;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.TextureView;
@@ -32,15 +28,15 @@ import android.widget.VideoView;
 import com.wolfpakapp.wolfpak2.R;
 import com.wolfpakapp.wolfpak2.camera.editor.colorpicker.ColorPickerView;
 import com.wolfpakapp.wolfpak2.camera.preview.CameraFragment;
+import com.wolfpakapp.wolfpak2.camera.preview.CameraLayout;
 
-import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
 
 /**
  * A fragment that displays a captured image or loops video for the user to edit
  * @author Roland Fong
  */
-public class PictureEditorLayout {
+public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
 
     private static final String TAG = "TAG-PictureEditorLayout";
 
@@ -54,7 +50,7 @@ public class PictureEditorLayout {
 
     private static String mVideoPath;
 
-    private MediaSaver mMediaSaver;
+    //private MediaSaver mMediaSaver;
 
     // for blurring
     private static final int BLUR_RADIUS = 20;
@@ -152,20 +148,23 @@ public class PictureEditorLayout {
         mBlurScript = RenderScript.create(fragment.getActivity());
         mIntrinsicScript = ScriptIntrinsicBlur.create(mBlurScript, Element.U8_4(mBlurScript));
 
-        mMediaSaver = new MediaSaver(fragment.getActivity(), mOverlay, mTextureView);
-        mMediaSaver.setMediaSaverListener(new MediaSaver.MediaSaverListener() {
-            @Override
-            public void onDownloadCompleted() {
-                // image/video save completed
-            }
-
-            @Override
-            public void onUploadCompleted() {
-                // restart preview process
-                UndoManager.clearStates();
-                startCamera();
-            }
-        });
+//        mMediaSaver = new MediaSaver(fragment.getActivity(), mOverlay, mTextureView);
+//        mMediaSaver.setMediaSaverListener(new MediaSaver.MediaSaverListener() {
+//            @Override
+//            public void onDownloadCompleted() {
+//                if(!isImage) {
+//                    mVideoView.resume();
+//                    Log.d(TAG, "Resuming Video");
+//                }
+//            }
+//
+//            @Override
+//            public void onUploadCompleted() {
+//                // restart preview process
+//                UndoManager.clearStates();
+//                startCamera();
+//            }
+//        });
 
         mVideoView = (VideoView) view.findViewById(R.id.video_player);
     }
@@ -218,8 +217,6 @@ public class PictureEditorLayout {
                         matrix.setScale(-1, 1);
                     }
                     matrix.postRotate(90);
-                    /*matrix.postScale(((float) canvas.getWidth()) / src.getHeight(),
-                            ((float) canvas.getHeight()) / src.getWidth());*/
                     Bitmap resizedBitmap = Bitmap.createBitmap(
                             src, 0, 0, width, height, matrix, true);
                     canvas.drawBitmap(resizedBitmap, 0, 0, null);
@@ -372,8 +369,13 @@ public class PictureEditorLayout {
 
     public void onPause() {
         if(!isImage) {
-            mVideoView.stopPlayback();
-            mVideoView.suspend();
+            mVideoView.pause();
+        }
+    }
+
+    public void onResume()  {
+        if(!isImage)    {
+            mVideoView.resume();
         }
     }
 
@@ -384,10 +386,29 @@ public class PictureEditorLayout {
                 startCamera();
                 break;
             case R.id.btn_download:
-                mMediaSaver.downloadMedia();
+                if(isImage) {
+                    MediaSaver.downloadImage(this, // listener
+                            Bitmap.createBitmap(mTextureView.getBitmap()), // background image
+                            Bitmap.createBitmap(mOverlay.getBitmap())); // foreground overlay
+                }
+                else    {
+                    mVideoView.pause();
+                    MediaSaver.downloadVideo(this,
+                            mVideoPath, // the original video
+                            Bitmap.createBitmap(mOverlay.getBitmap())); // foreground overlay
+                }
                 break;
             case R.id.btn_upload:
-                mMediaSaver.uploadMedia();
+                if(isImage) {
+                    MediaSaver.uploadImage(this, // listener
+                            Bitmap.createBitmap(mTextureView.getBitmap()), // background image
+                            Bitmap.createBitmap(mOverlay.getBitmap())); // foreground overlay
+                } else  {
+                    mVideoView.pause();
+                    MediaSaver.uploadVideo(this,
+                            mVideoPath, // the original video
+                            Bitmap.createBitmap(mOverlay.getBitmap())); // foreground overlay
+                }
                 break;
             case R.id.btn_undo:
                 if(UndoManager.getNumberOfStates() > 1) {
@@ -468,9 +489,14 @@ public class PictureEditorLayout {
         return true;
     }
 
-    public void startCamera()   {
-        onPause();
-        mFragment.switchLayouts();
+    public void startCamera() {
+        mFragment.getActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                mOverlay.clearBitmap();
+                mFragment.switchLayouts();
+            }
+        });
     }
 
     /**
@@ -480,7 +506,8 @@ public class PictureEditorLayout {
         mFragment.getActivity().runOnUiThread(new Runnable() {
               @Override
               public void run() {
-                  onPause();
+                  mVideoView.stopPlayback();
+                  mVideoView.suspend();
                   mOverlay.setVisibility(View.GONE);
                   mOverlay.getTextOverlay().setVisibility(View.GONE);
                   mColorPicker.setVisibility(View.GONE);
@@ -529,5 +556,22 @@ public class PictureEditorLayout {
                 }
             }
         });
+    }
+
+    @Override
+    public void onDownloadCompleted() {
+        Log.d(TAG, "Download Completed");
+        if(!isImage) {
+            mVideoView.resume();
+            Log.d(TAG, "Resuming Video");
+        }
+    }
+
+    @Override
+    public void onUploadCompleted() {
+        Log.d(TAG, "Upload Completed");
+        // go back to camera
+        UndoManager.clearStates();
+        startCamera();
     }
 }
