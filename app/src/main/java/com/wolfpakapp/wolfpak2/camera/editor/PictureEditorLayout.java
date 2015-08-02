@@ -36,7 +36,7 @@ import java.nio.ByteBuffer;
  * A fragment that displays a captured image or loops video for the user to edit
  * @author Roland Fong
  */
-public class PictureEditorLayout {
+public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
 
     private static final String TAG = "TAG-PictureEditorLayout";
 
@@ -50,7 +50,7 @@ public class PictureEditorLayout {
 
     private static String mVideoPath;
 
-    private MediaSaver mMediaSaver;
+    //private MediaSaver mMediaSaver;
 
     // for blurring
     private static final int BLUR_RADIUS = 20;
@@ -148,23 +148,23 @@ public class PictureEditorLayout {
         mBlurScript = RenderScript.create(fragment.getActivity());
         mIntrinsicScript = ScriptIntrinsicBlur.create(mBlurScript, Element.U8_4(mBlurScript));
 
-        mMediaSaver = new MediaSaver(fragment.getActivity(), mOverlay, mTextureView);
-        mMediaSaver.setMediaSaverListener(new MediaSaver.MediaSaverListener() {
-            @Override
-            public void onDownloadCompleted() {
-                if(!isImage) {
-                    mVideoView.resume();
-                    Log.d(TAG, "Resuming Video");
-                }
-            }
-
-            @Override
-            public void onUploadCompleted() {
-                // restart preview process
-                UndoManager.clearStates();
-                startCamera();
-            }
-        });
+//        mMediaSaver = new MediaSaver(fragment.getActivity(), mOverlay, mTextureView);
+//        mMediaSaver.setMediaSaverListener(new MediaSaver.MediaSaverListener() {
+//            @Override
+//            public void onDownloadCompleted() {
+//                if(!isImage) {
+//                    mVideoView.resume();
+//                    Log.d(TAG, "Resuming Video");
+//                }
+//            }
+//
+//            @Override
+//            public void onUploadCompleted() {
+//                // restart preview process
+//                UndoManager.clearStates();
+//                startCamera();
+//            }
+//        });
 
         mVideoView = (VideoView) view.findViewById(R.id.video_player);
     }
@@ -211,6 +211,7 @@ public class PictureEditorLayout {
                 mFragment.setImage(null); // so we know to skip initing image upon resume
                 // resize horizontally oriented images
                 if (width > height) {
+                    // TODO try using canvas concat to do transform and save the extra bitmap
                     // transformation matrix that scales and rotates
                     Matrix matrix = new Matrix();
                     if(CameraLayout.getFace() == CameraCharacteristics.LENS_FACING_FRONT)  {
@@ -388,14 +389,29 @@ public class PictureEditorLayout {
                 startCamera();
                 break;
             case R.id.btn_download:
-                if(!isImage)
+                if(isImage) {
+                    MediaSaver.downloadImage(this, // listener
+                            Bitmap.createBitmap(mTextureView.getBitmap()), // background image
+                            Bitmap.createBitmap(mOverlay.getBitmap())); // foreground overlay
+                }
+                else    {
                     mVideoView.pause();
-                mMediaSaver.downloadMedia();
+                    MediaSaver.downloadVideo(this,
+                            mVideoPath, // the original video
+                            Bitmap.createBitmap(mOverlay.getBitmap())); // foreground overlay
+                }
                 break;
             case R.id.btn_upload:
-                if(!isImage)
+                if(isImage) {
+                    MediaSaver.uploadImage(this, // listener
+                            Bitmap.createBitmap(mTextureView.getBitmap()), // background image
+                            Bitmap.createBitmap(mOverlay.getBitmap())); // foreground overlay
+                } else  {
                     mVideoView.pause();
-                mMediaSaver.uploadMedia();
+                    MediaSaver.uploadVideo(this,
+                            mVideoPath, // the original video
+                            Bitmap.createBitmap(mOverlay.getBitmap())); // foreground overlay
+                }
                 break;
             case R.id.btn_undo:
                 if(UndoManager.getNumberOfStates() > 1) {
@@ -477,7 +493,12 @@ public class PictureEditorLayout {
     }
 
     public void startCamera()   {
-        mFragment.switchLayouts();
+        mFragment.getActivity().runOnUiThread(new Runnable()    {
+            @Override
+            public void run() {
+                mFragment.switchLayouts();
+            }
+        });
     }
 
     /**
@@ -537,5 +558,22 @@ public class PictureEditorLayout {
                 }
             }
         });
+    }
+
+    @Override
+    public void onDownloadCompleted() {
+        Log.d(TAG, "Download Completed");
+        if(!isImage) {
+            mVideoView.resume();
+            Log.d(TAG, "Resuming Video");
+        }
+    }
+
+    @Override
+    public void onUploadCompleted() {
+        Log.d(TAG, "Upload Completed");
+        // go back to camera
+        UndoManager.clearStates();
+        startCamera();
     }
 }
