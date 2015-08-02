@@ -44,59 +44,63 @@ public class VideoSavingService extends Service {
 
             // unbundle intent
             Intent intent = requests.get(msg);
-            final String videoPath = (String) intent.getExtras().get(MediaSaver.VIDEO_PATH);
-            final String overlayPath = (String) intent.getExtras().get(MediaSaver.OVERLAY_PATH);
-            final String outputPath = (String) intent.getExtras().get(MediaSaver.OUTPUT_PATH);
-            final boolean isUploading = (boolean) intent.getExtras().get(MediaSaver.IS_UPLOADING);
+            if(intent != null) {
+                final String videoPath = (String) intent.getExtras().get(MediaSaver.VIDEO_PATH);
+                final String overlayPath = (String) intent.getExtras().get(MediaSaver.OVERLAY_PATH);
+                final String outputPath = (String) intent.getExtras().get(MediaSaver.OUTPUT_PATH);
+                final boolean isUploading = (boolean) intent.getExtras().get(MediaSaver.IS_UPLOADING);
 
-            // Generate FFmpeg command: overlays image (overlay), rotates 90 degrees to
-            // vertical orientation (transpose) and compresses video (qscale)
-            String cmd, transpose, audio, speed;
-            transpose = (CameraLayout.getFace() ==
-                    CameraCharacteristics.LENS_FACING_FRONT) ? "3" : "1"; // 1=rotate, 3=rotate/flip
-            audio = (CameraLayout.isSound()) ? "-map 0:a " : ""; // audio map
-            speed = isUploading ? "veryfast" : "ultrafast"; // server needs more compression so go slow
-            // actual command
-            cmd = "-y -i " + videoPath + " -i " + overlayPath +
-                    " -strict -2 -qp 29 -filter_complex" +
-                    " [0:v][1:v]overlay=0:0,transpose=" + transpose +
-                    "[out] -map [out] " + audio + "-codec:v libx264 -preset " + speed +
-                    " -codec:a copy " + outputPath;
-            Log.d(TAG, "COMMAND: " + cmd);
+                // Generate FFmpeg command: overlays image (overlay), rotates 90 degrees to
+                // vertical orientation (transpose) and compresses video (qscale)
+                String cmd, transpose, audio, speed;
+                transpose = (CameraLayout.getFace() ==
+                        CameraCharacteristics.LENS_FACING_FRONT) ? "3" : "1"; // 1=rotate, 3=rotate/flip
+                audio = (CameraLayout.isSound()) ? "-map 0:a " : ""; // audio map
+                speed = isUploading ? "veryfast" : "ultrafast"; // server needs more compression so go slow
+                // actual command
+                cmd = "-y -i " + videoPath + " -i " + overlayPath +
+                        " -strict -2 -qp 29 -filter_complex" +
+                        " [0:v][1:v]overlay=0:0,transpose=" + transpose +
+                        "[out] -map [out] " + audio + "-codec:v libx264 -preset " + speed +
+                        " -codec:a copy " + outputPath;
+                Log.d(TAG, "COMMAND: " + cmd);
 
-            // execute command
-            try {
-                MediaSaver.getFfmpeg().execute(cmd, new ExecuteBinaryResponseHandler() {
-                    @Override
-                    public void onStart() {}
-                    @Override
-                    public void onProgress(String message) {
-                        Log.d(TAG, "Progress: " + message);
-                    }
-                    @Override
-                    public void onFailure(String message) {
-                        Log.d(TAG, "Failure: " + message);
-                    }
-                    @Override
-                    public void onSuccess(String message) {
-                        Log.d(TAG, "Success: " + message);
-                    }
-                    @Override
-                    public void onFinish() {
-                        // destroy the input copy
-                        (new File(videoPath)).delete();
-                        if(isUploading) {
-                            // continue and send it to the server
-                            MediaSaver.upload(new File(outputPath));
+                // execute command
+                try {
+                    MediaSaver.getFfmpeg().execute(cmd, new ExecuteBinaryResponseHandler() {
+                        @Override
+                        public void onStart() {}
+                        @Override
+                        public void onProgress(String message) {
+                            Log.d(TAG, "Progress: " + message);
                         }
+                        @Override
+                        public void onFailure(String message) {
+                            Log.d(TAG, "Failure: " + message);
+                        }
+                        @Override
+                        public void onSuccess(String message) {
+                            Log.d(TAG, "Success: " + message);
+                        }
+                        @Override
+                        public void onFinish() {
+                            // destroy the input copy
+                            (new File(videoPath)).delete();
+                            if(isUploading) {
+                                // continue and send it to the server
+                                MediaSaver.upload(new File(outputPath), false);
+                            }
 
-                        // Stop the service using the startId, so that we don't stop
-                        // the service in the middle of handling another job
-                        stopSelf(msg2.arg1);
-                    }
-                });
-            } catch (FFmpegCommandAlreadyRunningException e) {
-                // Handle if FFmpeg is already running
+                            // Stop the service using the startId, so that we don't stop
+                            // the service in the middle of handling another job
+                            stopSelf(msg2.arg1);
+                        }
+                    });
+                } catch (FFmpegCommandAlreadyRunningException e) {
+                    // Handle if FFmpeg is already running
+                }
+            } else  { // intent was null; possibly sent in error
+                stopSelf(msg.arg1); // stop the service prevent crashing
             }
         }
     }

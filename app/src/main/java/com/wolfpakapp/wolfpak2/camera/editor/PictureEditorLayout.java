@@ -211,15 +211,12 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
                 mFragment.setImage(null); // so we know to skip initing image upon resume
                 // resize horizontally oriented images
                 if (width > height) {
-                    // TODO try using canvas concat to do transform and save the extra bitmap
                     // transformation matrix that scales and rotates
                     Matrix matrix = new Matrix();
                     if(CameraLayout.getFace() == CameraCharacteristics.LENS_FACING_FRONT)  {
                         matrix.setScale(-1, 1);
                     }
                     matrix.postRotate(90);
-                    /*matrix.postScale(((float) canvas.getWidth()) / src.getHeight(),
-                            ((float) canvas.getHeight()) / src.getWidth());*/
                     Bitmap resizedBitmap = Bitmap.createBitmap(
                             src, 0, 0, width, height, matrix, true);
                     canvas.drawBitmap(resizedBitmap, 0, 0, null);
@@ -492,10 +489,11 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
         return true;
     }
 
-    public void startCamera()   {
-        mFragment.getActivity().runOnUiThread(new Runnable()    {
+    public void startCamera() {
+        mFragment.getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {
+                mOverlay.clearBitmap();
                 mFragment.switchLayouts();
             }
         });
