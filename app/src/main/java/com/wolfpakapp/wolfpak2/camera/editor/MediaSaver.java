@@ -197,7 +197,7 @@ public class MediaSaver {
         }
 
         // create upload parameters
-        generateUploadParams(listener, file);
+        generateUploadParams(listener, file, true);
         // when user finishes input, upload will begin
     }
 
@@ -241,7 +241,7 @@ public class MediaSaver {
                 try {
                     saveVideotoFile(videoPath, overlay, false);
                     // buy some time
-                    stall(listener);
+                    stall(listener, false);
                 } catch(IOException e)  {
                     e.printStackTrace();
                 }
@@ -252,6 +252,7 @@ public class MediaSaver {
             protected void onPostExecute(Void aVoid) {
                 super.onPostExecute(aVoid);
                 // close dialog and notify listeners of completion
+                Log.d(TAG, "video save onpostexec");
                 progressDialog.dismiss();
                 listener.onDownloadCompleted();
             }
@@ -308,7 +309,7 @@ public class MediaSaver {
      */
     public static void uploadVideo(final MediaSaverListener listener, String videoPath,
                                    Bitmap overlay)   {
-        generateUploadParams(listener, null);
+        generateUploadParams(listener, null, false);
         try {
             saveVideotoFile(videoPath, overlay, true);
         } catch(IOException e)  {
@@ -319,7 +320,7 @@ public class MediaSaver {
     /**
      * Waits 5 seconds.  For stalling progress dialog to buy some time
      */
-    private static void stall(final MediaSaverListener listener) {
+    private static void stall(final MediaSaverListener listener, final boolean isUpload) {
         (new Thread(new Runnable()  {
             @Override
             public void run() {
@@ -329,8 +330,10 @@ public class MediaSaver {
                 } catch(InterruptedException e) {
                     e.printStackTrace();
                 }
-                progressDialog.dismiss();
-                listener.onUploadCompleted();
+                if(isUpload) {
+                    progressDialog.dismiss();
+                    listener.onUploadCompleted();
+                }
             }
         })).start();
     }
@@ -340,9 +343,9 @@ public class MediaSaver {
      * Complets the rest of the parameters (media and thumbnail) and initiates uploading process
      * @param file
      */
-    public static void upload(final File file)  {
+    public static void upload(final File file, final boolean isImage)  {
         // this is specifically for video!!
-        if(PictureEditorLayout.isImage())   {
+        if(isImage)   {
             Log.e(TAG, "Image attempted wrong upload call!");
         } else  {
             // add the now saved video file (and thumbnail)
@@ -354,7 +357,7 @@ public class MediaSaver {
             }
         }
         // now do regular upload
-        upload((MediaSaverListener) null);
+        upload((MediaSaverListener) null, isImage);
     }
 
     /**
@@ -362,7 +365,7 @@ public class MediaSaver {
      * Generates parameters and starts AsyncHttpClient.
      * @param listener the MediaSaverListener
      */
-    private static void upload(final MediaSaverListener listener)   {
+    private static void upload(final MediaSaverListener listener, final boolean isImage)   {
         // ensure working network connection
         ConnectivityManager connMgr = (ConnectivityManager)
                 mActivity.getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -377,7 +380,7 @@ public class MediaSaver {
                 public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
                     Log.d(TAG, "Upload Success " + statusCode);
                     // only call if this is image, video already called
-                    if(PictureEditorLayout.isImage()) {
+                    if(isImage) {
                         listener.onUploadCompleted();
                         progressDialog.dismiss();
                     }
@@ -387,7 +390,7 @@ public class MediaSaver {
                 public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
                     Log.e(TAG, "Upload Failure " + statusCode);
                     // only call if this is image, video already called
-                    if(PictureEditorLayout.isImage()) {
+                    if(isImage) {
                         listener.onUploadCompleted();
                         progressDialog.dismiss();
                     }
@@ -405,7 +408,8 @@ public class MediaSaver {
      * Begins the upload after user inputs requested parameters.
      * @param file the file to be sent
      */
-    public static void generateUploadParams(final MediaSaverListener listener, final File file)   {
+    public static void generateUploadParams(final MediaSaverListener listener,
+                                            final File file, final boolean isImage)   {
 
         UploadDialog uploadDialog = new UploadDialog();
         uploadDialog.setUploadDialogListener(new UploadDialog.UploadDialogListener() {
@@ -413,8 +417,8 @@ public class MediaSaver {
             public void onDialogPositiveClick(UploadDialog dialog) {
                 // start progress dialog
                 progressDialog = ProgressDialog.show(mActivity, "Please Wait...", "Sending...", true);
-                if(!PictureEditorLayout.isImage())
-                    stall(listener); // buy some time for video saving
+                if(!isImage)
+                    stall(listener, true); // buy some time for video saving
                 // initialize server params here
                 mMap.put("handle", dialog.getHandle());
                 mMap.put("is_nsfw", dialog.isNsfw() ? "true" : "false");
@@ -439,7 +443,7 @@ public class MediaSaver {
                         params.put("media", file);
                         Log.d(TAG, "PUT: media " + file.toString());
                     }*/
-                    if(PictureEditorLayout.isImage())   {
+                    if(isImage)   {
                         params.put("media", file); // put image BUT NOT VIDEO YET b/c not done saving
                     }
                 } catch(FileNotFoundException e)    {
@@ -447,8 +451,8 @@ public class MediaSaver {
                 }
 
                 // upload file (but don't do it yet if it's video!!
-                if(PictureEditorLayout.isImage())
-                    upload(listener);
+                if(isImage)
+                    upload(listener, isImage);
             }
 
             @Override
