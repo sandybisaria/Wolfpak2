@@ -20,7 +20,7 @@ import android.view.View;
  */
 public class EditableOverlay extends View {
 
-    private static final String TAG = "EditableOverlay";
+    private static final String TAG = "TAG-EditableOverlay";
 
     private TextureView mTextureView;
 

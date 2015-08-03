@@ -22,7 +22,7 @@ import com.wolfpakapp.wolfpak2.R;
  */
 public class TextOverlay extends EditText {
 
-    private final static String TAG = "TextOverlay";
+    private final static String TAG = "TAG-TextOverlay";
 
     private int mState;
     /**

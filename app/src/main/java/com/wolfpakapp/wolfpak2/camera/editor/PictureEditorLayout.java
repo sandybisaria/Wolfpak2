@@ -233,11 +233,8 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
         } else  {
             if(mFragment.getVideoPath() != null) {
                 mVideoPath = mFragment.getVideoPath();
-                try {
-                    UndoManager.addScreenState(Bitmap.createBitmap(mOverlay.getBitmap()));// initial state
-                } catch(NullPointerException e) {
-                    e.printStackTrace(); // screw that... just let the user wonder why he can't undo to first move
-                }
+                UndoManager.addScreenState(Bitmap.createBitmap(// initial state, empty screen
+                        mTextureView.getWidth(), mTextureView.getHeight(), null));
                 mFragment.setVideoPath(null); // so we know to skip initing upon resume
             } else  { // device likely resumed, so restore previous session
                 mOverlay.setBitmap(UndoManager.getLastScreenState());
