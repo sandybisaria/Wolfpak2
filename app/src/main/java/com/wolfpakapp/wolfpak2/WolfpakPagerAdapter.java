@@ -7,6 +7,7 @@ import android.support.v4.app.FragmentStatePagerAdapter;
 import com.wolfpakapp.wolfpak2.camera.preview.CameraFragment;
 import com.wolfpakapp.wolfpak2.leaderboard.LeaderboardFragment;
 import com.wolfpakapp.wolfpak2.mainfeed.MainFeedFragment;
+import com.wolfpakapp.wolfpak2.settings.WolfpakPreferenceFragment;
 
 /**
  * The WolfpakPagerAdapter is an extension of the FragmentStatePagerAdapter suited for use in the
@@ -36,6 +37,7 @@ public class WolfpakPagerAdapter extends FragmentStatePagerAdapter {
             case 0: return new LeaderboardFragment();
             case 1: return new MainFeedFragment();
             case 2: return new CameraFragment();
+            case 3: return new WolfpakPreferenceFragment();
         }
         return null;
     }

@@ -77,16 +77,14 @@
                 android:title="Terms of Service"
                 android:key="@string/terms_of_service">
 
-                <intent android:action="android.intent.action.VIEW" android:targetPackage="com.wolfpakapp.settings" android:targetClass="com.wolfpakapp.settings.termsofservice" />
+                <intent android:action="android.intent.action.VIEW" android:targetPackage="com.wolfpakapp.wolfpak2" android:targetClass="com.wolfpakapp.wolfpak2.settings.TermsOfServiceActivity" />
             </PreferenceScreen>
-
-
 
             <PreferenceScreen
             android:title="Privacy Policy"
             android:key="@string/privacy_policy">
 
-            <intent android:action="android.intent.action.VIEW" android:targetPackage="com.wolfpakapp.settings" android:targetClass="com.wolfpakapp.settings.privacypolicy" />
+            <intent android:action="android.intent.action.VIEW" android:targetPackage="com.wolfpakapp.wolfpak2" android:targetClass="com.wolfpakapp.wolfpak2.settings.PrivacyPolicyActivity" />
 
             </PreferenceScreen>
             <PreferenceScreen

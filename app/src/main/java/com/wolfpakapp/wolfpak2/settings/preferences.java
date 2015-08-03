@@ -3,12 +3,9 @@ package com.wolfpakapp.wolfpak2.settings;
 //SETTINGS/PREFERENCES PAGE, ALL THE MAIN IMPORTANTISH STUFF FOR THE SETTINGS ARE HERE
 
 import android.content.Context;
-import android.app.Fragment;
-import android.app.FragmentTransaction;
 import android.net.Uri;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
-import android.preference.PreferenceFragment;
 import android.preference.Preference.OnPreferenceClickListener;
 import android.content.Intent;
 import android.os.Bundle;
@@ -23,8 +20,6 @@ import android.widget.ListAdapter;
 
 import com.wolfpakapp.wolfpak2.R;
 
-//PREFERENCES NEED TO BE MADE THIS WAY BECAUSE THEY'RE WEIRD AND DON'T WORK THE SAME WAY AS OTHER THINGS, SO I HAVE AN ACTIVITY AND THE FRAGMENT INSTANTIATED INSIDE THE ACTIVITY
-
 public class preferences extends PreferenceActivity
 {
 
@@ -33,7 +28,6 @@ public class preferences extends PreferenceActivity
     protected void onCreate(final Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
-        getFragmentManager().beginTransaction().replace(android.R.id.content, new WolfPakPreferenceFragment()).commit();
 
         //THIS PART IS FOR THE SOCIAL MEDIA BUTTONS
         Preference myPref = (Preference) findPreference("followus");
@@ -59,18 +53,6 @@ public class preferences extends PreferenceActivity
                 finish();
             }
         });
-    }
-
-    //THE ACTUAL FRAGMENT FOR PREFERENCES IS MADE HERE
-    public static class WolfPakPreferenceFragment extends PreferenceFragment
-    {
-        @Override
-        public void onCreate(final Bundle savedInstanceState)
-        {
-            super.onCreate(savedInstanceState);
-            addPreferencesFromResource(R.xml.preferences);
-        }
-
     }
 
     //THIS CREATES THE DIALOG FOR THE SOCIAL MEDIA BUTTONS

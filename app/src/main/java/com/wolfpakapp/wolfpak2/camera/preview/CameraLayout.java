@@ -582,7 +582,7 @@ public class CameraLayout {
                         @Override
                         public void onConfigureFailed(CameraCaptureSession cameraCaptureSession) {
                             Log.e(TAG, "Configure Failed");
-                            createCameraPreviewSession(); // try again
+//                            createCameraPreviewSession(); // try again
                         }
                     }, null
             );

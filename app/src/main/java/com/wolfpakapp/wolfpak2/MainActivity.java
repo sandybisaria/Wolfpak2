@@ -15,7 +15,7 @@ import com.wolfpakapp.wolfpak2.service.UserIdManager;
 
 public class MainActivity extends AppCompatActivity {
 
-    private static final int NUM_PAGES = 3;
+    private static final int NUM_PAGES = 4;
     public static final int REQUEST_CHECK_SETTINGS = 123;
 
     private WolfpakPagerAdapter mPagerAdapter;

@@ -29,8 +29,20 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".settings.preferences"
-            android:label="@string/title_activity_preferences" >
+            android:name=".settings.TermsOfServiceActivity"
+            android:label="@string/title_activity_termsofservice">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".settings.PrivacyPolicyActivity"
+            android:label="@string/title_activity_privacypolicy" >
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
         </activity>
     </application>
 
