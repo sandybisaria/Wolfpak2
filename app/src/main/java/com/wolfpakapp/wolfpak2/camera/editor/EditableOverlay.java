@@ -141,11 +141,12 @@ public class EditableOverlay extends View {
      */
     public Bitmap getBitmap()
     {
+        Bitmap b = Bitmap.createBitmap(mBitmap);
         if(mTextOverlay.getState() != TextOverlay.TEXT_STATE_HIDDEN) {
-            Canvas c = new Canvas(mBitmap);
+            Canvas c = new Canvas(b);
             c.drawBitmap(mTextOverlay.getBitmap(), mTextOverlay.getX(), mTextOverlay.getY(), null);
         }
-        return mBitmap;
+        return b;
     }
 
     /**
