@@ -238,11 +238,11 @@ public class MainFeedFragment extends Fragment {
 
                     try {
                         if (isUpvoting()) {
-                            displayLatestPost();
                             dismissPost(Post.VoteStatus.UPVOTED);
-                        } else if (isDownvoting()) {
                             displayLatestPost();
+                        } else if (isDownvoting()) {
                             dismissPost(Post.VoteStatus.DOWNVOTED);
+                            displayLatestPost();
                         } else {
                             v.setX(0);
                             v.setY(0);
@@ -318,6 +318,25 @@ public class MainFeedFragment extends Fragment {
         }
 
         mBaseFrameLayout.removeView(postView);
+
+        mClient.updateLikeStatus(post.getId(), voteStatus, new AsyncHttpResponseHandler() {
+            @Override
+            public void onSuccess(int statusCode, Header[] headers,
+                                  byte[] responseBody) {
+                Log.d("UPDATE", "Successful");
+            }
+
+            @Override
+            public void onFailure(int statusCode, Header[] headers,
+                                  byte[] responseBody, Throwable error) {
+                try {
+                    Log.d(Integer.toString(statusCode), new String(responseBody));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                Log.d("UPDATE", "Failed");
+            }
+        });
 
     }
 }
