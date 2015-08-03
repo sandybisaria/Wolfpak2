@@ -34,10 +34,10 @@ public class WolfpakPagerAdapter extends FragmentStatePagerAdapter {
     @Override
     public Fragment getItem(int i) {
         switch (i) {
-            case 0: return new LeaderboardFragment();
-            case 1: return new MainFeedFragment();
-            case 2: return new CameraFragment();
-            case 3: return new WolfpakPreferenceFragment();
+            case 0: return new WolfpakPreferenceFragment();
+            case 1: return new LeaderboardFragment();
+            case 2: return new MainFeedFragment();
+            case 3: return new CameraFragment();
         }
         return null;
     }

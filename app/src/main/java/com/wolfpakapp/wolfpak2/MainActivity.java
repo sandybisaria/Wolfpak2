@@ -60,6 +60,8 @@ public class MainActivity extends AppCompatActivity {
         mPagerAdapter = new WolfpakPagerAdapter(getSupportFragmentManager());
         mViewPager = (ViewPager) findViewById(R.id.main_activity_view_pager);
         mViewPager.setAdapter(mPagerAdapter);
+        // The default page is the main feed.
+        mViewPager.setCurrentItem(2);
     }
 
     @Override
