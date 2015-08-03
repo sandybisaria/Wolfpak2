@@ -122,7 +122,6 @@ public class MainFeedFragment extends Fragment {
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-
                 displayLatestPost();
             }
 
@@ -144,29 +143,11 @@ public class MainFeedFragment extends Fragment {
             return;
         }
 
-        if (post.isImage()) {
-            ImageView imageView = new ImageView(getActivity());
+        PostView postView = new PostView(getActivity(), post);
 
-            imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
-            imageView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
-            Picasso.with(getActivity()).load(post.getMediaUrl()).into(imageView);
-
-            imageView.setOnTouchListener(new PostOnTouchListener(post));
-
-            mBaseFrameLayout.addView(imageView);
-            mVisibleViewQueue.add(imageView);
-        } else {
-            VideoView videoView = new VideoView(getActivity());
-
-            videoView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
-            videoView.setVideoPath(post.getMediaUrl());
-            videoView.start();
-
-            videoView.setOnTouchListener(new PostOnTouchListener(post));
-
-            mBaseFrameLayout.addView(videoView);
-            mVisibleViewQueue.add(videoView);
-        }
+        postView.setOnTouchListener(new PostOnTouchListener(post));
+        mBaseFrameLayout.addView(postView);
+        mVisibleViewQueue.add(postView);
     }
 
     /**
@@ -178,9 +159,6 @@ public class MainFeedFragment extends Fragment {
         private float initialTouchX = 0;
         private float initialTouchY = 0;
         private final int WAIT_TIME = 50;
-
-        private Float initialViewX = null;
-        private Float initialViewY = null;
 
         private float lastTouchX = 0;
         private float lastTouchY = 0;
@@ -206,11 +184,6 @@ public class MainFeedFragment extends Fragment {
 
                     lastTouchX = initialTouchX;
                     lastTouchY = initialTouchY;
-
-                    if (initialViewX == null) {
-                        initialViewX = v.getX();
-                        initialViewY = v.getY();
-                    }
 
                     return true;
                 }
@@ -239,9 +212,18 @@ public class MainFeedFragment extends Fragment {
                             requestDisallowInterceptTouchEventForParents(v, true);
                         }
                     }
+                    // Now, if canSwipe was set to false, we can allow the PostView to be manipulated
                     if (canSwipe != null && !canSwipe) {
                         v.setX(v.getX() + dx);
                         v.setY(v.getY() + dy);
+
+                        if (isUpvoting()) {
+                            ((PostView) v).setTint(Post.VoteStatus.UPVOTED);
+                        } else if (isDownvoting()) {
+                            ((PostView) v).setTint(Post.VoteStatus.DOWNVOTED);
+                        } else {
+                            ((PostView) v).setTint(Post.VoteStatus.NOT_VOTED);
+                        }
                     }
 
                     lastTouchX = x;
@@ -259,14 +241,13 @@ public class MainFeedFragment extends Fragment {
                     }
 
                     try {
-                        final float totalDeltaY = initialTouchY - lastTouchY;
-
-                        if (Math.abs(totalDeltaY) > 500) {
+                        if (isUpvoting() || isDownvoting()) {
                             displayLatestPost();
                             dismissPost(mPost, v);
                         } else {
-                            v.setX(initialViewX);
-                            v.setY(initialViewY);
+                            v.setX(0);
+                            v.setY(0);
+                            canSwipe = null;
                         }
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -277,6 +258,24 @@ public class MainFeedFragment extends Fragment {
             }
 
             return false;
+        }
+
+        private boolean isUpvoting() {
+            final float totalDeltaY = initialTouchY - lastTouchY;
+            if (totalDeltaY > 300) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+
+        private boolean isDownvoting() {
+            final float totalDeltaY = initialTouchY - lastTouchY;
+            if (totalDeltaY < -300) {
+                return true;
+            } else {
+                return false;
+            }
         }
 
         /**
@@ -303,7 +302,7 @@ public class MainFeedFragment extends Fragment {
      */
     private void dismissPost(Post post, View v) {
         //TODO Determine whether to upvote or downvote (requires additional parameters...)
-        mVisibleViewQueue.remove(v);
+        mVisibleViewQueue.remove();
         mBaseFrameLayout.removeView(v);
     }
 }
