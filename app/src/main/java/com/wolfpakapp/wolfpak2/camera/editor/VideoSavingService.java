@@ -84,8 +84,9 @@ public class VideoSavingService extends Service {
                         }
                         @Override
                         public void onFinish() {
-                            // destroy the input copy
+                            // destroy the input temp files
                             (new File(videoPath)).delete();
+                            (new File(overlayPath)).delete();
                             if(isUploading) {
                                 // continue and send it to the server
                                 MediaSaver.upload(new File(outputPath), false);
@@ -123,6 +124,7 @@ public class VideoSavingService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        Log.d(TAG, "Starting new command id: " + startId);
         // Toast.makeText(this, "Video Save Starting", Toast.LENGTH_SHORT).show();
         // For each start request, send a message to start a job and deliver the
         // start ID so we know which request we're stopping when we finish the job

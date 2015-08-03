@@ -253,7 +253,7 @@ public class MediaSaver {
                 super.onPostExecute(aVoid);
                 // close dialog and notify listeners of completion
                 Log.d(TAG, "video save onpostexec");
-                progressDialog.dismiss();
+                // progress dialog is dismissed after stall finishes
                 listener.onDownloadCompleted();
             }
         };
@@ -275,7 +275,7 @@ public class MediaSaver {
         copy(new File(videoPath), videoFile);
 
         // create and save overlay
-        File tempImgFile = new File(mActivity.getExternalFilesDir(null), "overlay.png");
+        File tempImgFile = new File(mActivity.getExternalFilesDir(null), timeStamp + ".png");
         FileOutputStream output = new FileOutputStream(tempImgFile);
         // blit overlay onto texture
         Bitmap finalImage = Bitmap.createBitmap(overlay);
@@ -291,7 +291,7 @@ public class MediaSaver {
         File storageDir = Environment.getExternalStoragePublicDirectory(
                 Environment.DIRECTORY_MOVIES); // is there a standard video directory?
         File video= File.createTempFile(outputPath, ".mp4", storageDir); // TODO don't use tempfile?
-
+        Log.d(TAG, "About to start service intent");
         // start intent to service to handle this in background
         Intent intent = new Intent(mActivity, VideoSavingService.class);
         intent.putExtra(VIDEO_PATH, videoFile.getCanonicalPath());
@@ -326,12 +326,12 @@ public class MediaSaver {
             public void run() {
                 // just wait 5s to buy some time
                 try {
-                    Thread.sleep(5000);
+                    Thread.sleep(3000);
                 } catch(InterruptedException e) {
                     e.printStackTrace();
                 }
+                progressDialog.dismiss();
                 if(isUpload) {
-                    progressDialog.dismiss();
                     listener.onUploadCompleted();
                 }
             }

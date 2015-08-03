@@ -148,24 +148,6 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
         mBlurScript = RenderScript.create(fragment.getActivity());
         mIntrinsicScript = ScriptIntrinsicBlur.create(mBlurScript, Element.U8_4(mBlurScript));
 
-//        mMediaSaver = new MediaSaver(fragment.getActivity(), mOverlay, mTextureView);
-//        mMediaSaver.setMediaSaverListener(new MediaSaver.MediaSaverListener() {
-//            @Override
-//            public void onDownloadCompleted() {
-//                if(!isImage) {
-//                    mVideoView.resume();
-//                    Log.d(TAG, "Resuming Video");
-//                }
-//            }
-//
-//            @Override
-//            public void onUploadCompleted() {
-//                // restart preview process
-//                UndoManager.clearStates();
-//                startCamera();
-//            }
-//        });
-
         mVideoView = (VideoView) view.findViewById(R.id.video_player);
     }
 
@@ -195,7 +177,7 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
         }
 
         if(isImage) {
-            if(mFragment.getImage() != null) {
+            if(UndoManager.getNumberOfStates() == 0) {
                 Canvas canvas = mTextureView.lockCanvas();
 
                 Image img = mFragment.getImage();
@@ -208,7 +190,7 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
                 buffer.get(bytes);
                 Bitmap src = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
                 mFragment.getImage().close(); // don't forget to close the image buffer!
-                mFragment.setImage(null); // so we know to skip initing image upon resume
+                //mFragment.setImage(null); // so we know to skip initing image upon resume
                 // resize horizontally oriented images
                 if (width > height) {
                     // transformation matrix that scales and rotates
@@ -226,16 +208,17 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
                 mTextureView.unlockCanvasAndPost(canvas);
                 Log.d(TAG, "Pic posted should be visible");
             } else { // device likely resumed,  so restore previous session
+                Log.d(TAG, "Displaying resumed image");
                 Canvas c = mTextureView.lockCanvas();
                 c.drawBitmap(UndoManager.getLastScreenState(), 0, 0, null);
                 mTextureView.unlockCanvasAndPost(c);
             }
         } else  {
-            if(mFragment.getVideoPath() != null) {
-                mVideoPath = mFragment.getVideoPath();
+            if(UndoManager.getNumberOfStates() == 0) {
+                mVideoPath = mFragment.getVideoPath().toString();
                 UndoManager.addScreenState(Bitmap.createBitmap(// initial state, empty screen
                         mTextureView.getWidth(), mTextureView.getHeight(), null));
-                mFragment.setVideoPath(null); // so we know to skip initing upon resume
+                // mFragment.setVideoPath(null); // so we know to skip initing upon resume
             } else  { // device likely resumed, so restore previous session
                 mOverlay.setBitmap(UndoManager.getLastScreenState());
             }
@@ -246,7 +229,7 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
             }
             // play the video
             try {
-                Log.d(TAG, "Playing Video");
+                Log.d(TAG, "Playing Video: " + mVideoPath);
                 mVideoView.setVideoPath(mVideoPath);
                 mVideoView.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
                     @Override
@@ -372,7 +355,8 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
 
     public void onResume()  {
         if(!isImage)    {
-            mVideoView.resume();
+            // video view doesn't need to wait for textureview to be ready
+            displayMedia();
         }
     }
 
