@@ -10,6 +10,8 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewParent;
+import android.view.animation.Animation;
+import android.view.animation.TranslateAnimation;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.VideoView;
@@ -32,7 +34,7 @@ public class MainFeedFragment extends Fragment {
 
     private RequestParams mMainFeedParams;
     private ArrayDeque<Post> mPostQueue;
-    private ArrayDeque<View> mVisibleViewQueue;
+    private ArrayDeque<PostView> mVisibleViewQueue;
 
     private FrameLayout mBaseFrameLayout;
 
@@ -137,7 +139,7 @@ public class MainFeedFragment extends Fragment {
      */
     private void displayLatestPost() {
         // Get the post at the
-        Post post = mPostQueue.poll();
+        Post post = mPostQueue.peek();
         if (post == null) {
             //TODO Display refresh button? Or, merely keep the refresh button behind everything?
             return;
@@ -145,7 +147,7 @@ public class MainFeedFragment extends Fragment {
 
         PostView postView = new PostView(getActivity(), post);
 
-        postView.setOnTouchListener(new PostOnTouchListener(post));
+        postView.setOnTouchListener(new PostOnTouchListener());
         mBaseFrameLayout.addView(postView);
         mVisibleViewQueue.add(postView);
     }
@@ -163,13 +165,7 @@ public class MainFeedFragment extends Fragment {
         private float lastTouchX = 0;
         private float lastTouchY = 0;
 
-        private Post mPost;
-
         private Boolean canSwipe = null;
-
-        public PostOnTouchListener(Post post) {
-            mPost = post;
-        }
 
         @Override
         public boolean onTouch(View v, MotionEvent event) {
@@ -241,9 +237,12 @@ public class MainFeedFragment extends Fragment {
                     }
 
                     try {
-                        if (isUpvoting() || isDownvoting()) {
+                        if (isUpvoting()) {
                             displayLatestPost();
-                            dismissPost(mPost, v);
+                            dismissPost(Post.VoteStatus.UPVOTED);
+                        } else if (isDownvoting()) {
+                            displayLatestPost();
+                            dismissPost(Post.VoteStatus.DOWNVOTED);
                         } else {
                             v.setX(0);
                             v.setY(0);
@@ -295,14 +294,30 @@ public class MainFeedFragment extends Fragment {
         }
     }
 
-    /**
-     * Dismiss the current post.
-     * @param post
-     * @param v
-     */
-    private void dismissPost(Post post, View v) {
+    private void dismissPost(Post.VoteStatus voteStatus) {
         //TODO Determine whether to upvote or downvote (requires additional parameters...)
-        mVisibleViewQueue.remove();
-        mBaseFrameLayout.removeView(v);
+        PostView postView = mVisibleViewQueue.poll();
+        Post post = mPostQueue.poll();
+
+        if (voteStatus == Post.VoteStatus.UPVOTED) {
+            Animation slide = new TranslateAnimation(Animation.RELATIVE_TO_PARENT, 0.0f,
+                    Animation.RELATIVE_TO_PARENT, 0.0f, Animation.RELATIVE_TO_PARENT,
+                    0.0f, Animation.RELATIVE_TO_PARENT, -5.0f);
+            slide.setDuration(750);
+
+            postView.startAnimation(slide);
+            postView.animate().rotation(-30).start();
+        } else if (voteStatus == Post.VoteStatus.DOWNVOTED) {
+            Animation slide = new TranslateAnimation(Animation.RELATIVE_TO_PARENT, 0.0f,
+                    Animation.RELATIVE_TO_PARENT, 0.0f, Animation.RELATIVE_TO_PARENT,
+                    0.0f, Animation.RELATIVE_TO_PARENT, 5.2f);
+            slide.setDuration(751);
+
+            postView.startAnimation(slide);
+            postView.animate().rotation(30).start();
+        }
+
+        mBaseFrameLayout.removeView(postView);
+
     }
 }
