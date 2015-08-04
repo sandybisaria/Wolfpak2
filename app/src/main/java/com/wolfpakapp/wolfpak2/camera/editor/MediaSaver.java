@@ -149,7 +149,7 @@ public class MediaSaver {
         // Create an image file name
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
         File imagefile = new File(Environment.getExternalStoragePublicDirectory(
-                Environment.DIRECTORY_PICTURES).getAbsolutePath() + "/" + timeStamp + ".jpeg");
+                Environment.DIRECTORY_PICTURES).getAbsolutePath(), timeStamp + ".jpeg");
 
         String filePath = imagefile.getAbsolutePath();
 
@@ -224,6 +224,7 @@ public class MediaSaver {
     public static void downloadVideo(final MediaSaverListener listener, final String videoPath,
                                      final Bitmap overlay)  {
         progressDialog = new ProgressDialog(mActivity);
+        Log.d(TAG, "Creating async vid saving task");
         // use AsyncTask to start a progress dialog
         AsyncTask<Void, Void, Void> task = new AsyncTask<Void, Void, Void>() {
             @Override
@@ -239,9 +240,8 @@ public class MediaSaver {
             @Override
             protected Void doInBackground(Void... params) {
                 try {
+                    Log.d(TAG, "about to try saving vid");
                     saveVideotoFile(videoPath, overlay, false);
-                    // buy some time
-                    stall(listener, false);
                 } catch(IOException e)  {
                     e.printStackTrace();
                 }
@@ -253,11 +253,11 @@ public class MediaSaver {
                 super.onPostExecute(aVoid);
                 // close dialog and notify listeners of completion
                 Log.d(TAG, "video save onpostexec");
-                // progress dialog is dismissed after stall finishes
+                progressDialog.dismiss();
                 listener.onDownloadCompleted();
             }
         };
-        task.execute((Void[]) null);
+        task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (Void[]) null);
     }
 
     /**
@@ -269,11 +269,12 @@ public class MediaSaver {
      */
     private static void saveVideotoFile(String videoPath, Bitmap overlay,
                                         boolean isUploading) throws IOException {
+        Log.d(TAG, "In save vid to file");
         // make a copy of the video; ensures it will not be overwritten
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
         File videoFile = new File(mActivity.getExternalFilesDir(null), timeStamp + ".mp4");
         copy(new File(videoPath), videoFile);
-
+        Log.d(TAG, "Creating Overlay");
         // create and save overlay
         File tempImgFile = new File(mActivity.getExternalFilesDir(null), timeStamp + ".png");
         FileOutputStream output = new FileOutputStream(tempImgFile);
@@ -285,12 +286,12 @@ public class MediaSaver {
                 finalImage, 0, 0, finalImage.getWidth(), finalImage.getHeight(), matrix, true);
         // compresses whatever textureview and overlay have into output
         resizedBitmap.compress(Bitmap.CompressFormat.PNG, 60, output);
-
+        Log.d(TAG, "Creating output file");
         // create output file
-        String outputPath = "MP4_" + timeStamp + "_";
+        String outputPath = "MP4_" + timeStamp + ".mp4";
         File storageDir = Environment.getExternalStoragePublicDirectory(
                 Environment.DIRECTORY_MOVIES); // is there a standard video directory?
-        File video= File.createTempFile(outputPath, ".mp4", storageDir); // TODO don't use tempfile?
+        File video = new File(storageDir, outputPath); //File.createTempFile(outputPath, ".mp4", storageDir);
         Log.d(TAG, "About to start service intent");
         // start intent to service to handle this in background
         Intent intent = new Intent(mActivity, VideoSavingService.class);
@@ -315,27 +316,6 @@ public class MediaSaver {
         } catch(IOException e)  {
             e.printStackTrace();
         }
-    }
-
-    /**
-     * Waits 5 seconds.  For stalling progress dialog to buy some time
-     */
-    private static void stall(final MediaSaverListener listener, final boolean isUpload) {
-        (new Thread(new Runnable()  {
-            @Override
-            public void run() {
-                // just wait 5s to buy some time
-                try {
-                    Thread.sleep(3000);
-                } catch(InterruptedException e) {
-                    e.printStackTrace();
-                }
-                progressDialog.dismiss();
-                if(isUpload) {
-                    listener.onUploadCompleted();
-                }
-            }
-        })).start();
     }
 
     /**
@@ -417,8 +397,6 @@ public class MediaSaver {
             public void onDialogPositiveClick(UploadDialog dialog) {
                 // start progress dialog
                 progressDialog = ProgressDialog.show(mActivity, "Please Wait...", "Sending...", true);
-                if(!isImage)
-                    stall(listener, true); // buy some time for video saving
                 // initialize server params here
                 mMap.put("handle", dialog.getHandle());
                 mMap.put("is_nsfw", dialog.isNsfw() ? "true" : "false");
@@ -453,6 +431,10 @@ public class MediaSaver {
                 // upload file (but don't do it yet if it's video!!
                 if(isImage)
                     upload(listener, isImage);
+                else    {
+                    progressDialog.dismiss();
+                    listener.onUploadCompleted();
+                }
             }
 
             @Override

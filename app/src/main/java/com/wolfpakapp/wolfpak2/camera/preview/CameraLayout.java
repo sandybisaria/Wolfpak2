@@ -43,10 +43,12 @@ import com.wolfpakapp.wolfpak2.camera.preview.CameraFragment;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
@@ -122,7 +124,7 @@ public class CameraLayout {
     private final CameraDevice.StateCallback mStateCallback = new CameraDevice.StateCallback()  {
         @Override
         public void onOpened(CameraDevice cameraDevice) {
-            Log.d(TAG, "On opened, will start preview");
+            //Log.d(TAG, "On opened, will start preview");
             // starts camera preview
             mCameraOpenCloseLock.release();
             mCameraDevice = cameraDevice;
@@ -177,7 +179,7 @@ public class CameraLayout {
             = new ImageReader.OnImageAvailableListener() {
         @Override
         public void onImageAvailable(ImageReader reader) {
-            Log.d(TAG, "Image Avail and set");
+            //Log.d(TAG, "Image Avail and set");
             mFragment.setImage(reader.acquireNextImage());
         }
     };
@@ -330,7 +332,7 @@ public class CameraLayout {
                     mTouchHandler.postDelayed(videoRunner, 600); // if hold lasts 0.6s, record video
                 }
                 else if(event.getAction() == MotionEvent.ACTION_UP) {
-                    Log.d(TAG, "Take Picture Action Up");
+                    //Log.d(TAG, "Take Picture Action Up");
                     mTouchHandler.removeCallbacks(videoRunner);
                     stopTouchHandler();
                     if(mIsRecordingVideo)   { // if indeed held for 0.6s, mIsRecordingVideo should be true
@@ -549,7 +551,7 @@ public class CameraLayout {
             }
             mPreviewRequestBuilder.addTarget(previewSurface);
 
-            Log.d(TAG, "Finishing camera preview session creation");
+            //Log.d(TAG, "Finishing camera preview session creation");
 
             // Here, we create a CameraCaptureSession for camera preview.
             mCameraDevice.createCaptureSession(surfaces,
@@ -691,18 +693,18 @@ public class CameraLayout {
                     }
 
                     mCountDownTimer.start();
-                    Log.d(TAG, "Starting media recorder");
+                    //Log.d(TAG, "Starting media recorder");
                     mMediaRecorder.start();// Start recording
-                    Log.d(TAG, "Media Recorder Started");
+                    //Log.d(TAG, "Media Recorder Started");
                     Thread.sleep(1000); // make sure the video lasts at least 1s
-                    Log.d(TAG, "1s wait");
+                    //Log.d(TAG, "1s wait");
                     mVideoStarterThread.quitSafely();
                 } catch (IllegalStateException e) {
                     e.printStackTrace();
                 } catch (InterruptedException e1) {
                     e1.printStackTrace();
                 }
-                Log.d(TAG, "Video starter finished");
+                //Log.d(TAG, "Video starter finished");
             }
         });
     }
@@ -712,14 +714,14 @@ public class CameraLayout {
      */
     private void stopRecordingVideo() {
         try {
-            Log.d(TAG, "Waiting until videostarter finsh");
+            //Log.d(TAG, "Waiting until videostarter finsh");
             mVideoStarterThread.join();
         } catch(InterruptedException e) {
             e.printStackTrace();
         }
-        Log.d(TAG, "Video Starter finish, stopping");
+        //Log.d(TAG, "Video Starter finish, stopping");
         stopVideoStarterThread();
-        Log.d(TAG, "Finished stopping vid starter");
+        //Log.d(TAG, "Finished stopping vid starter");
         mIsRecordingVideo = false;
         mLockingForEditor = true; // prevent action_up from accidentally taking picture
 
@@ -994,7 +996,7 @@ public class CameraLayout {
      * Hides all the camera icons
      */
     public void hide()  {
-        Log.d(TAG, "Hiding camera");
+        //Log.d(TAG, "Hiding camera");
         mFragment.getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {

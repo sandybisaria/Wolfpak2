@@ -84,7 +84,7 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
             = new TextureView.SurfaceTextureListener()  {
                 @Override
                 public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
-                    Log.d(TAG, "Edit Texture Avail");
+                    //Log.d(TAG, "Edit Texture Avail");
                     mIsTextureReady = true;
                     mTextureView.setTransform(new Matrix());
                     displayMedia();
@@ -206,9 +206,9 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
                 }
 
                 mTextureView.unlockCanvasAndPost(canvas);
-                Log.d(TAG, "Pic posted should be visible");
+                //Log.d(TAG, "Pic posted should be visible");
             } else { // device likely resumed,  so restore previous session
-                Log.d(TAG, "Displaying resumed image");
+                //Log.d(TAG, "Displaying resumed image");
                 Canvas c = mTextureView.lockCanvas();
                 c.drawBitmap(UndoManager.getLastScreenState(), 0, 0, null);
                 mTextureView.unlockCanvasAndPost(c);
@@ -517,7 +517,7 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
         mFragment.getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                Log.d(TAG, "Showing Editor");
+                //Log.d(TAG, "Showing Editor");
                 mOverlay.setVisibility(View.VISIBLE);
                 mUndoButton.setVisibility(View.VISIBLE);
                 mTextButton.setVisibility(View.VISIBLE);
@@ -528,14 +528,14 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
                 mUploadButton.setVisibility(View.VISIBLE);
 
                 if(mFragment.getFileType() == CameraFragment.FILE_TYPE_IMAGE) {
-                    Log.d(TAG, "Showing TextureView");
+                    //Log.d(TAG, "Showing TextureView");
                     mTextureView.setVisibility(View.VISIBLE);
                     if (mIsTextureReady) {
                         onSurfaceTextureAvailable();
                     }
                 }
                 else {
-                    Log.d(TAG, "Showing VidView");
+                    //Log.d(TAG, "Showing VidView");
                     mVideoView.setVisibility(View.VISIBLE);
                     displayMedia();
                 }
@@ -548,7 +548,7 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
         Log.d(TAG, "Download Completed");
         if(!isImage) {
             mVideoView.resume();
-            Log.d(TAG, "Resuming Video");
+            //Log.d(TAG, "Resuming Video");
         }
     }
 
