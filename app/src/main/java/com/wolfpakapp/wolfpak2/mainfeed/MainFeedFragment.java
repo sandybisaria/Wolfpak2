@@ -14,6 +14,7 @@ import android.view.animation.Animation;
 import android.view.animation.TranslateAnimation;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.Toast;
 import android.widget.VideoView;
 
 import com.loopj.android.http.AsyncHttpResponseHandler;
@@ -77,6 +78,10 @@ public class MainFeedFragment extends Fragment {
             // the status bar.
             getActivity().getWindow().getDecorView()
                     .setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN);
+            // See displayLatestPost()
+            if (mPostQueue != null && mPostQueue.size() == 0) {
+                Toast.makeText(getActivity(), "No posts", Toast.LENGTH_SHORT).show();
+            }
         } else {
             if (mVisibleViewQueue != null) {
                 for (View view : mVisibleViewQueue) {
@@ -142,6 +147,7 @@ public class MainFeedFragment extends Fragment {
         Post post = mPostQueue.peek();
         if (post == null) {
             //TODO Display refresh button? Or, merely keep the refresh button behind everything?
+            Toast.makeText(getActivity(), "No posts", Toast.LENGTH_SHORT).show();
             return;
         }
 
