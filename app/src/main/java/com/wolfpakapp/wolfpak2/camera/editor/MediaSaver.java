@@ -5,6 +5,7 @@ import android.app.ProgressDialog;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Matrix;
@@ -12,6 +13,7 @@ import android.hardware.camera2.CameraCharacteristics;
 import android.media.ThumbnailUtils;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Environment;
 import android.provider.MediaStore;
@@ -39,7 +41,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
@@ -147,8 +148,9 @@ public class MediaSaver {
     private static String saveImagetoFile(Bitmap image, Bitmap overlay) throws IOException   {
         // Create an image file name
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-        File imagefile = File.createTempFile(timeStamp, ".jpeg",
-                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES));
+        File imagefile = new File(Environment.getExternalStoragePublicDirectory(
+                Environment.DIRECTORY_PICTURES).getAbsolutePath() + "/" + timeStamp + ".jpeg");
+
         String filePath = imagefile.getAbsolutePath();
 
         // write data to file system
@@ -167,9 +169,7 @@ public class MediaSaver {
         // insert image
         mActivity.getContentResolver().insert(
                 MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
-        // stores the image with other image media (accessible through Files > Images)
-        MediaStore.Images.Media.insertImage(mActivity.getContentResolver(),
-                filePath, imagefile.getName(), "No Description");
+
         // close streams
         if (null != output) {
             try {

@@ -363,7 +363,6 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
     public void onClick(int id) {
         switch(id) {
             case R.id.btn_back:
-                UndoManager.clearStates();
                 startCamera();
                 break;
             case R.id.btn_download:
@@ -470,9 +469,15 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
     }
 
     public void startCamera() {
+        // reset undos to nothing
+        UndoManager.clearStates();
         mFragment.getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {
+                // reset text
+                mOverlay.getTextOverlay().setText("");
+                mOverlay.getTextOverlay().setState(TextOverlay.TEXT_STATE_HIDDEN);
+                // clear the overlay
                 mOverlay.clearBitmap();
                 mFragment.switchLayouts();
             }
@@ -551,7 +556,6 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
     public void onUploadCompleted() {
         Log.d(TAG, "Upload Completed");
         // go back to camera
-        UndoManager.clearStates();
         startCamera();
     }
 }
