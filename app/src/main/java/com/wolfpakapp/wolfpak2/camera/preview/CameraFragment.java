@@ -50,6 +50,8 @@ public class CameraFragment extends Fragment
     private static CameraLayout mCameraLayout;
     private static PictureEditorLayout mPictureEditorLayout;
 
+    private Thread mCameraCloseThread = null;
+
     private AutoFitTextureView mTextureView;
 
     /**
@@ -168,18 +170,32 @@ public class CameraFragment extends Fragment
                 WolfpakPager.setActive(false);
                 Log.d(TAG, "Hiding camera, showing editor");
                 mCameraLayout.hide();
-                (new Thread(new Runnable()  {
+                mCameraCloseThread = new Thread(new Runnable()  {
                     @Override
                     public void run() {
+                        Log.d(TAG, "Pausing the camera");
                         mCameraLayout.onPause(); // takes time... run off UI thread
+                        Log.d(TAG, "Finished pausing the camera");
                     }
-                })).start();
+                });
+                mCameraCloseThread.start();
                 mPictureEditorLayout.show();
                 break;
             case GLOBAL_STATE_EDITOR:
                 mGlobalState = GLOBAL_STATE_CAMERA;
                 WolfpakPager.setActive(true);
                 mPictureEditorLayout.hide();
+                if(mCameraCloseThread != null) {
+                    try {
+                        Log.d(TAG, "Waiting for camera to finish pausing");
+                        mCameraCloseThread.join(); // wait until camera finishes closing before opening again
+                        Log.d(TAG, "Will show layout");
+                    } catch(InterruptedException e) {
+                        e.printStackTrace();
+                    } finally {
+                        mCameraCloseThread = null;
+                    }
+                }
                 mCameraLayout.show();
                 mCameraLayout.onResume();
                 break;

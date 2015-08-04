@@ -547,7 +547,7 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
     public void onDownloadCompleted() {
         Log.d(TAG, "Download Completed");
         if(!isImage) {
-            mVideoView.resume();
+            mVideoView.start();
             //Log.d(TAG, "Resuming Video");
         }
     }
@@ -555,6 +555,8 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
     @Override
     public void onUploadCompleted() {
         Log.d(TAG, "Upload Completed");
+        if(!isImage)
+            mVideoView.start();
         // go back to camera
         startCamera();
     }
