@@ -10,13 +10,18 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewParent;
+import android.view.animation.Animation;
+import android.view.animation.TranslateAnimation;
 import android.widget.FrameLayout;
+<<<<<<< HEAD
 import android.widget.ImageView;
 import android.widget.VideoView;
+=======
+import android.widget.Toast;
+>>>>>>> cd6a104d641cbb3b8fc14a6ea295f58f3378baa9
 
 import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
-import com.squareup.picasso.Picasso;
 import com.wolfpakapp.wolfpak2.Post;
 import com.wolfpakapp.wolfpak2.R;
 import com.wolfpakapp.wolfpak2.service.ServerRestClient;
@@ -32,7 +37,14 @@ public class MainFeedFragment extends Fragment {
 
     private RequestParams mMainFeedParams;
     private ArrayDeque<Post> mPostQueue;
+<<<<<<< HEAD
     private ArrayDeque<View> mVisibleViewQueue;
+=======
+    private ArrayDeque<PostView> mPostViewQueue;
+
+    private Post topPost = null;
+    private PostView topPostView = null;
+>>>>>>> cd6a104d641cbb3b8fc14a6ea295f58f3378baa9
 
     private FrameLayout mBaseFrameLayout;
 
@@ -47,7 +59,11 @@ public class MainFeedFragment extends Fragment {
 
         setupRequestParams();
         mPostQueue = new ArrayDeque<>();
+<<<<<<< HEAD
         mVisibleViewQueue = new ArrayDeque<>();
+=======
+        mPostViewQueue = new ArrayDeque<>();
+>>>>>>> cd6a104d641cbb3b8fc14a6ea295f58f3378baa9
     }
 
     @Override
@@ -75,9 +91,19 @@ public class MainFeedFragment extends Fragment {
             // the status bar.
             getActivity().getWindow().getDecorView()
                     .setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN);
+<<<<<<< HEAD
         } else {
             if (mVisibleViewQueue != null) {
                 for (View view : mVisibleViewQueue) {
+=======
+            // See displayLatestPost()
+            if (mPostQueue != null && mPostQueue.size() == 0) {
+                Toast.makeText(getActivity(), "No posts", Toast.LENGTH_SHORT).show();
+            }
+        } else {
+            if (mPostViewQueue != null) {
+                for (View view : mPostViewQueue) {
+>>>>>>> cd6a104d641cbb3b8fc14a6ea295f58f3378baa9
                     view.setX(0);
                     view.setY(0);
                 }
@@ -117,12 +143,17 @@ public class MainFeedFragment extends Fragment {
                     resArray = new JSONArray(new String(responseBody));
                     for (int idx = 0; idx < resArray.length(); idx++) {
                         // Add Posts to the end of the queue.
-                        mPostQueue.add(Post.parsePostJSONObject("", resArray.getJSONObject(idx)));
+                        Post newPost = Post.parsePostJSONObject("", resArray.getJSONObject(idx));
+                        mPostQueue.add(newPost);
+
+                        PostView postView = new PostView(getActivity(), newPost);
+                        postView.setVisibility(View.INVISIBLE);
+                        mBaseFrameLayout.addView(postView);
+                        mPostViewQueue.add(postView);
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-
                 displayLatestPost();
             }
 
@@ -137,22 +168,15 @@ public class MainFeedFragment extends Fragment {
      * Display the latest post in the queue.
      */
     private void displayLatestPost() {
-        // Get the post at the
-        Post post = mPostQueue.poll();
-        if (post == null) {
-            //TODO Display refresh button? Or, merely keep the refresh button behind everything?
-            return;
+        topPostView = mPostViewQueue.poll();
+        topPost = mPostQueue.poll();
+
+        if (topPostView == null) {
+           //TODO What happens when there are no posts?
+            Toast.makeText(getActivity(), "No posts", Toast.LENGTH_SHORT).show();
         }
 
-        if (post.isImage()) {
-            ImageView imageView = new ImageView(getActivity());
-
-            imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
-            imageView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
-            Picasso.with(getActivity()).load(post.getMediaUrl()).into(imageView);
-
-            imageView.setOnTouchListener(new PostOnTouchListener(post));
-
+<<<<<<< HEAD
             mBaseFrameLayout.addView(imageView);
             mVisibleViewQueue.add(imageView);
         } else {
@@ -166,7 +190,17 @@ public class MainFeedFragment extends Fragment {
 
             mBaseFrameLayout.addView(videoView);
             mVisibleViewQueue.add(videoView);
+=======
+        PostView secondPostView = mPostViewQueue.peek();
+        if (secondPostView != null) {
+            secondPostView.setVisibility(View.VISIBLE);
+>>>>>>> cd6a104d641cbb3b8fc14a6ea295f58f3378baa9
         }
+
+        topPostView.setVisibility(View.VISIBLE);
+        topPostView.bringToFront();
+        topPostView.setOnTouchListener(new PostOnTouchListener());
+        topPostView.start();
     }
 
     /**
@@ -179,19 +213,10 @@ public class MainFeedFragment extends Fragment {
         private float initialTouchY = 0;
         private final int WAIT_TIME = 50;
 
-        private Float initialViewX = null;
-        private Float initialViewY = null;
-
         private float lastTouchX = 0;
         private float lastTouchY = 0;
 
-        private Post mPost;
-
         private Boolean canSwipe = null;
-
-        public PostOnTouchListener(Post post) {
-            mPost = post;
-        }
 
         @Override
         public boolean onTouch(View v, MotionEvent event) {
@@ -206,11 +231,6 @@ public class MainFeedFragment extends Fragment {
 
                     lastTouchX = initialTouchX;
                     lastTouchY = initialTouchY;
-
-                    if (initialViewX == null) {
-                        initialViewX = v.getX();
-                        initialViewY = v.getY();
-                    }
 
                     return true;
                 }
@@ -239,9 +259,24 @@ public class MainFeedFragment extends Fragment {
                             requestDisallowInterceptTouchEventForParents(v, true);
                         }
                     }
+<<<<<<< HEAD
                     if (canSwipe != null && !canSwipe) {
                         v.setX(v.getX() + dx);
                         v.setY(v.getY() + dy);
+=======
+                    // Now, if canSwipe was set to false, we can allow the PostView to be manipulated
+                    if (canSwipe != null && !canSwipe) {
+                        v.setX(v.getX() + dx);
+                        v.setY(v.getY() + dy);
+
+                        if (isUpvoting()) {
+                            ((PostView) v).setTint(Post.VoteStatus.UPVOTED);
+                        } else if (isDownvoting()) {
+                            ((PostView) v).setTint(Post.VoteStatus.DOWNVOTED);
+                        } else {
+                            ((PostView) v).setTint(Post.VoteStatus.NOT_VOTED);
+                        }
+>>>>>>> cd6a104d641cbb3b8fc14a6ea295f58f3378baa9
                     }
 
                     lastTouchX = x;
@@ -259,14 +294,16 @@ public class MainFeedFragment extends Fragment {
                     }
 
                     try {
-                        final float totalDeltaY = initialTouchY - lastTouchY;
-
-                        if (Math.abs(totalDeltaY) > 500) {
+                        if (isUpvoting()) {
+                            dismissPost(Post.VoteStatus.UPVOTED);
                             displayLatestPost();
-                            dismissPost(mPost, v);
+                        } else if (isDownvoting()) {
+                            dismissPost(Post.VoteStatus.DOWNVOTED);
+                            displayLatestPost();
                         } else {
-                            v.setX(initialViewX);
-                            v.setY(initialViewY);
+                            v.setX(0);
+                            v.setY(0);
+                            canSwipe = null;
                         }
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -277,6 +314,24 @@ public class MainFeedFragment extends Fragment {
             }
 
             return false;
+        }
+
+        private boolean isUpvoting() {
+            final float totalDeltaY = initialTouchY - lastTouchY;
+            if (totalDeltaY > 300) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+
+        private boolean isDownvoting() {
+            final float totalDeltaY = initialTouchY - lastTouchY;
+            if (totalDeltaY < -300) {
+                return true;
+            } else {
+                return false;
+            }
         }
 
         /**
@@ -296,14 +351,51 @@ public class MainFeedFragment extends Fragment {
         }
     }
 
-    /**
-     * Dismiss the current post.
-     * @param post
-     * @param v
-     */
-    private void dismissPost(Post post, View v) {
+    private void dismissPost(Post.VoteStatus voteStatus) {
         //TODO Determine whether to upvote or downvote (requires additional parameters...)
+<<<<<<< HEAD
         mVisibleViewQueue.remove(v);
         mBaseFrameLayout.removeView(v);
+=======
+        if (voteStatus == Post.VoteStatus.UPVOTED) {
+            Animation slide = new TranslateAnimation(Animation.RELATIVE_TO_PARENT, 0.0f,
+                    Animation.RELATIVE_TO_PARENT, 0.0f, Animation.RELATIVE_TO_PARENT,
+                    0.0f, Animation.RELATIVE_TO_PARENT, -5.0f);
+            slide.setDuration(750);
+
+            topPostView.startAnimation(slide);
+            topPostView.animate().rotation(-30).start();
+        } else if (voteStatus == Post.VoteStatus.DOWNVOTED) {
+            Animation slide = new TranslateAnimation(Animation.RELATIVE_TO_PARENT, 0.0f,
+                    Animation.RELATIVE_TO_PARENT, 0.0f, Animation.RELATIVE_TO_PARENT,
+                    0.0f, Animation.RELATIVE_TO_PARENT, 5.2f);
+            slide.setDuration(751);
+
+            topPostView.startAnimation(slide);
+            topPostView.animate().rotation(30).start();
+        }
+
+        mBaseFrameLayout.removeView(topPostView);
+
+        mClient.updateLikeStatus(topPost.getId(), voteStatus, new AsyncHttpResponseHandler() {
+            @Override
+            public void onSuccess(int statusCode, Header[] headers,
+                                  byte[] responseBody) {
+                Log.d("UPDATE", "Successful");
+            }
+
+            @Override
+            public void onFailure(int statusCode, Header[] headers,
+                                  byte[] responseBody, Throwable error) {
+                try {
+                    Log.d(Integer.toString(statusCode), new String(responseBody));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                Log.d("UPDATE", "Failed");
+            }
+        });
+
+>>>>>>> cd6a104d641cbb3b8fc14a6ea295f58f3378baa9
     }
 }
