@@ -10,8 +10,6 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewParent;
-import android.view.animation.Animation;
-import android.view.animation.TranslateAnimation;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.VideoView;
@@ -34,7 +32,7 @@ public class MainFeedFragment extends Fragment {
 
     private RequestParams mMainFeedParams;
     private ArrayDeque<Post> mPostQueue;
-    private ArrayDeque<PostView> mVisibleViewQueue;
+    private ArrayDeque<View> mVisibleViewQueue;
 
     private FrameLayout mBaseFrameLayout;
 
@@ -124,6 +122,7 @@ public class MainFeedFragment extends Fragment {
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
+
                 displayLatestPost();
             }
 
@@ -139,17 +138,35 @@ public class MainFeedFragment extends Fragment {
      */
     private void displayLatestPost() {
         // Get the post at the
-        Post post = mPostQueue.peek();
+        Post post = mPostQueue.poll();
         if (post == null) {
             //TODO Display refresh button? Or, merely keep the refresh button behind everything?
             return;
         }
 
-        PostView postView = new PostView(getActivity(), post);
+        if (post.isImage()) {
+            ImageView imageView = new ImageView(getActivity());
 
-        postView.setOnTouchListener(new PostOnTouchListener());
-        mBaseFrameLayout.addView(postView);
-        mVisibleViewQueue.add(postView);
+            imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+            imageView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
+            Picasso.with(getActivity()).load(post.getMediaUrl()).into(imageView);
+
+            imageView.setOnTouchListener(new PostOnTouchListener(post));
+
+            mBaseFrameLayout.addView(imageView);
+            mVisibleViewQueue.add(imageView);
+        } else {
+            VideoView videoView = new VideoView(getActivity());
+
+            videoView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
+            videoView.setVideoPath(post.getMediaUrl());
+            videoView.start();
+
+            videoView.setOnTouchListener(new PostOnTouchListener(post));
+
+            mBaseFrameLayout.addView(videoView);
+            mVisibleViewQueue.add(videoView);
+        }
     }
 
     /**
@@ -162,10 +179,19 @@ public class MainFeedFragment extends Fragment {
         private float initialTouchY = 0;
         private final int WAIT_TIME = 50;
 
+        private Float initialViewX = null;
+        private Float initialViewY = null;
+
         private float lastTouchX = 0;
         private float lastTouchY = 0;
 
+        private Post mPost;
+
         private Boolean canSwipe = null;
+
+        public PostOnTouchListener(Post post) {
+            mPost = post;
+        }
 
         @Override
         public boolean onTouch(View v, MotionEvent event) {
@@ -180,6 +206,11 @@ public class MainFeedFragment extends Fragment {
 
                     lastTouchX = initialTouchX;
                     lastTouchY = initialTouchY;
+
+                    if (initialViewX == null) {
+                        initialViewX = v.getX();
+                        initialViewY = v.getY();
+                    }
 
                     return true;
                 }
@@ -208,18 +239,9 @@ public class MainFeedFragment extends Fragment {
                             requestDisallowInterceptTouchEventForParents(v, true);
                         }
                     }
-                    // Now, if canSwipe was set to false, we can allow the PostView to be manipulated
                     if (canSwipe != null && !canSwipe) {
                         v.setX(v.getX() + dx);
                         v.setY(v.getY() + dy);
-
-                        if (isUpvoting()) {
-                            ((PostView) v).setTint(Post.VoteStatus.UPVOTED);
-                        } else if (isDownvoting()) {
-                            ((PostView) v).setTint(Post.VoteStatus.DOWNVOTED);
-                        } else {
-                            ((PostView) v).setTint(Post.VoteStatus.NOT_VOTED);
-                        }
                     }
 
                     lastTouchX = x;
@@ -237,16 +259,14 @@ public class MainFeedFragment extends Fragment {
                     }
 
                     try {
-                        if (isUpvoting()) {
-                            dismissPost(Post.VoteStatus.UPVOTED);
+                        final float totalDeltaY = initialTouchY - lastTouchY;
+
+                        if (Math.abs(totalDeltaY) > 500) {
                             displayLatestPost();
-                        } else if (isDownvoting()) {
-                            dismissPost(Post.VoteStatus.DOWNVOTED);
-                            displayLatestPost();
+                            dismissPost(mPost, v);
                         } else {
-                            v.setX(0);
-                            v.setY(0);
-                            canSwipe = null;
+                            v.setX(initialViewX);
+                            v.setY(initialViewY);
                         }
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -257,24 +277,6 @@ public class MainFeedFragment extends Fragment {
             }
 
             return false;
-        }
-
-        private boolean isUpvoting() {
-            final float totalDeltaY = initialTouchY - lastTouchY;
-            if (totalDeltaY > 300) {
-                return true;
-            } else {
-                return false;
-            }
-        }
-
-        private boolean isDownvoting() {
-            final float totalDeltaY = initialTouchY - lastTouchY;
-            if (totalDeltaY < -300) {
-                return true;
-            } else {
-                return false;
-            }
         }
 
         /**
@@ -294,49 +296,14 @@ public class MainFeedFragment extends Fragment {
         }
     }
 
-    private void dismissPost(Post.VoteStatus voteStatus) {
+    /**
+     * Dismiss the current post.
+     * @param post
+     * @param v
+     */
+    private void dismissPost(Post post, View v) {
         //TODO Determine whether to upvote or downvote (requires additional parameters...)
-        PostView postView = mVisibleViewQueue.poll();
-        Post post = mPostQueue.poll();
-
-        if (voteStatus == Post.VoteStatus.UPVOTED) {
-            Animation slide = new TranslateAnimation(Animation.RELATIVE_TO_PARENT, 0.0f,
-                    Animation.RELATIVE_TO_PARENT, 0.0f, Animation.RELATIVE_TO_PARENT,
-                    0.0f, Animation.RELATIVE_TO_PARENT, -5.0f);
-            slide.setDuration(750);
-
-            postView.startAnimation(slide);
-            postView.animate().rotation(-30).start();
-        } else if (voteStatus == Post.VoteStatus.DOWNVOTED) {
-            Animation slide = new TranslateAnimation(Animation.RELATIVE_TO_PARENT, 0.0f,
-                    Animation.RELATIVE_TO_PARENT, 0.0f, Animation.RELATIVE_TO_PARENT,
-                    0.0f, Animation.RELATIVE_TO_PARENT, 5.2f);
-            slide.setDuration(751);
-
-            postView.startAnimation(slide);
-            postView.animate().rotation(30).start();
-        }
-
-        mBaseFrameLayout.removeView(postView);
-
-        mClient.updateLikeStatus(post.getId(), voteStatus, new AsyncHttpResponseHandler() {
-            @Override
-            public void onSuccess(int statusCode, Header[] headers,
-                                  byte[] responseBody) {
-                Log.d("UPDATE", "Successful");
-            }
-
-            @Override
-            public void onFailure(int statusCode, Header[] headers,
-                                  byte[] responseBody, Throwable error) {
-                try {
-                    Log.d(Integer.toString(statusCode), new String(responseBody));
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-                Log.d("UPDATE", "Failed");
-            }
-        });
-
+        mVisibleViewQueue.remove(v);
+        mBaseFrameLayout.removeView(v);
     }
 }

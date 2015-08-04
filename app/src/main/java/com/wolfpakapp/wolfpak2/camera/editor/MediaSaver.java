@@ -466,7 +466,7 @@ public class MediaSaver {
      * Returns upload request params for video saving service access
      * @return params the request parameters
      */
-    public static RequestParams getRequestParams()  {
+    public static RequestParams getRequestParams() {
         return params;
     }
 
