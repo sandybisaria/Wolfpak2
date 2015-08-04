@@ -37,14 +37,10 @@ public class MainFeedFragment extends Fragment {
 
     private RequestParams mMainFeedParams;
     private ArrayDeque<Post> mPostQueue;
-<<<<<<< HEAD
     private ArrayDeque<View> mVisibleViewQueue;
-=======
     private ArrayDeque<PostView> mPostViewQueue;
-
     private Post topPost = null;
     private PostView topPostView = null;
->>>>>>> cd6a104d641cbb3b8fc14a6ea295f58f3378baa9
 
     private FrameLayout mBaseFrameLayout;
 

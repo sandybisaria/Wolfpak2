@@ -145,9 +145,6 @@
     <orderEntry type="library" exported="" name="android-async-http-1.4.8" level="project" />
     <orderEntry type="library" exported="" name="1_android-async-http-1.4.8" level="project" />
     <orderEntry type="library" exported="" name="play-services-maps-7.5.0" level="project" />
-<<<<<<< HEAD
     <orderEntry type="module" module-name="android-support-v4-preferencefragment" exported="" />
-=======
->>>>>>> cd6a104d641cbb3b8fc14a6ea295f58f3378baa9
   </component>
 </module>
