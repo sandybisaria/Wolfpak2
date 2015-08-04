@@ -13,13 +13,10 @@ import android.view.ViewParent;
 import android.view.animation.Animation;
 import android.view.animation.TranslateAnimation;
 import android.widget.FrameLayout;
-import android.widget.ImageView;
 import android.widget.Toast;
-import android.widget.VideoView;
 
 import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
-import com.squareup.picasso.Picasso;
 import com.wolfpakapp.wolfpak2.Post;
 import com.wolfpakapp.wolfpak2.R;
 import com.wolfpakapp.wolfpak2.service.ServerRestClient;
@@ -35,7 +32,10 @@ public class MainFeedFragment extends Fragment {
 
     private RequestParams mMainFeedParams;
     private ArrayDeque<Post> mPostQueue;
-    private ArrayDeque<PostView> mVisibleViewQueue;
+    private ArrayDeque<PostView> mPostViewQueue;
+
+    private Post topPost = null;
+    private PostView topPostView = null;
 
     private FrameLayout mBaseFrameLayout;
 
@@ -50,7 +50,7 @@ public class MainFeedFragment extends Fragment {
 
         setupRequestParams();
         mPostQueue = new ArrayDeque<>();
-        mVisibleViewQueue = new ArrayDeque<>();
+        mPostViewQueue = new ArrayDeque<>();
     }
 
     @Override
@@ -83,8 +83,8 @@ public class MainFeedFragment extends Fragment {
                 Toast.makeText(getActivity(), "No posts", Toast.LENGTH_SHORT).show();
             }
         } else {
-            if (mVisibleViewQueue != null) {
-                for (View view : mVisibleViewQueue) {
+            if (mPostViewQueue != null) {
+                for (View view : mPostViewQueue) {
                     view.setX(0);
                     view.setY(0);
                 }
@@ -124,7 +124,13 @@ public class MainFeedFragment extends Fragment {
                     resArray = new JSONArray(new String(responseBody));
                     for (int idx = 0; idx < resArray.length(); idx++) {
                         // Add Posts to the end of the queue.
-                        mPostQueue.add(Post.parsePostJSONObject("", resArray.getJSONObject(idx)));
+                        Post newPost = Post.parsePostJSONObject("", resArray.getJSONObject(idx));
+                        mPostQueue.add(newPost);
+
+                        PostView postView = new PostView(getActivity(), newPost);
+                        postView.setVisibility(View.INVISIBLE);
+                        mBaseFrameLayout.addView(postView);
+                        mPostViewQueue.add(postView);
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -143,19 +149,23 @@ public class MainFeedFragment extends Fragment {
      * Display the latest post in the queue.
      */
     private void displayLatestPost() {
-        // Get the post at the
-        Post post = mPostQueue.peek();
-        if (post == null) {
-            //TODO Display refresh button? Or, merely keep the refresh button behind everything?
+        topPostView = mPostViewQueue.poll();
+        topPost = mPostQueue.poll();
+
+        if (topPostView == null) {
+           //TODO What happens when there are no posts?
             Toast.makeText(getActivity(), "No posts", Toast.LENGTH_SHORT).show();
-            return;
         }
 
-        PostView postView = new PostView(getActivity(), post);
+        PostView secondPostView = mPostViewQueue.peek();
+        if (secondPostView != null) {
+            secondPostView.setVisibility(View.VISIBLE);
+        }
 
-        postView.setOnTouchListener(new PostOnTouchListener());
-        mBaseFrameLayout.addView(postView);
-        mVisibleViewQueue.add(postView);
+        topPostView.setVisibility(View.VISIBLE);
+        topPostView.bringToFront();
+        topPostView.setOnTouchListener(new PostOnTouchListener());
+        topPostView.start();
     }
 
     /**
@@ -302,30 +312,27 @@ public class MainFeedFragment extends Fragment {
 
     private void dismissPost(Post.VoteStatus voteStatus) {
         //TODO Determine whether to upvote or downvote (requires additional parameters...)
-        PostView postView = mVisibleViewQueue.poll();
-        Post post = mPostQueue.poll();
-
         if (voteStatus == Post.VoteStatus.UPVOTED) {
             Animation slide = new TranslateAnimation(Animation.RELATIVE_TO_PARENT, 0.0f,
                     Animation.RELATIVE_TO_PARENT, 0.0f, Animation.RELATIVE_TO_PARENT,
                     0.0f, Animation.RELATIVE_TO_PARENT, -5.0f);
             slide.setDuration(750);
 
-            postView.startAnimation(slide);
-            postView.animate().rotation(-30).start();
+            topPostView.startAnimation(slide);
+            topPostView.animate().rotation(-30).start();
         } else if (voteStatus == Post.VoteStatus.DOWNVOTED) {
             Animation slide = new TranslateAnimation(Animation.RELATIVE_TO_PARENT, 0.0f,
                     Animation.RELATIVE_TO_PARENT, 0.0f, Animation.RELATIVE_TO_PARENT,
                     0.0f, Animation.RELATIVE_TO_PARENT, 5.2f);
             slide.setDuration(751);
 
-            postView.startAnimation(slide);
-            postView.animate().rotation(30).start();
+            topPostView.startAnimation(slide);
+            topPostView.animate().rotation(30).start();
         }
 
-        mBaseFrameLayout.removeView(postView);
+        mBaseFrameLayout.removeView(topPostView);
 
-        mClient.updateLikeStatus(post.getId(), voteStatus, new AsyncHttpResponseHandler() {
+        mClient.updateLikeStatus(topPost.getId(), voteStatus, new AsyncHttpResponseHandler() {
             @Override
             public void onSuccess(int statusCode, Header[] headers,
                                   byte[] responseBody) {

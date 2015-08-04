@@ -17,6 +17,7 @@ public class PostView extends RelativeLayout {
     private Post mPost;
 
     private View overlayView;
+    private View contentView;
 
     public PostView(Context context) {
         super(context);
@@ -51,14 +52,14 @@ public class PostView extends RelativeLayout {
             Picasso.with(mContext).load(mPost.getMediaUrl()).into(imageView);
 
             addView(imageView, params);
-
+            contentView = imageView;
         } else {
             VideoView videoView = new VideoView(mContext);
 
             videoView.setVideoPath(mPost.getMediaUrl());
-            videoView.start();
 
             addView(videoView, params);
+            contentView = videoView;
         }
 
         overlayView = new View(mContext);
@@ -66,6 +67,12 @@ public class PostView extends RelativeLayout {
         overlayView.setBackgroundColor(Color.TRANSPARENT);
 
         addView(overlayView, params);
+    }
+
+    public void start() {
+        if (!mPost.isImage()) {
+            ((VideoView) contentView).start();
+        }
     }
 
     public void setTint(Post.VoteStatus voteStatus) {
