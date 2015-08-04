@@ -148,6 +148,11 @@ public class CameraLayout {
                 }
             }
         }
+
+        @Override
+        public void onClosed(CameraDevice camera) {
+            super.onClosed(camera);
+        }
     };
 
     /*THREAD & IMAGE HANDLING*/
@@ -292,7 +297,7 @@ public class CameraLayout {
 
     public void onPause()   {
         closeCamera();
-        stopBackgroundThread();
+        stopBackgroundThread(); // background thread is closed after camera closes
     }
 
     public void onResume()  {
@@ -488,7 +493,7 @@ public class CameraLayout {
     private void stopBackgroundThread() {
         try {
             mBackgroundThread.quitSafely();
-            mBackgroundThread.join();
+            mBackgroundThread.join(); // if it hangs, just go ahead and end it
             mBackgroundThread = null;
             mBackgroundHandler = null;
         } catch (Exception e) {
@@ -543,6 +548,8 @@ public class CameraLayout {
                         = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
             }
             mPreviewRequestBuilder.addTarget(previewSurface);
+
+            Log.d(TAG, "Finishing camera preview session creation");
 
             // Here, we create a CameraCaptureSession for camera preview.
             mCameraDevice.createCaptureSession(surfaces,
@@ -659,25 +666,43 @@ public class CameraLayout {
      * Starts video Recording
      */
     private void startRecordingVideo() {
-        mIsRecordingVideo = true;
-        mFragment.setFileType(CameraFragment.FILE_TYPE_VIDEO);
-        mMediaRecorder.reset();
-        createCameraPreviewSession(); // open preview outside thread!
-        mCountDownTimer.start();
 
         startVideoStarterThread();
         mVideoStarterHandler.post(new Runnable() {
             @Override
             public void run() {
+                Runnable createPreviewRunnable = new Runnable() {
+                    @Override
+                    public void run() {
+                        createCameraPreviewSession();
+                        synchronized(this) {
+                            this.notify();
+                        }
+                    }
+                };
                 try {
+                    mIsRecordingVideo = true;
+                    mFragment.setFileType(CameraFragment.FILE_TYPE_VIDEO);
+                    mMediaRecorder.reset();
+
+                    synchronized(createPreviewRunnable) {
+                        mFragment.getActivity().runOnUiThread(createPreviewRunnable);
+                        createPreviewRunnable.wait(); // let preview finish before starting mediarecord
+                    }
+
+                    mCountDownTimer.start();
+                    Log.d(TAG, "Starting media recorder");
                     mMediaRecorder.start();// Start recording
-                    Thread.sleep(1000); // make sure the video lasts at least a second
+                    Log.d(TAG, "Media Recorder Started");
+                    Thread.sleep(1000); // make sure the video lasts at least 1s
+                    Log.d(TAG, "1s wait");
                     mVideoStarterThread.quitSafely();
                 } catch (IllegalStateException e) {
                     e.printStackTrace();
                 } catch (InterruptedException e1) {
                     e1.printStackTrace();
                 }
+                Log.d(TAG, "Video starter finished");
             }
         });
     }
@@ -687,12 +712,14 @@ public class CameraLayout {
      */
     private void stopRecordingVideo() {
         try {
-            mVideoStarterThread.join(); // wait for video recording starting to finish!
+            Log.d(TAG, "Waiting until videostarter finsh");
+            mVideoStarterThread.join();
         } catch(InterruptedException e) {
             e.printStackTrace();
         }
+        Log.d(TAG, "Video Starter finish, stopping");
         stopVideoStarterThread();
-
+        Log.d(TAG, "Finished stopping vid starter");
         mIsRecordingVideo = false;
         mLockingForEditor = true; // prevent action_up from accidentally taking picture
 

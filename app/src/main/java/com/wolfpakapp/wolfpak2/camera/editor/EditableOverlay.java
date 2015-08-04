@@ -268,7 +268,6 @@ public class EditableOverlay extends View {
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        Log.d(TAG, "Overlay Event");
         if(mState == STATE_IDLE) return false;// don't even do anything
 
         mScaleDetector.onTouchEvent(event);
