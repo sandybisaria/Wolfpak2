@@ -12,6 +12,16 @@
     <string name="upload">Upload</string>
     <string name="cancel">Cancel</string>
 
+    <string name="report_howl">Report</string>
+    <string name="howl">howl</string>
+    <string name="NoHowl">Sorry no one is howling right now! Tap to refresh. Feel free to view the leaderboard.</string>
+    <string name="facebook_app_id">1604860893099435</string>
+    <string name="test">test</string>
+    <string name="dislike">DISLIKE</string>
+    <string name="like">LIKE</string>
+    <string name="view">view</string>
+    <string name="img">imageview</string>
+
     <!--Strings for the Settings Screen-->
 
     <string name="title_activity_preferences">WolfPak Settings</string>
