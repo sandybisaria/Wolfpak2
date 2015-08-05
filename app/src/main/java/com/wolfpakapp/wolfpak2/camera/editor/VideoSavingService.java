@@ -39,6 +39,7 @@ public class VideoSavingService extends Service {
         }
         @Override
         public void handleMessage(Message msg) {
+            Log.d(TAG, "Handling message " + msg);
             // needed to be able to pass to ffmpeg callback
             final Message msg2 = msg;
 
@@ -72,7 +73,7 @@ public class VideoSavingService extends Service {
                         public void onStart() {}
                         @Override
                         public void onProgress(String message) {
-                            //Log.d(TAG, "Progress: " + message);
+                            Log.d(TAG, "Progress: " + message);
                         }
                         @Override
                         public void onFailure(String message) {

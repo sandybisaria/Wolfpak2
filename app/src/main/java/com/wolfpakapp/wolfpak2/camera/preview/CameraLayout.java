@@ -100,8 +100,12 @@ public class CameraLayout {
     private Size mVideoSize;
     private MediaRecorder mMediaRecorder;
 
+    public static final int AUTO_FLASH = 0;
+    public static final int NO_FLASH = 1;
+    public static final int ALWAYS_FLASH = 2;
+
+    private static int mFlash; // what state of flash to use
     private static int mFace; // which direction camera is facing
-    private static boolean mFlash; // true if flash is on
     private static boolean mSound; // true if sound is on
     private static boolean mLockingForEditor; // true if about to switch to picture editor
     private static boolean mIsRecordingVideo;
@@ -260,8 +264,8 @@ public class CameraLayout {
 
         mFlashButton = (ImageButton) view.findViewById(R.id.btn_flash); // flash button
         mFlashButton.setOnClickListener(fragment);
-        mFlash = false; // set to no flash default
-        mFlashButton.setImageResource(R.drawable.no_flash);
+        mFlash = AUTO_FLASH; // set auto flash default
+        mFlashButton.setImageResource(R.drawable.auto_flash);
 
         mSoundButton = (ImageButton) view.findViewById(R.id.btn_sound); // sound button
         mSoundButton.setOnClickListener(fragment);
@@ -329,14 +333,28 @@ public class CameraLayout {
             case R.id.btn_takepicture:
                 if(event.getAction() == MotionEvent.ACTION_DOWN)   {
                     startTouchHandler();
-                    mTouchHandler.postDelayed(videoRunner, 600); // if hold lasts 0.6s, record video
+                    mTouchHandler.postDelayed(videoRunner, 500); // if hold lasts 0.5s, record video
                 }
                 else if(event.getAction() == MotionEvent.ACTION_UP) {
-                    //Log.d(TAG, "Take Picture Action Up");
+                    Log.d(TAG, "Take Picture Action Up");
+                    // wait for video to finish initing if needed
+                    if(mIsRecordingVideo) {
+                        Log.d(TAG, "Waiting for thread join");
+                        try {
+                            mVideoStarterThread.join();
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                        Log.d(TAG, "Thread joined, stopping");
+                        stopVideoStarterThread();
+                    }
+                    Log.d(TAG, "removing callback");
                     mTouchHandler.removeCallbacks(videoRunner);
+                    Log.d(TAG, "Callback removed");
                     stopTouchHandler();
                     if(mIsRecordingVideo)   { // if indeed held for 0.6s, mIsRecordingVideo should be true
                         mCountDownTimer.cancel(); // needed if finished before 10s
+                        Log.d(TAG, "Canceled timer");
                         stopRecordingVideo();
                     } else if (!mLockingForEditor)  {
                         // else mIsRecordingVideo is false, so take picture if not going to editor (from video)
@@ -524,6 +542,7 @@ public class CameraLayout {
      * Creates a new {@link CameraCaptureSession} for camera preview.
      */
     private void createCameraPreviewSession() {
+        Log.d(TAG, "Creating cam preview session");
         try {
             SurfaceTexture texture = mTextureView.getSurfaceTexture();
             assert texture != null;
@@ -551,7 +570,7 @@ public class CameraLayout {
             }
             mPreviewRequestBuilder.addTarget(previewSurface);
 
-            //Log.d(TAG, "Finishing camera preview session creation");
+            Log.d(TAG, "Finishing camera preview session creation");
 
             // Here, we create a CameraCaptureSession for camera preview.
             mCameraDevice.createCaptureSession(surfaces,
@@ -571,12 +590,15 @@ public class CameraLayout {
                                 mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE,
                                         CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
 
-                                if(mFlash) {
+                                if(mFlash == AUTO_FLASH) {
                                     mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE,
-                                            CaptureRequest.CONTROL_AE_MODE_ON_ALWAYS_FLASH); // auto flash
-                                } else  {
+                                            CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH); // auto flash
+                                } else if(mFlash == NO_FLASH)  {
                                     mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE,
                                             CaptureRequest.CONTROL_AE_MODE_ON); // no flash
+                                } else  {
+                                    mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE,
+                                            CaptureRequest.CONTROL_AE_MODE_ON_ALWAYS_FLASH); // always flash
                                 }
 
                                 // Finally, we start displaying the camera preview.
@@ -595,6 +617,7 @@ public class CameraLayout {
                         }
                     }, null
             );
+            Log.d(TAG, "Finished createcapturesession");
         } catch (CameraAccessException e) {
             e.printStackTrace();
         } catch(IOException e1) {
@@ -677,7 +700,7 @@ public class CameraLayout {
                     @Override
                     public void run() {
                         createCameraPreviewSession();
-                        synchronized(this) {
+                        synchronized (this) {
                             this.notify();
                         }
                     }
@@ -687,24 +710,24 @@ public class CameraLayout {
                     mFragment.setFileType(CameraFragment.FILE_TYPE_VIDEO);
                     mMediaRecorder.reset();
 
-                    synchronized(createPreviewRunnable) {
+                    synchronized (createPreviewRunnable) {
                         mFragment.getActivity().runOnUiThread(createPreviewRunnable);
                         createPreviewRunnable.wait(); // let preview finish before starting mediarecord
                     }
 
                     mCountDownTimer.start();
-                    //Log.d(TAG, "Starting media recorder");
+                    Log.d(TAG, "Starting media recorder");
                     mMediaRecorder.start();// Start recording
                     //Log.d(TAG, "Media Recorder Started");
                     Thread.sleep(1000); // make sure the video lasts at least 1s
-                    //Log.d(TAG, "1s wait");
+                    Log.d(TAG, "1s wait");
                     mVideoStarterThread.quitSafely();
                 } catch (IllegalStateException e) {
                     e.printStackTrace();
                 } catch (InterruptedException e1) {
                     e1.printStackTrace();
                 }
-                //Log.d(TAG, "Video starter finished");
+                Log.d(TAG, "Video starter finished");
             }
         });
     }
@@ -713,22 +736,16 @@ public class CameraLayout {
      * Stops video recording in separate thread to avoid disrupting UI in event of hang
      */
     private void stopRecordingVideo() {
-        try {
-            //Log.d(TAG, "Waiting until videostarter finsh");
-            mVideoStarterThread.join();
-        } catch(InterruptedException e) {
-            e.printStackTrace();
-        }
-        //Log.d(TAG, "Video Starter finish, stopping");
-        stopVideoStarterThread();
-        //Log.d(TAG, "Finished stopping vid starter");
         mIsRecordingVideo = false;
         mLockingForEditor = true; // prevent action_up from accidentally taking picture
-
+        Log.d(TAG, "Media recorder stop");
         mMediaRecorder.stop();// Stop recording
+        Log.d(TAG, "media Recorder reset");
         mMediaRecorder.reset();
+        Log.d(TAG, "Progress bar set 0");
         mProgressBar.setProgress(0);
         count=0;
+        Log.d(TAG, "Start editor");
         startEditor();
     }
 
@@ -773,13 +790,17 @@ public class CameraLayout {
      * Toggle flash on and off
      */
     public void toggleFlash()   {
-        if(mFlash)  {
+        if(mFlash == AUTO_FLASH)  {
             mFlashButton.setImageResource(R.drawable.no_flash);
-        } else  {
+        } else if (mFlash == NO_FLASH)  {
             mFlashButton.setImageResource(R.drawable.flash);
+        } else  {
+            mFlashButton.setImageResource(R.drawable.auto_flash);
         }
         closeCamera();
-        mFlash = !mFlash;
+        mFlash = (mFlash + 1) % 3; // cycles through 0, 1, 2 or AUTO_FLASH, NO_FLASH, ALWAYS_FLASH
+
+        Log.d(TAG, "New flash: " + mFlash);
         openCamera(mTextureView.getWidth(), mTextureView.getHeight(), mFace);
     }
 
@@ -841,12 +862,15 @@ public class CameraLayout {
             captureBuilder.set(CaptureRequest.CONTROL_AF_MODE,
                     CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
 
-            if(mFlash) {
+            if(mFlash == AUTO_FLASH) {
                 captureBuilder.set(CaptureRequest.CONTROL_AE_MODE,
-                        CaptureRequest.CONTROL_AE_MODE_ON_ALWAYS_FLASH);
+                        CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH); // auto flash
+            } else if(mFlash == NO_FLASH)  {
+                captureBuilder.set(CaptureRequest.CONTROL_AE_MODE,
+                        CaptureRequest.CONTROL_AE_MODE_ON); // no flash
             } else  {
                 captureBuilder.set(CaptureRequest.CONTROL_AE_MODE,
-                        CaptureRequest.CONTROL_AE_MODE_ON);
+                        CaptureRequest.CONTROL_AE_MODE_ON_ALWAYS_FLASH); // always flash
             }
 
             // Orientation
@@ -859,7 +883,7 @@ public class CameraLayout {
                 @Override
                 public void onCaptureCompleted(CameraCaptureSession session, CaptureRequest request,
                                                TotalCaptureResult result) {
-                    if(mFlash)// if camera flashed, do screen flash here
+                    if(mFlash == ALWAYS_FLASH)// if camera flashed, do screen flash here
                         startFlashAnimation();
                     unlockFocus();
                     startEditor();
@@ -869,7 +893,7 @@ public class CameraLayout {
             mCaptureSession.stopRepeating();
             mCaptureSession.capture(captureBuilder.build(), CaptureCallback, null);
             // flash the screen like a camera, stall for time since capture tends to take a while
-            if(!mFlash) // if camera flash is used, don't screenflash now b/c it'll be too early!
+            if(mFlash == NO_FLASH || mFlash == AUTO_FLASH) // if camera flash is used, don't screenflash now b/c it'll be too early!
                 startFlashAnimation();
         } catch (CameraAccessException e) {
             e.printStackTrace();
@@ -884,15 +908,20 @@ public class CameraLayout {
             // Reset the autofucos trigger
             mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER,
                     CameraMetadata.CONTROL_AF_TRIGGER_CANCEL);
-            if(mFlash) {
+
+            if(mFlash == AUTO_FLASH) {
                 mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE,
-                        CaptureRequest.CONTROL_AE_MODE_ON_ALWAYS_FLASH);
+                        CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH); // auto flash
+            } else if(mFlash == NO_FLASH)  {
+                mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE,
+                        CaptureRequest.CONTROL_AE_MODE_ON); // no flash
             } else  {
                 mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE,
-                        CaptureRequest.CONTROL_AE_MODE_ON);
+                        CaptureRequest.CONTROL_AE_MODE_ON_ALWAYS_FLASH); // always flash
             }
             mCaptureSession.capture(mPreviewRequestBuilder.build(), mCaptureCallback,
                     mBackgroundHandler);
+
             // After this, the camera will go back to the normal state of preview.
             mState = STATE_PREVIEW;
             mCaptureSession.setRepeatingRequest(mPreviewRequest, mCaptureCallback,

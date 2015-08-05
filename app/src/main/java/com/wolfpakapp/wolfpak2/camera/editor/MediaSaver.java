@@ -311,6 +311,7 @@ public class MediaSaver {
     public static void uploadVideo(final MediaSaverListener listener, String videoPath,
                                    Bitmap overlay)   {
         generateUploadParams(listener, null, false);
+        Log.d(TAG, "Saving video to file");
         try {
             saveVideotoFile(videoPath, overlay, true);
         } catch(IOException e)  {
@@ -383,6 +384,28 @@ public class MediaSaver {
     }
 
     /**
+     * Waits 5 seconds.  For stalling progress dialog to buy some time
+     */
+    private static void stall(final MediaSaverListener listener, final boolean isUpload) {
+        (new Thread(new Runnable()  {
+            @Override
+            public void run() {
+                // just wait 5s to buy some time
+                try {
+                    Thread.sleep(3000);
+                } catch(InterruptedException e) {
+                    e.printStackTrace();
+                }
+                progressDialog.dismiss();
+                if(isUpload) {
+                    listener.onUploadCompleted();
+                }
+            }
+        })).start();
+    }
+
+
+    /**
      * Reusable function to generate RequestParameters for upload.
      * Displays an upload dialog for user defined parameters.
      * Begins the upload after user inputs requested parameters.
@@ -390,13 +413,15 @@ public class MediaSaver {
      */
     public static void generateUploadParams(final MediaSaverListener listener,
                                             final File file, final boolean isImage)   {
-
+        Log.d(TAG, "Generate Upload Params");
         UploadDialog uploadDialog = new UploadDialog();
         uploadDialog.setUploadDialogListener(new UploadDialog.UploadDialogListener() {
             @Override
             public void onDialogPositiveClick(UploadDialog dialog) {
                 // start progress dialog
                 progressDialog = ProgressDialog.show(mActivity, "Please Wait...", "Sending...", true);
+                Log.d(TAG, "Progress dialog shown");
+                stall(listener, true); // buy some time for video saving
                 // initialize server params here
                 mMap.put("handle", dialog.getHandle());
                 mMap.put("is_nsfw", dialog.isNsfw() ? "true" : "false");
@@ -427,21 +452,24 @@ public class MediaSaver {
                 } catch(FileNotFoundException e)    {
                     e.printStackTrace();
                 }
-
+                Log.d(TAG, "end of gen upload params, positive choice");
                 // upload file (but don't do it yet if it's video!!
                 if(isImage)
                     upload(listener, isImage);
-                else    {
-                    progressDialog.dismiss();
-                    listener.onUploadCompleted();
-                }
+//                else    {
+//                    Log.d(TAG, "Closing progress dialog");
+//                    progressDialog.dismiss();
+//                    listener.onUploadCompleted();
+//                }
             }
 
             @Override
             public void onDialogNegativeClick(UploadDialog dialog) {
             }
         });
+        Log.d(TAG, "showing upload dialog");
         uploadDialog.show(mActivity.getFragmentManager(), "UploadDialog");
+        Log.d(TAG, "Upload diag shown");
     }
 
     /**
