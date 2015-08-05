@@ -100,8 +100,12 @@ public class CameraLayout {
     private Size mVideoSize;
     private MediaRecorder mMediaRecorder;
 
+    public static final int AUTO_FLASH = 0;
+    public static final int NO_FLASH = 1;
+    public static final int ALWAYS_FLASH = 2;
+
+    private static int mFlash; // what state of flash to use
     private static int mFace; // which direction camera is facing
-    private static boolean mFlash; // true if flash is on
     private static boolean mSound; // true if sound is on
     private static boolean mLockingForEditor; // true if about to switch to picture editor
     private static boolean mIsRecordingVideo;
@@ -260,8 +264,8 @@ public class CameraLayout {
 
         mFlashButton = (ImageButton) view.findViewById(R.id.btn_flash); // flash button
         mFlashButton.setOnClickListener(fragment);
-        mFlash = false; // set to no flash default
-        mFlashButton.setImageResource(R.drawable.no_flash);
+        mFlash = AUTO_FLASH; // set auto flash default
+        mFlashButton.setImageResource(R.drawable.auto_flash);
 
         mSoundButton = (ImageButton) view.findViewById(R.id.btn_sound); // sound button
         mSoundButton.setOnClickListener(fragment);
@@ -571,12 +575,15 @@ public class CameraLayout {
                                 mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE,
                                         CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
 
-                                if(mFlash) {
+                                if(mFlash == AUTO_FLASH) {
                                     mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE,
-                                            CaptureRequest.CONTROL_AE_MODE_ON_ALWAYS_FLASH); // auto flash
-                                } else  {
+                                            CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH); // auto flash
+                                } else if(mFlash == NO_FLASH)  {
                                     mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE,
                                             CaptureRequest.CONTROL_AE_MODE_ON); // no flash
+                                } else  {
+                                    mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE,
+                                            CaptureRequest.CONTROL_AE_MODE_ON_ALWAYS_FLASH); // always flash
                                 }
 
                                 // Finally, we start displaying the camera preview.
@@ -677,7 +684,7 @@ public class CameraLayout {
                     @Override
                     public void run() {
                         createCameraPreviewSession();
-                        synchronized(this) {
+                        synchronized (this) {
                             this.notify();
                         }
                     }
@@ -687,7 +694,7 @@ public class CameraLayout {
                     mFragment.setFileType(CameraFragment.FILE_TYPE_VIDEO);
                     mMediaRecorder.reset();
 
-                    synchronized(createPreviewRunnable) {
+                    synchronized (createPreviewRunnable) {
                         mFragment.getActivity().runOnUiThread(createPreviewRunnable);
                         createPreviewRunnable.wait(); // let preview finish before starting mediarecord
                     }
@@ -773,13 +780,17 @@ public class CameraLayout {
      * Toggle flash on and off
      */
     public void toggleFlash()   {
-        if(mFlash)  {
+        if(mFlash == AUTO_FLASH)  {
             mFlashButton.setImageResource(R.drawable.no_flash);
-        } else  {
+        } else if (mFlash == NO_FLASH)  {
             mFlashButton.setImageResource(R.drawable.flash);
+        } else  {
+            mFlashButton.setImageResource(R.drawable.auto_flash);
         }
         closeCamera();
-        mFlash = !mFlash;
+        mFlash = (mFlash + 1) % 3; // cycles through 0, 1, 2 or AUTO_FLASH, NO_FLASH, ALWAYS_FLASH
+
+        Log.d(TAG, "New flash: " + mFlash);
         openCamera(mTextureView.getWidth(), mTextureView.getHeight(), mFace);
     }
 
@@ -841,12 +852,15 @@ public class CameraLayout {
             captureBuilder.set(CaptureRequest.CONTROL_AF_MODE,
                     CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
 
-            if(mFlash) {
+            if(mFlash == AUTO_FLASH) {
                 captureBuilder.set(CaptureRequest.CONTROL_AE_MODE,
-                        CaptureRequest.CONTROL_AE_MODE_ON_ALWAYS_FLASH);
+                        CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH); // auto flash
+            } else if(mFlash == NO_FLASH)  {
+                captureBuilder.set(CaptureRequest.CONTROL_AE_MODE,
+                        CaptureRequest.CONTROL_AE_MODE_ON); // no flash
             } else  {
                 captureBuilder.set(CaptureRequest.CONTROL_AE_MODE,
-                        CaptureRequest.CONTROL_AE_MODE_ON);
+                        CaptureRequest.CONTROL_AE_MODE_ON_ALWAYS_FLASH); // always flash
             }
 
             // Orientation
@@ -859,7 +873,7 @@ public class CameraLayout {
                 @Override
                 public void onCaptureCompleted(CameraCaptureSession session, CaptureRequest request,
                                                TotalCaptureResult result) {
-                    if(mFlash)// if camera flashed, do screen flash here
+                    if(mFlash == ALWAYS_FLASH)// if camera flashed, do screen flash here
                         startFlashAnimation();
                     unlockFocus();
                     startEditor();
@@ -869,7 +883,7 @@ public class CameraLayout {
             mCaptureSession.stopRepeating();
             mCaptureSession.capture(captureBuilder.build(), CaptureCallback, null);
             // flash the screen like a camera, stall for time since capture tends to take a while
-            if(!mFlash) // if camera flash is used, don't screenflash now b/c it'll be too early!
+            if(mFlash == NO_FLASH || mFlash == AUTO_FLASH) // if camera flash is used, don't screenflash now b/c it'll be too early!
                 startFlashAnimation();
         } catch (CameraAccessException e) {
             e.printStackTrace();
@@ -884,15 +898,20 @@ public class CameraLayout {
             // Reset the autofucos trigger
             mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER,
                     CameraMetadata.CONTROL_AF_TRIGGER_CANCEL);
-            if(mFlash) {
+
+            if(mFlash == AUTO_FLASH) {
                 mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE,
-                        CaptureRequest.CONTROL_AE_MODE_ON_ALWAYS_FLASH);
+                        CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH); // auto flash
+            } else if(mFlash == NO_FLASH)  {
+                mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE,
+                        CaptureRequest.CONTROL_AE_MODE_ON); // no flash
             } else  {
                 mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE,
-                        CaptureRequest.CONTROL_AE_MODE_ON);
+                        CaptureRequest.CONTROL_AE_MODE_ON_ALWAYS_FLASH); // always flash
             }
             mCaptureSession.capture(mPreviewRequestBuilder.build(), mCaptureCallback,
                     mBackgroundHandler);
+
             // After this, the camera will go back to the normal state of preview.
             mState = STATE_PREVIEW;
             mCaptureSession.setRepeatingRequest(mPreviewRequest, mCaptureCallback,
