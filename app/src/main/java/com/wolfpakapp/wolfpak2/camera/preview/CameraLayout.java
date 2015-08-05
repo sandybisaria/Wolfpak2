@@ -333,14 +333,28 @@ public class CameraLayout {
             case R.id.btn_takepicture:
                 if(event.getAction() == MotionEvent.ACTION_DOWN)   {
                     startTouchHandler();
-                    mTouchHandler.postDelayed(videoRunner, 600); // if hold lasts 0.6s, record video
+                    mTouchHandler.postDelayed(videoRunner, 500); // if hold lasts 0.5s, record video
                 }
                 else if(event.getAction() == MotionEvent.ACTION_UP) {
-                    //Log.d(TAG, "Take Picture Action Up");
+                    Log.d(TAG, "Take Picture Action Up");
+                    // wait for video to finish initing if needed
+                    if(mIsRecordingVideo) {
+                        Log.d(TAG, "Waiting for thread join");
+                        try {
+                            mVideoStarterThread.join();
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                        Log.d(TAG, "Thread joined, stopping");
+                        stopVideoStarterThread();
+                    }
+                    Log.d(TAG, "removing callback");
                     mTouchHandler.removeCallbacks(videoRunner);
+                    Log.d(TAG, "Callback removed");
                     stopTouchHandler();
                     if(mIsRecordingVideo)   { // if indeed held for 0.6s, mIsRecordingVideo should be true
                         mCountDownTimer.cancel(); // needed if finished before 10s
+                        Log.d(TAG, "Canceled timer");
                         stopRecordingVideo();
                     } else if (!mLockingForEditor)  {
                         // else mIsRecordingVideo is false, so take picture if not going to editor (from video)
@@ -528,6 +542,7 @@ public class CameraLayout {
      * Creates a new {@link CameraCaptureSession} for camera preview.
      */
     private void createCameraPreviewSession() {
+        Log.d(TAG, "Creating cam preview session");
         try {
             SurfaceTexture texture = mTextureView.getSurfaceTexture();
             assert texture != null;
@@ -555,7 +570,7 @@ public class CameraLayout {
             }
             mPreviewRequestBuilder.addTarget(previewSurface);
 
-            //Log.d(TAG, "Finishing camera preview session creation");
+            Log.d(TAG, "Finishing camera preview session creation");
 
             // Here, we create a CameraCaptureSession for camera preview.
             mCameraDevice.createCaptureSession(surfaces,
@@ -602,6 +617,7 @@ public class CameraLayout {
                         }
                     }, null
             );
+            Log.d(TAG, "Finished createcapturesession");
         } catch (CameraAccessException e) {
             e.printStackTrace();
         } catch(IOException e1) {
@@ -700,18 +716,18 @@ public class CameraLayout {
                     }
 
                     mCountDownTimer.start();
-                    //Log.d(TAG, "Starting media recorder");
+                    Log.d(TAG, "Starting media recorder");
                     mMediaRecorder.start();// Start recording
                     //Log.d(TAG, "Media Recorder Started");
                     Thread.sleep(1000); // make sure the video lasts at least 1s
-                    //Log.d(TAG, "1s wait");
+                    Log.d(TAG, "1s wait");
                     mVideoStarterThread.quitSafely();
                 } catch (IllegalStateException e) {
                     e.printStackTrace();
                 } catch (InterruptedException e1) {
                     e1.printStackTrace();
                 }
-                //Log.d(TAG, "Video starter finished");
+                Log.d(TAG, "Video starter finished");
             }
         });
     }
@@ -720,22 +736,16 @@ public class CameraLayout {
      * Stops video recording in separate thread to avoid disrupting UI in event of hang
      */
     private void stopRecordingVideo() {
-        try {
-            //Log.d(TAG, "Waiting until videostarter finsh");
-            mVideoStarterThread.join();
-        } catch(InterruptedException e) {
-            e.printStackTrace();
-        }
-        //Log.d(TAG, "Video Starter finish, stopping");
-        stopVideoStarterThread();
-        //Log.d(TAG, "Finished stopping vid starter");
         mIsRecordingVideo = false;
         mLockingForEditor = true; // prevent action_up from accidentally taking picture
-
+        Log.d(TAG, "Media recorder stop");
         mMediaRecorder.stop();// Stop recording
+        Log.d(TAG, "media Recorder reset");
         mMediaRecorder.reset();
+        Log.d(TAG, "Progress bar set 0");
         mProgressBar.setProgress(0);
         count=0;
+        Log.d(TAG, "Start editor");
         startEditor();
     }
 
