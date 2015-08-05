@@ -1,2 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
+<<<<<<< HEAD
 <merger version="3"><dataSet config="debug"><source path="C:\Users\rfblue2\Documents\GITHUB\Wolfpak2\android-support-v4-preferencefragment\build\intermediates\bundles\debug\assets"/></dataSet><dataSet config="main"><source path="C:\Users\rfblue2\Documents\GITHUB\Wolfpak2\android-support-v4-preferencefragment\src\androidTest\assets"/></dataSet></merger>
+=======
+<merger version="3"><dataSet config="debug"><source path="/Users/Vishaal/Documents/AndroidStudioProjects/Wolfpak2/android-support-v4-preferencefragment/build/intermediates/bundles/debug/assets"/></dataSet><dataSet config="main"><source path="/Users/Vishaal/Documents/AndroidStudioProjects/Wolfpak2/android-support-v4-preferencefragment/src/androidTest/assets"/></dataSet></merger>
+>>>>>>> f2dfd4a3400fba91259f6ed5b32e7824ef82970f

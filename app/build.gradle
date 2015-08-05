@@ -28,5 +28,6 @@ dependencies {
     compile 'com.squareup.picasso:picasso:2.5.2'
     compile 'com.loopj.android:android-async-http:1.4.8'
     compile 'com.google.android.gms:play-services:7.5.0'
+    compile 'com.facebook.android:facebook-android-sdk:4.1.0'
     compile project(':android-support-v4-preferencefragment')
 }
