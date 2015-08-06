@@ -572,55 +572,62 @@ public class CameraLayout {
 
             Log.d(TAG, "Finishing camera preview session creation");
 
-            // Here, we create a CameraCaptureSession for camera preview.
-            mCameraDevice.createCaptureSession(surfaces,
-                    new CameraCaptureSession.StateCallback() {
+            try {
+                // Here, we create a CameraCaptureSession for camera preview.
+                mCameraDevice.createCaptureSession(surfaces,
+                        new CameraCaptureSession.StateCallback() {
 
-                        @Override
-                        public void onConfigured(CameraCaptureSession cameraCaptureSession) {
-                            // The camera is already closed
-                            if (null == mCameraDevice) {
-                                return;
-                            }
-
-                            // When the session is ready, we start displaying the preview.
-                            mCaptureSession = cameraCaptureSession;
-                            try {
-                                // Auto focus should be continuous for camera preview.
-                                mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE,
-                                        CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
-
-                                if(mFlash == AUTO_FLASH) {
-                                    mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE,
-                                            CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH); // auto flash
-                                } else if(mFlash == NO_FLASH)  {
-                                    mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE,
-                                            CaptureRequest.CONTROL_AE_MODE_ON); // no flash
-                                } else  {
-                                    mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE,
-                                            CaptureRequest.CONTROL_AE_MODE_ON_ALWAYS_FLASH); // always flash
+                            @Override
+                            public void onConfigured(CameraCaptureSession cameraCaptureSession) {
+                                // The camera is already closed
+                                if (null == mCameraDevice) {
+                                    return;
                                 }
 
-                                // Finally, we start displaying the camera preview.
-                                mPreviewRequest = mPreviewRequestBuilder.build();
+                                // When the session is ready, we start displaying the preview.
+                                mCaptureSession = cameraCaptureSession;
                                 try {
-                                    mCaptureSession.setRepeatingRequest(mPreviewRequest,
-                                            mCaptureCallback, mBackgroundHandler);
-                                } catch(IllegalStateException e)    {
+                                    // Auto focus should be continuous for camera preview.
+                                    mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE,
+                                            CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
+
+                                    if (mFlash == AUTO_FLASH) {
+                                        mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE,
+                                                CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH); // auto flash
+                                    } else if (mFlash == NO_FLASH) {
+                                        mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE,
+                                                CaptureRequest.CONTROL_AE_MODE_ON); // no flash
+                                    } else {
+                                        mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE,
+                                                CaptureRequest.CONTROL_AE_MODE_ON_ALWAYS_FLASH); // always flash
+                                    }
+
+                                    // Finally, we start displaying the camera preview.
+                                    mPreviewRequest = mPreviewRequestBuilder.build();
+                                    try {
+                                        mCaptureSession.setRepeatingRequest(mPreviewRequest,
+                                                mCaptureCallback, mBackgroundHandler);
+                                    } catch (IllegalStateException e) {
+                                        Log.d(TAG, "Preview request failed, trying again");
+                                        createCameraPreviewSession();
+                                        e.printStackTrace();
+                                        return;
+                                    }
+                                } catch (CameraAccessException e) {
                                     e.printStackTrace();
                                 }
-                            } catch (CameraAccessException e) {
-                                e.printStackTrace();
                             }
-                        }
 
-                        @Override
-                        public void onConfigureFailed(CameraCaptureSession cameraCaptureSession) {
-                            Log.e(TAG, "Configure Failed");
+                            @Override
+                            public void onConfigureFailed(CameraCaptureSession cameraCaptureSession) {
+                                Log.e(TAG, "Configure Failed");
 //                            createCameraPreviewSession(); // try again
-                        }
-                    }, null
-            );
+                            }
+                        }, null
+                );
+            } catch(IllegalStateException e)    {
+                e.printStackTrace();
+            }
             Log.d(TAG, "Finished createcapturesession");
         } catch (CameraAccessException e) {
             e.printStackTrace();
@@ -898,7 +905,10 @@ public class CameraLayout {
             try {
                 mCaptureSession.capture(captureBuilder.build(), CaptureCallback, null);
             } catch(IllegalArgumentException e) {
+                Log.d(TAG, "Capture threw exception, trying again");
+                captureStillPicture();
                 e.printStackTrace();
+                return;
             }
             // flash the screen like a camera, stall for time since capture tends to take a while
             if(mFlash == NO_FLASH || mFlash == AUTO_FLASH) // if camera flash is used, don't screenflash now b/c it'll be too early!
