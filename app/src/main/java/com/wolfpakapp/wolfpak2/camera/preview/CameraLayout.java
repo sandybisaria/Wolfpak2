@@ -603,8 +603,12 @@ public class CameraLayout {
 
                                 // Finally, we start displaying the camera preview.
                                 mPreviewRequest = mPreviewRequestBuilder.build();
-                                mCaptureSession.setRepeatingRequest(mPreviewRequest,
-                                        mCaptureCallback, mBackgroundHandler);
+                                try {
+                                    mCaptureSession.setRepeatingRequest(mPreviewRequest,
+                                            mCaptureCallback, mBackgroundHandler);
+                                } catch(IllegalStateException e)    {
+                                    e.printStackTrace();
+                                }
                             } catch (CameraAccessException e) {
                                 e.printStackTrace();
                             }
@@ -891,7 +895,11 @@ public class CameraLayout {
             };
 
             mCaptureSession.stopRepeating();
-            mCaptureSession.capture(captureBuilder.build(), CaptureCallback, null);
+            try {
+                mCaptureSession.capture(captureBuilder.build(), CaptureCallback, null);
+            } catch(IllegalArgumentException e) {
+                e.printStackTrace();
+            }
             // flash the screen like a camera, stall for time since capture tends to take a while
             if(mFlash == NO_FLASH || mFlash == AUTO_FLASH) // if camera flash is used, don't screenflash now b/c it'll be too early!
                 startFlashAnimation();
