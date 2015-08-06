@@ -109,6 +109,7 @@ public class CameraLayout {
     private static boolean mSound; // true if sound is on
     private static boolean mLockingForEditor; // true if about to switch to picture editor
     private static boolean mIsRecordingVideo;
+    private boolean mFlashOnAuto = false; // if true, camera highly likely to flash
 
     private Button mCaptureButton;
     private ImageButton mSwitchButton;
@@ -195,6 +196,15 @@ public class CameraLayout {
     private CameraCaptureSession.CaptureCallback mCaptureCallback
             = new CameraCaptureSession.CaptureCallback()    {
         private void process(CaptureResult result)  {
+            // check if auto will flash
+            Integer ae = result.get(CaptureResult.CONTROL_AE_STATE);
+            Log.d(TAG, "AE: " + ae);
+            if(mState != STATE_PREVIEW && mFlash == AUTO_FLASH && ae != null &&
+                    ae == CaptureRequest.CONTROL_AE_STATE_FLASH_REQUIRED)   {
+                mFlashOnAuto = true;
+                Log.d(TAG, "Will flash on auto; state: " + mState);
+            }
+            // process result
             switch(mState)  {
                 case STATE_PREVIEW: break;
                 case STATE_WAITING_LOCK:
@@ -894,8 +904,11 @@ public class CameraLayout {
                 @Override
                 public void onCaptureCompleted(CameraCaptureSession session, CaptureRequest request,
                                                TotalCaptureResult result) {
-                    if(mFlash == ALWAYS_FLASH)// if camera flashed, do screen flash here
+                    if(mFlash == ALWAYS_FLASH || // if camera flashed, do screen flash here
+                            (mFlash == AUTO_FLASH && mFlashOnAuto == true)) {
+                        mFlashOnAuto = false;
                         startFlashAnimation();
+                    }
                     unlockFocus();
                     startEditor();
                 }
@@ -911,7 +924,8 @@ public class CameraLayout {
                 return;
             }
             // flash the screen like a camera, stall for time since capture tends to take a while
-            if(mFlash == NO_FLASH || mFlash == AUTO_FLASH) // if camera flash is used, don't screenflash now b/c it'll be too early!
+            if(mFlash == NO_FLASH || // if camera flash is used, don't screenflash now b/c it'll be too early!
+                    (mFlash == AUTO_FLASH && mFlashOnAuto == false))
                 startFlashAnimation();
         } catch (CameraAccessException e) {
             e.printStackTrace();
