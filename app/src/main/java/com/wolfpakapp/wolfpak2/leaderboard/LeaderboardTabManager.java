@@ -8,6 +8,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewParent;
 import android.widget.TextView;
 
 import com.loopj.android.http.AsyncHttpResponseHandler;
@@ -43,6 +44,7 @@ public class LeaderboardTabManager {
     private ServerRestClient mClient;
 
     private boolean isItemSelected = false;
+    private boolean isNewDrawingOrderSet = false;
 
     public LeaderboardTabManager(final String tag, final LeaderboardFragment mParentFragment) {
         this.tag = tag;
@@ -183,22 +185,24 @@ public class LeaderboardTabManager {
         return tag;
     }
 
-    /**
-     * @return True if an item in the tab was selected.
-     */
     public boolean isItemSelected() {
         return isItemSelected;
     }
 
-    /**
-     * Set whether an item in the tab is selected.
-     */
     public void setIsItemSelected(boolean isItemSelected) {
         this.isItemSelected = isItemSelected;
     }
 
+    public boolean isNewDrawingOrderSet() {
+        return isNewDrawingOrderSet;
+    }
+
+    public void setIsNewDrawingOrderSet(boolean isNewDrawingOrderSet) {
+        this.isNewDrawingOrderSet = isNewDrawingOrderSet;
+    }
+
     /**
-     * Refresh the karma count. This method does nothing if this is not the den tab.
+     * Refresh the karma count (on the den tab).
      */
     private void refreshKarmaCount() {
         // Just being cautious...
@@ -238,5 +242,15 @@ public class LeaderboardTabManager {
 
     public ServerRestClient getServerRestClient() {
         return mClient;
+    }
+
+    public void requestDisallowInterceptTouchEventForParents(View v,
+                                                              boolean disallowIntercept) {
+        ViewParent parent = v.getParent();
+        while (parent != null) {
+            parent.requestDisallowInterceptTouchEvent(disallowIntercept);
+            parent = parent.getParent();
+        }
+
     }
 }

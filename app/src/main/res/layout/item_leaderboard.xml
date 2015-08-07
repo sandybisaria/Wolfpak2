@@ -4,7 +4,7 @@
     android:layout_height="wrap_content" android:layout_margin="@dimen/leaderboard_item_margin"
     android:background="@drawable/background_leaderboard_item" >
 
-    <ImageView
+    <com.wolfpakapp.wolfpak2.leaderboard.ThumbnailImageView
         android:layout_width="@dimen/leaderboard_item_thumbnail_size"
         android:layout_height="@dimen/leaderboard_item_thumbnail_size"
         android:layout_margin="@dimen/leaderboard_item_thumbnail_margin"

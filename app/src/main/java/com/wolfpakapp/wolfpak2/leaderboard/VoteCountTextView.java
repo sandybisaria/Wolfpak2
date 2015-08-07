@@ -9,9 +9,11 @@ import android.graphics.drawable.GradientDrawable;
 import android.os.Build;
 import android.support.v4.view.MotionEventCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
+import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewParent;
 import android.view.animation.OvershootInterpolator;
@@ -23,11 +25,10 @@ import com.wolfpakapp.wolfpak2.R;
 
 import org.apache.http.Header;
 
-import java.util.ArrayList;
-
 public class VoteCountTextView extends TextView {
     private LeaderboardTabManager mManager = null;
     private Post mPost = null;
+    private View parentItemView = null;
     private boolean isTouchEnabled = false;
 
     private float initialViewX = 0;
@@ -35,8 +36,6 @@ public class VoteCountTextView extends TextView {
 
     private float lastTouchX = 0;
     private float lastTouchY = 0;
-
-    private ArrayList<OnInteractingCallbacks> mCallbacks = new ArrayList<>();
 
     public VoteCountTextView(Context context) {
         super(context);
@@ -50,9 +49,10 @@ public class VoteCountTextView extends TextView {
         super(context, attrs, defStyleAttr);
     }
 
-    public void initialize(LeaderboardTabManager manager, Post post) {
+    public void initialize(LeaderboardTabManager manager, Post post, View parentItemView) {
         mManager = manager;
         mPost = post;
+        this.parentItemView = parentItemView;
         refresh();
 
         // If this is in the den, then disable the onTouchEvent() method.
@@ -90,14 +90,6 @@ public class VoteCountTextView extends TextView {
         setBackgroundColor(mPost.getVoteStatus());
     }
 
-    /**
-     * Add a set of callbacks to be invoked when the view is being interacted with.
-     * @param callback
-     */
-    public void addOnInteractingCallbacks(OnInteractingCallbacks callback) {
-        mCallbacks.add(callback);
-    }
-
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         if (!isTouchEnabled) {
@@ -113,11 +105,11 @@ public class VoteCountTextView extends TextView {
                 }
                 mManager.setIsItemSelected(true);
 
-                setClipChildrenForParents(false);
+                // Ensure that the vote count receives all touch events.
+                mManager.getSwipeRefreshLayout().setEnabled(false);
+                mManager.requestDisallowInterceptTouchEventForParents(this, true);
 
-                for (OnInteractingCallbacks mCallback : mCallbacks) {
-                    mCallback.onInteractionStart();
-                }
+                setClipChildrenForParents(false);
 
                 initialViewX = getX();
                 initialViewY = getY();
@@ -130,8 +122,33 @@ public class VoteCountTextView extends TextView {
 
 
             case MotionEvent.ACTION_MOVE: {
-                for (OnInteractingCallbacks mCallback : mCallbacks) {
-                    mCallback.onInteractionInProgress();
+                // Was originally under onInteractionStart, but a simultaneous tap on two views
+                // causes the application to crash due to the RecyclerView (for some reason)
+                // being unable to draw the elements. Now, only when the view has been moved
+                // is the drawing oder of the RecyclerView modified.
+                if (!mManager.isNewDrawingOrderSet()) {
+                    mManager.setIsNewDrawingOrderSet(true);
+                    RecyclerView recyclerView = mManager.getRecyclerView();
+                    final int indexOfFrontChild = recyclerView.indexOfChild(parentItemView);
+                    // Needed so that the vote count can be drawn over sibling post views.
+                    recyclerView.setChildDrawingOrderCallback(new RecyclerView
+                            .ChildDrawingOrderCallback() {
+                        private int nextChildIndexToRender;
+
+                        @Override
+                        public int onGetChildDrawingOrder(int childCount, int iteration) {
+                            if (iteration == childCount - 1) {
+                                nextChildIndexToRender = 0;
+                                return indexOfFrontChild;
+                            } else {
+                                if (nextChildIndexToRender == indexOfFrontChild) {
+                                    nextChildIndexToRender++;
+                                }
+                                return nextChildIndexToRender++;
+                            }
+                        }
+                    });
+                    recyclerView.invalidate();
                 }
 
                 // Calculate how much the pointer has moved, and move the vote count as much.
@@ -219,9 +236,16 @@ public class VoteCountTextView extends TextView {
                 animatorSet.addListener(new AnimatorListenerAdapter() {
                     @Override
                     public void onAnimationEnd(Animator animation) {
-                        for (OnInteractingCallbacks mCallback : mCallbacks) {
-                            mCallback.onInteractionFinish();
-                        }
+                        // Enable the SwipeRefreshLayout when appropriate.
+                        mManager.safeEnableSwipeRefreshLayout();
+                        mManager.requestDisallowInterceptTouchEventForParents(VoteCountTextView.this,
+                                false);
+
+                        // Reset the drawing order of the RecyclerView.
+                        mManager.setIsNewDrawingOrderSet(false);
+                        RecyclerView recyclerView = mManager.getRecyclerView();
+                        recyclerView.setChildDrawingOrderCallback(null);
+                        recyclerView.invalidate();
 
                         mManager.setIsItemSelected(false);
                         setClipChildrenForParents(true);
