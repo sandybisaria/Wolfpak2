@@ -8,15 +8,11 @@ import android.animation.ValueAnimator;
 import android.graphics.Color;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
-import android.graphics.drawable.GradientDrawable;
 import android.graphics.drawable.LayerDrawable;
 import android.media.MediaPlayer;
-import android.net.Uri;
 import android.os.Build;
 import android.support.v4.view.MotionEventCompat;
-import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -24,20 +20,14 @@ import android.view.ViewGroup;
 import android.view.ViewParent;
 import android.view.animation.AccelerateDecelerateInterpolator;
 import android.view.animation.Interpolator;
-import android.view.animation.OvershootInterpolator;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.VideoView;
 
-import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.squareup.picasso.Picasso;
 import com.wolfpakapp.wolfpak2.Post;
 import com.wolfpakapp.wolfpak2.R;
-import com.wolfpakapp.wolfpak2.service.ServerRestClient;
-import com.wolfpakapp.wolfpak2.WolfpakServiceProvider;
-
-import org.apache.http.Header;
 
 import java.util.ArrayList;
 
@@ -50,18 +40,12 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
     private LeaderboardTabManager mParentManager;
 
     private Animator mCurrentAnimator;
-    private boolean isItemSelected = false;
     private boolean isNewDrawingOrderSet = false;
-
-    private ServerRestClient mClient;
 
     public LeaderboardTabAdapter(ArrayList<Post> posts,
                                  LeaderboardTabManager parentManager) {
         mPosts = posts;
         mParentManager = parentManager;
-
-        mClient = (ServerRestClient) WolfpakServiceProvider
-                .getServiceManager(WolfpakServiceProvider.SERVERRESTCLIENT);
     }
 
     @Override
@@ -82,17 +66,6 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
         holder.bindPost(mPosts.get(position));
     }
 
-    public LeaderboardTabManager getParentManager() {
-        return mParentManager;
-    }
-
-    /**
-     * @return True if an item in the tab was selected.
-     */
-    public boolean isItemSelected() {
-        return isItemSelected;
-    }
-
     /**
      * The ViewHolder class describes the view for each post and configures behaviors for the
      * different elements in each post view.
@@ -101,7 +74,7 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
         private Post mPost;
 
         private TextView handleTextView;
-        private TextView voteCountTextView;
+        private VoteCountTextView voteCountTextView;
 
         private ImageView thumbnailImageView;
 
@@ -110,8 +83,8 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
 
             handleTextView = (TextView) itemView
                     .findViewById(R.id.leaderboard_item_handle_text_view);
-            voteCountTextView = (TextView) itemView
-                    .findViewById(R.id.leaderboard_item_view_count_text_view);
+            voteCountTextView = (VoteCountTextView) itemView
+                    .findViewById(R.id.leaderboard_item_vote_count_text_view);
             thumbnailImageView = (ImageView) itemView
                     .findViewById(R.id.leaderboard_item_thumbnail_image_view);
         }
@@ -121,11 +94,62 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
 
             handleTextView.setText(post.getHandle());
 
-            updateVoteCountBackground(post.getVoteStatus());
-            // The view count TextViews can not be interacted with in the den
-            if (!mParentManager.getTag().equals(LeaderboardFragment.DEN_TAG)) {
-                voteCountTextView.setOnTouchListener(new VoteCountOnTouchListener());
-            }
+            // If this is the den, then do not enable the touch listener.
+            voteCountTextView.initialize(mParentManager, post);
+
+            voteCountTextView.addOnInteractingCallbacks(new OnInteractingCallbacks() {
+                @Override
+                public void onInteractionStart() {
+                    // Ensure that the vote count receives all touch events.
+                    mParentManager.getSwipeRefreshLayout().setEnabled(false);
+                    requestDisallowInterceptTouchEventForParents(voteCountTextView, true);
+                }
+
+                @Override
+                public void onInteractionInProgress() {
+                    // Was originally under onInteractionStart, but a simultaneous tap on two views
+                    // causes the application to crash due to the RecyclerView (for some reason)
+                    // being unable to draw the elements. Now, only when the view has been moved
+                    // is the drawing oder of the RecyclerView modified.
+                    if (!isNewDrawingOrderSet) {
+                        isNewDrawingOrderSet = true;
+                        RecyclerView recyclerView = mParentManager.getRecyclerView();
+                        final int indexOfFrontChild = recyclerView.indexOfChild(itemView);
+                        // Needed so that the vote count can be drawn over sibling post views.
+                        recyclerView.setChildDrawingOrderCallback(new RecyclerView
+                                .ChildDrawingOrderCallback() {
+                            private int nextChildIndexToRender;
+
+                            @Override
+                            public int onGetChildDrawingOrder(int childCount, int iteration) {
+                                if (iteration == childCount - 1) {
+                                    nextChildIndexToRender = 0;
+                                    return indexOfFrontChild;
+                                } else {
+                                    if (nextChildIndexToRender == indexOfFrontChild) {
+                                        nextChildIndexToRender++;
+                                    }
+                                    return nextChildIndexToRender++;
+                                }
+                            }
+                        });
+                        recyclerView.invalidate();
+                    }
+                }
+
+                @Override
+                public void onInteractionFinish() {
+                    // Enable the SwipeRefreshLayout when appropriate.
+                    mParentManager.safeEnableSwipeRefreshLayout();
+                    requestDisallowInterceptTouchEventForParents(voteCountTextView, false);
+
+                    // Reset the drawing order of the RecyclerView.
+                    isNewDrawingOrderSet = false;
+                    RecyclerView recyclerView = mParentManager.getRecyclerView();
+                    recyclerView.setChildDrawingOrderCallback(null);
+                    recyclerView.invalidate();
+                }
+            });
 
             if (post.isImage()) {
                 Picasso.with(mParentManager.getParentActivity()).load(post.getMediaUrl())
@@ -156,33 +180,6 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
         }
 
         /**
-         * Update the vote count background so that it corresponds to the passed VoteStatus. Note
-         * that this does NOT change the Post's actual VoteStatus. Also ensure that
-         * the vote count matches the Post's updated vote count.
-         * @param voteStatus
-         */
-        public void updateVoteCountBackground(Post.VoteStatus voteStatus) {
-            GradientDrawable bg;
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                bg = (GradientDrawable) voteCountTextView.getResources()
-                        .getDrawable(R.drawable.background_view_count, null);
-            } else {
-                bg = (GradientDrawable) voteCountTextView.getResources()
-                        .getDrawable(R.drawable.background_view_count);
-            }
-
-            int statusColor = voteStatus.getStatusColor(mParentManager.getParentActivity());
-            if (bg != null) {
-                bg.setColor(statusColor);
-                voteCountTextView.setBackground(bg);
-            }
-
-            voteCountTextView.setText(Integer.toString(mPost.getUpdatedVoteCount()));
-
-            voteCountTextView.invalidate();
-        }
-
-        /**
          * Call requestDisallowInterceptTouchEvent() on all parents of the view.
          * @param v The child view.
          * @param disallowIntercept True to stop the parent from intercepting touch events.
@@ -196,211 +193,6 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
                 parent = parent.getParent();
             }
 
-        }
-
-        /**
-         * The ViewCountOnTouchListener handles touch events on the vote count.
-         */
-        private final class VoteCountOnTouchListener implements View.OnTouchListener {
-            private SwipeRefreshLayout mLayout = mParentManager.getTabLayout();
-
-            private float initialViewX;
-            private float initialViewY;
-
-            private float lastTouchX = 0;
-            private float lastTouchY = 0;
-
-            private final int ANIM_DURATION = 350;
-            private Interpolator INTERPOLATOR = new OvershootInterpolator(1.4f);
-
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                final int action = MotionEventCompat.getActionMasked(event);
-
-                switch (action) {
-                    case MotionEvent.ACTION_DOWN: {
-                        // Only one item can be selected at a time
-                        if (isItemSelected) {
-                            return false;
-                        }
-                        isItemSelected = true;
-
-                        // Ensure that the SwipeRefreshLayout is disabled... (is this still needed?)
-                        mLayout.setEnabled(false);
-                        setClipChildrenForParents(voteCountTextView, false);
-                        requestDisallowInterceptTouchEventForParents(voteCountTextView, true);
-
-                        lastTouchX = event.getRawX();
-                        lastTouchY = event.getRawY();
-
-                        initialViewX = voteCountTextView.getX();
-                        initialViewY = voteCountTextView.getY();
-
-                        return true;
-                    }
-                    case MotionEvent.ACTION_MOVE: {
-                        // Was originally under ACTION_DOWN, but a simultaneous tap on two elements
-                        // causes the application to crash due to the RecyclerView (for some reason)
-                        // being unable to draw the elements. Now, only when the view has been moved
-                        // will the drawing oder of the RecyclerView be modified
-                        if (!isNewDrawingOrderSet) {
-                            RecyclerView recyclerView = mParentManager.getRecyclerView();
-                            final int indexOfFrontChild = recyclerView.indexOfChild(itemView);
-                            Log.d("Index",Integer.toString(indexOfFrontChild));
-                            // Needed so that the vote count can be drawn over sibling post views.
-                            recyclerView.setChildDrawingOrderCallback(new RecyclerView
-                                    .ChildDrawingOrderCallback() {
-                                private int nextChildIndexToRender;
-
-                                @Override
-                                public int onGetChildDrawingOrder(int childCount, int iteration) {
-                                    if (iteration == childCount - 1) {
-                                        nextChildIndexToRender = 0;
-                                        return indexOfFrontChild;
-                                    } else {
-                                        if (nextChildIndexToRender == indexOfFrontChild) {
-                                            nextChildIndexToRender++;
-                                        }
-                                        return nextChildIndexToRender++;
-                                    }
-                                }
-                            });
-                            isNewDrawingOrderSet = true;
-                            // NEEDED SO THE APP DOESN'T CRASH
-                            recyclerView.invalidate();
-                        }
-
-                        final float x = event.getRawX();
-                        final float y = event.getRawY();
-
-                        final float dx = x - lastTouchX;
-                        final float dy = y - lastTouchY;
-
-                        // Calculate how much the pointer has moved, and move the vote count as much.
-                        voteCountTextView.setX(voteCountTextView.getX() + dx);
-                        voteCountTextView.setY(voteCountTextView.getY() + dy);
-
-                        // Change the COLOR of the vote count, but do NOT save the status yet!
-                        if (voteCountTextView.getY() < initialViewY) {
-                            if (mPost.getVoteStatus() == Post.VoteStatus.UPVOTED) {
-                                updateVoteCountBackground(Post.VoteStatus.NOT_VOTED);
-                            } else {
-                                updateVoteCountBackground(Post.VoteStatus.UPVOTED);
-                            }
-                        } else if (voteCountTextView.getY() > initialViewY) {
-                            if (mPost.getVoteStatus() == Post.VoteStatus.DOWNVOTED) {
-                                updateVoteCountBackground(Post.VoteStatus.NOT_VOTED);
-                            } else {
-                                updateVoteCountBackground(Post.VoteStatus.DOWNVOTED);
-                            }
-                        }
-
-                        lastTouchX = x;
-                        lastTouchY = y;
-
-                        return true;
-                    }
-                    case MotionEvent.ACTION_POINTER_UP: {
-                        return true;
-                    }
-
-                    case MotionEvent.ACTION_CANCEL:
-                    case MotionEvent.ACTION_UP: {
-                        // Ensure that the SwipeRefreshLayout is not prematurely enabled.
-                        mParentManager.toggleSwipeRefreshLayout();
-                        requestDisallowInterceptTouchEventForParents(voteCountTextView, false);
-
-                        // Determine the new VoteStatus of the post.
-                        final Post.VoteStatus newStatus;
-                        if (voteCountTextView.getY() < initialViewY) {
-                            if (mPost.getVoteStatus() == Post.VoteStatus.UPVOTED) {
-                                newStatus = Post.VoteStatus.NOT_VOTED;
-                            } else {
-                                newStatus = Post.VoteStatus.UPVOTED;
-                            }
-                        } else if (voteCountTextView.getY() > initialViewY) {
-                            if (mPost.getVoteStatus() == Post.VoteStatus.DOWNVOTED) {
-                                newStatus = Post.VoteStatus.NOT_VOTED;
-                            } else {
-                                newStatus = Post.VoteStatus.DOWNVOTED;
-                            }
-                        } else {
-                            // Don't change the vote status (this case should rarely happen).
-                            newStatus = mPost.getVoteStatus();
-                        }
-
-                        mClient.updateLikeStatus(mPost.getId(), newStatus,
-                                new AsyncHttpResponseHandler() {
-                            @Override
-                            public void onSuccess(int statusCode, Header[] headers,
-                                                  byte[] responseBody) {
-                                // If successful, locally update the vote status and background.
-                                mPost.setVoteStatus(newStatus);
-                                updateVoteCountBackground(newStatus);
-                            }
-
-                            @Override
-                            public void onFailure(int statusCode, Header[] headers,
-                                                  byte[] responseBody, Throwable error) {
-                                try {
-                                    Log.d(Integer.toString(statusCode), new String(responseBody));
-                                } catch (Exception e) {
-                                    e.printStackTrace();
-                                }
-                                // If unsuccessful, the post's vote status is unchanged.
-                                updateVoteCountBackground(mPost.getVoteStatus());
-                            }
-                        });
-
-                        // Animate the vote count returning to its position.
-                        AnimatorSet animatorSet = new AnimatorSet();
-                        ObjectAnimator xAnim = ObjectAnimator.ofFloat(voteCountTextView, "X",
-                                voteCountTextView.getX(), initialViewX);
-                        ObjectAnimator yAnim = ObjectAnimator.ofFloat(voteCountTextView, "Y",
-                                voteCountTextView.getY(), initialViewY);
-                        animatorSet.play(xAnim).with(yAnim);
-                        animatorSet.setDuration(ANIM_DURATION);
-                        animatorSet.setInterpolator(INTERPOLATOR);
-                        animatorSet.addListener(new AnimatorListenerAdapter() {
-                            @Override
-                            public void onAnimationEnd(Animator animation) {
-                                // Reset the drawing order of the RecyclerView.
-                                RecyclerView recyclerView = mParentManager.getRecyclerView();
-                                recyclerView.setChildDrawingOrderCallback(null);
-                                recyclerView.invalidate();
-                                isNewDrawingOrderSet = false;
-
-                                setClipChildrenForParents(voteCountTextView, true);
-                                // No item is being selected anymore.
-                                isItemSelected = false;
-                            }
-                        });
-
-                        animatorSet.start();
-                        return true;
-                    }
-                }
-
-                return false;
-            }
-
-            /**
-             * Call setClipChildren on (almost) all parents of the view. However, the
-             * SwipeRefreshLayout is never modified.
-             * @param v The child view.
-             * @param clipChildren True to clip children to the bounds.
-             */
-            private void setClipChildrenForParents(View v, boolean clipChildren) {
-                ViewParent parent = v.getParent();
-                while (parent instanceof ViewGroup) {
-                    // This is a bandage solution to fix the issue where if the SwipeRefreshLayout
-                    // is set to false, then the entire post view covers the tab widget...
-                    if (!(parent instanceof SwipeRefreshLayout)) {
-                        ((ViewGroup) parent).setClipChildren(clipChildren);
-                    }
-                    parent = parent.getParent();
-                }
-            }
         }
 
         /**
@@ -424,10 +216,10 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
             @Override
             public void onClick(View v) {
                 // Do not respond if another element is selected.
-                if (isItemSelected) {
+                if (mParentManager.isItemSelected()) {
                     return;
                 }
-                isItemSelected = true;
+                mParentManager.setIsItemSelected(true);
                 if (mPost.isImage()) {
                     // Create an expanded ImageView.
                     ImageView expandedImageView = new ImageView(mParentManager.getParentActivity());
@@ -540,7 +332,6 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
             /**
              * The ExpandedViewOnTouchListener handles touch events on the expanded view. The drag
              * implementation is similar to that of the vote count.
-             * @see VoteCountOnTouchListener
              */
             private final class ExpandedViewOnTouchListener implements View.OnTouchListener {
                 private float lastTouchX = 0;
@@ -553,7 +344,7 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
                     switch (action) {
                         case MotionEvent.ACTION_DOWN: {
                             // Make sure that the SwipeRefreshLayout is disabled.
-                            mParentManager.getTabLayout().setEnabled(false);
+                            mParentManager.getSwipeRefreshLayout().setEnabled(false);
                             // May not be necessary...
                             requestDisallowInterceptTouchEventForParents(v, true);
 
@@ -582,7 +373,7 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
                         }
                         case MotionEvent.ACTION_CANCEL:
                         case MotionEvent.ACTION_UP: {
-                            mParentManager.getTabLayout().setEnabled(true);
+                            mParentManager.getSwipeRefreshLayout().setEnabled(true);
                             mParentManager.getRecyclerView().setEnabled(true);
 
                             // May not be necessary...
@@ -607,7 +398,7 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
              * @param expandedView The expanded View.
              */
             private void animateViewShrinking(View expandedView) {
-                mParentManager.toggleSwipeRefreshLayout();
+                mParentManager.safeEnableSwipeRefreshLayout();
 
                 if (mCurrentAnimator != null) {
                     mCurrentAnimator.cancel();
@@ -647,7 +438,7 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
                         thumbnailImageView.setVisibility(View.VISIBLE);
                         mCurrentAnimator = null;
                         // The item is no longer selected.
-                        isItemSelected = false;
+                        mParentManager.setIsItemSelected(false);
                         animatingView.setVisibility(View.GONE);
                     }
                 });

@@ -42,6 +42,8 @@ public class LeaderboardTabManager {
 
     private ServerRestClient mClient;
 
+    private boolean isItemSelected = false;
+
     public LeaderboardTabManager(final String tag, final LeaderboardFragment mParentFragment) {
         this.tag = tag;
         this.mParentFragment = mParentFragment;
@@ -57,14 +59,14 @@ public class LeaderboardTabManager {
         mRecyclerView.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
-                return mTabAdapter.isItemSelected();
+                return isItemSelected;
             }
         });
         // Ensure that the SwipeRefreshLayout will not refresh until the user is scrolled to the top.
         mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
-                    toggleSwipeRefreshLayout();
+                    safeEnableSwipeRefreshLayout();
             }
         });
 
@@ -149,14 +151,14 @@ public class LeaderboardTabManager {
         }
     }
 
-    public SwipeRefreshLayout getTabLayout() {
+    public SwipeRefreshLayout getSwipeRefreshLayout() {
         return mSwipeRefreshLayout;
     }
 
     /**
-     * Toggle the SwipeRefreshLayout based on whether the user has scrolled to the top.
+     * Enable the SwipeRefreshLayout if the user has scrolled to the top.
      */
-    public void toggleSwipeRefreshLayout() {
+    public void safeEnableSwipeRefreshLayout() {
         // Get the position of the first completely visible post.
         int firstVisiblePos = ((LinearLayoutManager) mRecyclerView.getLayoutManager())
                 .findFirstCompletelyVisibleItemPosition();
@@ -185,7 +187,14 @@ public class LeaderboardTabManager {
      * @return True if an item in the tab was selected.
      */
     public boolean isItemSelected() {
-        return mTabAdapter.isItemSelected();
+        return isItemSelected;
+    }
+
+    /**
+     * Set whether an item in the tab is selected.
+     */
+    public void setIsItemSelected(boolean isItemSelected) {
+        this.isItemSelected = isItemSelected;
     }
 
     /**
@@ -225,5 +234,9 @@ public class LeaderboardTabManager {
                 Log.d("Failure", Integer.toString(statusCode));
             }
         });
+    }
+
+    public ServerRestClient getServerRestClient() {
+        return mClient;
     }
 }
