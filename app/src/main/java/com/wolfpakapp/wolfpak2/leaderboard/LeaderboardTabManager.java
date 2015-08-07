@@ -52,6 +52,8 @@ public class LeaderboardTabManager {
 
         mSwipeRefreshLayout = (SwipeRefreshLayout) LayoutInflater
                 .from(mParentFragment.getActivity()).inflate(R.layout.tab_leaderboard, null);
+        mSwipeRefreshLayout.setColorSchemeColors(getParentActivity().getResources()
+                .getColor(R.color.wolfpak_red));
 
         mRecyclerView = (RecyclerView) mSwipeRefreshLayout.findViewById(R.id.leaderboard_recycler_view);
         mRecyclerView.setHasFixedSize(false);
@@ -81,7 +83,12 @@ public class LeaderboardTabManager {
         mClient = (ServerRestClient) WolfpakServiceProvider
                 .getServiceManager(WolfpakServiceProvider.SERVERRESTCLIENT);
 
-        // Retrieve the set of posts from the server.
+        // Retrieve the set of posts from the server (and visibly indicate this).
+        mSwipeRefreshLayout.post(new Runnable() {
+            @Override public void run() {
+                mSwipeRefreshLayout.setRefreshing(true);
+            }
+        });
         mClient.get(mParentFragment.getRelativeUrl(tag), mParentFragment.getRequestParams(tag),
                 new AsyncHttpResponseHandler() {
                     @Override
@@ -96,13 +103,14 @@ public class LeaderboardTabManager {
                             e.printStackTrace();
                         }
                         mTabAdapter.notifyDataSetChanged();
+                        mSwipeRefreshLayout.setRefreshing(false);
                     }
 
                     @Override
                     public void onFailure(int statusCode, Header[] headers, byte[] responseBody,
                                           Throwable error) {
-//                        Toast.makeText(mParentFragment.getActivity(), "Failed", Toast.LENGTH_SHORT).show();
                         Log.d("Failure", Integer.toString(statusCode));
+                        mSwipeRefreshLayout.setRefreshing(false);
                     }
                 });
         // When the SwipeRefreshLayout is refreshed, retrieve a fresh set of posts.
@@ -125,16 +133,13 @@ public class LeaderboardTabManager {
                             e.printStackTrace();
                         }
                         mTabAdapter.notifyDataSetChanged();
-                        // End the refresh.
                         mSwipeRefreshLayout.setRefreshing(false);
                     }
 
                     @Override
                     public void onFailure(int statusCode, Header[] headers, byte[] responseBody,
                                           Throwable error) {
-//                        Toast.makeText(mParentFragment.getActivity(), "Failed", Toast.LENGTH_SHORT).show();
                         Log.d("Failure", Integer.toString(statusCode));
-                        // End the refresh.
                         mSwipeRefreshLayout.setRefreshing(false);
                     }
                 });
