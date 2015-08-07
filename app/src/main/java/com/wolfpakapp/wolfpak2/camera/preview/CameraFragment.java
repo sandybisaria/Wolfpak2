@@ -19,6 +19,8 @@ import com.wolfpakapp.wolfpak2.camera.editor.MediaSaver;
 import com.wolfpakapp.wolfpak2.camera.editor.PictureEditorLayout;
 import com.wolfpakapp.wolfpak2.R;
 
+import java.io.File;
+
 /**
  * A fragment container housing both camera and editor user interfaces
  * @author Roland Fong
@@ -79,6 +81,21 @@ public class CameraFragment extends Fragment
         @Override
         public void onSurfaceTextureUpdated(SurfaceTexture surface) {}
     };
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        // clear the temporary directory of lingering files not deleted by videosaverservice
+        File root = getActivity().getExternalFilesDir(null);
+        File[] Files = root.listFiles();
+        if(Files != null) {
+            int j;
+            for(j = 0; j < Files.length; j++) {
+                Log.d(TAG, "DELETING: " + Files[j].getAbsolutePath());
+                Files[j].delete();
+            }
+        }
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,

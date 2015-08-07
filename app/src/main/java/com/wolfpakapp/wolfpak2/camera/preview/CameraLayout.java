@@ -198,7 +198,6 @@ public class CameraLayout {
         private void process(CaptureResult result)  {
             // check if auto will flash
             Integer ae = result.get(CaptureResult.CONTROL_AE_STATE);
-            Log.d(TAG, "AE: " + ae);
             if(mState != STATE_PREVIEW && mFlash == AUTO_FLASH && ae != null &&
                     ae == CaptureRequest.CONTROL_AE_STATE_FLASH_REQUIRED)   {
                 mFlashOnAuto = true;
@@ -575,8 +574,14 @@ public class CameraLayout {
                 mPreviewRequestBuilder.addTarget(recorderSurface);
             } else  {
                 surfaces.add(mImageReader.getSurface());
-                mPreviewRequestBuilder
-                        = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
+                if(mCameraDevice != null) {
+                    mPreviewRequestBuilder
+                            = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
+                } else {
+                    // something went wrong
+                    onPause();
+                    onResume();
+                }
             }
             mPreviewRequestBuilder.addTarget(previewSurface);
 
