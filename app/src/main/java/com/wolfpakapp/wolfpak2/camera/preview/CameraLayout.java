@@ -495,6 +495,7 @@ public class CameraLayout {
      */
     private void closeCamera() {
         try {
+            Log.d(TAG, "Acquiring lock");
             mCameraOpenCloseLock.acquire();
             Log.d(TAG, "Ending capture Session");
             if (null != mCaptureSession) {
@@ -635,6 +636,7 @@ public class CameraLayout {
 
                                     // Finally, we start displaying the camera preview.
                                     mPreviewRequest = mPreviewRequestBuilder.build();
+                                    Log.d(TAG, "Starting preview repeating request");
                                     try {
                                         mCaptureSession.setRepeatingRequest(mPreviewRequest,
                                                 mCaptureCallback, mBackgroundHandler);
@@ -809,8 +811,14 @@ public class CameraLayout {
                     CameraMetadata.CONTROL_AF_TRIGGER_START);
             // Tell #mCaptureCallback to wait for the lock.
             mState = STATE_WAITING_LOCK;
-            mCaptureSession.setRepeatingRequest(mPreviewRequestBuilder.build(), mCaptureCallback,
-                    mBackgroundHandler);
+            try {
+                mCaptureSession.setRepeatingRequest(mPreviewRequestBuilder.build(), mCaptureCallback,
+                        mBackgroundHandler);
+            } catch(IllegalArgumentException e) {
+                Log.e(TAG, "Lock Focus Request failed");
+                createCameraPreviewSession();
+                e.printStackTrace();
+            }
         } catch (CameraAccessException e) {
             e.printStackTrace();
         }
@@ -1064,6 +1072,8 @@ public class CameraLayout {
 
     private void startEditor()   {
         //closeCamera();
+        // release the lock
+        mCameraOpenCloseLock.release();
         Log.d(TAG, "Starting editor function");
         mFragment.getActivity().runOnUiThread(new Runnable() {
             @Override
