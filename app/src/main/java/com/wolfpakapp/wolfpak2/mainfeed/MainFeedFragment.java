@@ -20,7 +20,7 @@ public class MainFeedFragment extends Fragment {
     /** Layouts & Buttons **/
     public ImageView refresh_howl;
     public ImageButton report;
-    public ImageButton share;
+//    public ImageButton share;
     public RelativeLayout frame;
 
     Networking_MainFeed network = new Networking_MainFeed(this);
@@ -65,7 +65,7 @@ public class MainFeedFragment extends Fragment {
 
         /** Dialogs **/
         report = (ImageButton) view.findViewById(R.id.imageButtonf);
-        share = (ImageButton) view.findViewById(R.id.imageButton1f);
+//        share = (ImageButton) view.findViewById(R.id.imageButton1f);
 
         network.initializeQueryString();
 

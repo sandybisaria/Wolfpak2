@@ -39,6 +39,7 @@
     <string name="contact_us">mailto:support@wolfpakapp.com</string>
     <string name="summary">Follow Us on Social Media</string>
     <string name="default_summary">Which Platform?</string>
+    <string name="share">Facebook</string>
 
     <!--End of Strings for the Settings Screen-->
 
