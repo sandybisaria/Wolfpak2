@@ -34,12 +34,12 @@ public class CustomView_MainFeed{
     }
 
     /** PreLoad Views **/
-    public void loadViews(String isImage, String handle, String url){
+    public void loadViews(String isImage, String handle, String url, String thumbnail){
         myLayout = mainFeed.frame;
         MediaView mediaView = new MediaView(mainFeed.getActivity());
 
         Uri uri = Uri.parse(url);
-        mediaView.setMediaView(uri, url, handle, isImage);
+        mediaView.setMediaView(uri, handle, isImage, thumbnail);
 
         mediaView.setOnTouchListener(new ImageOnTouchListener());
         myLayout.addView(mediaView);
@@ -212,6 +212,7 @@ public class CustomView_MainFeed{
                     }
 
                     if (network.HowlsIsImage[mainFeed.number] != null && Objects.equals(network.HowlsIsImage[mainFeed.number], "false")) {
+//                        views[mainFeed.number].mediaVideoViewThumbnail.setVisibility(View.GONE);
                         views[mainFeed.number].mediaVideoView.start();
                     }
 

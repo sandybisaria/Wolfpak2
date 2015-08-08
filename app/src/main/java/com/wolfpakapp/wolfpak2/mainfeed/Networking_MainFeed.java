@@ -9,6 +9,7 @@ import android.location.LocationManager;
 import android.os.Bundle;
 import android.telephony.TelephonyManager;
 import android.text.InputType;
+import android.util.Log;
 import android.widget.EditText;
 
 import com.loopj.android.http.AsyncHttpClient;
@@ -38,6 +39,8 @@ public class Networking_MainFeed{
     private String[] HowlsUserID;
     private String[] HowlsPostID;
     private String[] HowlsHandle;
+    public String[] HowlsThumbnail;
+
 
     /** Location **/
     public LocationManager lm;
@@ -64,6 +67,7 @@ public class Networking_MainFeed{
         HowlsUserID = new String[length];
         HowlsPostID = new String[length];
         HowlsHandle = new String[length];
+        HowlsThumbnail = new String[length];
         random_input = "";
     }
 
@@ -154,6 +158,12 @@ public class Networking_MainFeed{
                                             } catch (JSONException e) {
                                                 e.printStackTrace();
                                             }
+                                            try {
+                                                HowlsThumbnail[x] = arr.getJSONObject(x).optString("thumbnail_url");
+                                                Log.d("CHECK",HowlsThumbnail[x]);
+                                            } catch (JSONException e) {
+                                                e.printStackTrace();
+                                            }
                                         }
 
                                         customView.num = arr.length() - 1;
@@ -161,7 +171,7 @@ public class Networking_MainFeed{
                                         count = arr.length();
 
                                         for (int x = size; x > -1; x--) {
-                                            customView.loadViews(HowlsIsImage[x], HowlsHandle[x], HowlsURL[x]);
+                                            customView.loadViews(HowlsIsImage[x], HowlsHandle[x], HowlsURL[x],HowlsThumbnail[x]);
                                         }
 
                                         if (Objects.equals(HowlsIsImage[0], "false")) {

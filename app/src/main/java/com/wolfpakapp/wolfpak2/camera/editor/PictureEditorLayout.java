@@ -169,7 +169,7 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
      * Displays media onto textureview
      */
     private void displayMedia() {
-        Log.d(TAG, "FILE TYPE: " + mFragment.getFileType());
+        Log.d(TAG, "FILE TYPE1: " + mFragment.getFileType());
         if(mFragment.getFileType() == CameraFragment.FILE_TYPE_IMAGE) {
             isImage = true;
         } else if(mFragment.getFileType() == CameraFragment.FILE_TYPE_VIDEO)    {
@@ -197,7 +197,7 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
                 buffer.get(bytes);
                 Bitmap src = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
                 mFragment.getImage().close(); // don't forget to close the image buffer!
-                //mFragment.setImage(null); // so we know to skip initing image upon resume
+                //mFragment.setImage(null); // so we know to skip initiating image upon resume
                 // resize horizontally oriented images
                 if (width > height) {
                     // transformation matrix that scales and rotates

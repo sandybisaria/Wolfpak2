@@ -19,6 +19,16 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
+    <!--<ImageView-->
+        <!--android:id="@+id/mediaVideoViewThumbnail"-->
+        <!--android:visibility="gone"-->
+        <!--android:scaleType="fitXY"-->
+        <!--android:layout_alignBottom="@id/mediaVideoView"-->
+        <!--android:layout_alignStart="@id/mediaVideoView"-->
+        <!--android:layout_width="wrap_content"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:contentDescription="@string/img"/>-->
+
     <View
         android:id="@+id/likeStatusOverlayView"
         android:alpha="0.5"

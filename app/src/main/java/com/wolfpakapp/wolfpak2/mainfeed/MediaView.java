@@ -26,6 +26,7 @@ public class MediaView extends RelativeLayout {
     private ImageView mediaImageView;
     public VideoView mediaVideoView;
 
+//    public ImageView mediaVideoViewThumbnail;
     private View likeStatusOverlayView;
 
     /** Constructors **/
@@ -78,7 +79,7 @@ public class MediaView extends RelativeLayout {
      * @param mediaUrl AWS S3 URL for the media
      * @param isImage boolean of whether or not the mediaUrl is an image
      */
-    public void setMediaView(Uri mediaUrl, String url, String handle, String isImage) {
+    public void setMediaView(Uri mediaUrl, String handle, String isImage, String thumbnail) {
         if (Objects.equals(isImage, "true")) {
             this.mediaImageView.setVisibility(View.VISIBLE);
             Picasso.with(this.mediaImageView.getContext()).load(mediaUrl).into(this.mediaImageView);
@@ -87,13 +88,8 @@ public class MediaView extends RelativeLayout {
             this.mediaVideoView.setVisibility(View.VISIBLE);
             this.mediaVideoView.setVideoURI(mediaUrl);
             this.mediaVideoView.requestFocus();
-            this.mediaVideoView.start();
-            try {
-                Thread.sleep(500);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            this.mediaVideoView.pause();
+//            this.mediaVideoViewThumbnail.setVisibility(View.VISIBLE);
+//            Picasso.with(this.mediaVideoViewThumbnail.getContext()).load(thumbnail).into(this.mediaVideoViewThumbnail);
         }
     }
 
@@ -105,6 +101,7 @@ public class MediaView extends RelativeLayout {
 
         this.mediaImageView = (ImageView)findViewById(R.id.mediaImageView);
         this.mediaVideoView = (VideoView)findViewById(R.id.mediaVideoView);
+//        this.mediaVideoViewThumbnail = (ImageView) findViewById(R.id.mediaVideoViewThumbnail);
 
         this.likeStatusOverlayView = findViewById(R.id.likeStatusOverlayView);
     }
