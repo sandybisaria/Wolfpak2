@@ -197,9 +197,11 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
                 buffer.get(bytes);
                 Bitmap src = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
                 mFragment.getImage().close(); // don't forget to close the image buffer!
-                //mFragment.setImage(null); // so we know to skip initiating image upon resume
+                //mFragment.setImage(null); // so we know to skip initing image upon resume
+                Log.d(TAG, "Image size: " + width + ", " + height);
+                Log.d(TAG, "Bitmap size: " + src.getWidth() + ", " + src.getHeight());
                 // resize horizontally oriented images
-                if (width > height) {
+                if (src.getWidth() > src.getHeight()) {
                     // transformation matrix that scales and rotates
                     Matrix matrix = new Matrix();
                     if(CameraLayout.getFace() == CameraCharacteristics.LENS_FACING_FRONT)  {
@@ -207,9 +209,12 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
                     }
                     matrix.postRotate(90);
                     Bitmap resizedBitmap = Bitmap.createBitmap(
-                            src, 0, 0, width, height, matrix, true);
+                            src, 0, 0, src.getWidth(), src.getHeight(), matrix, true);
                     canvas.drawBitmap(resizedBitmap, 0, 0, null);
                     UndoManager.addScreenState(resizedBitmap); // initial state
+                } else  {
+                    canvas.drawBitmap(src, 0, 0, null);
+                    UndoManager.addScreenState(src); // initial state
                 }
 
                 mTextureView.unlockCanvasAndPost(canvas);
