@@ -48,7 +48,7 @@ public class CustomView_MainFeed{
         Log.v("DEBUG", String.valueOf(num));
         num--;
 
-        mainFeed.share.bringToFront();
+//        mainFeed.share.bringToFront();
         mainFeed.report.bringToFront();
     }
 
