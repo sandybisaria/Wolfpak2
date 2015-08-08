@@ -95,6 +95,25 @@ public class CameraFragment extends Fragment
                 Files[j].delete();
             }
         }
+
+        MediaSaver.setActivity(getActivity());
+        Log.d(TAG, "initing FFMPEG");
+        // init FFmpeg
+        MediaSaver.setFfmpeg(FFmpeg.getInstance(getActivity()));
+        try {
+            MediaSaver.getFfmpeg().loadBinary(new LoadBinaryResponseHandler() {
+                @Override
+                public void onStart() {}
+                @Override
+                public void onFailure() {}
+                @Override
+                public void onSuccess() {}
+                @Override
+                public void onFinish() {}
+            });
+        } catch (FFmpegNotSupportedException e) {
+            // Handle if FFmpeg is not supported by device
+        }
     }
 
     @Override
@@ -118,24 +137,6 @@ public class CameraFragment extends Fragment
         // init camera layout and picture editor layout
         mCameraLayout = new CameraLayout(this, view);
         mPictureEditorLayout = new PictureEditorLayout(this, view);
-
-        MediaSaver.setActivity(getActivity());
-        // init FFmpeg
-        MediaSaver.setFfmpeg(FFmpeg.getInstance(getActivity()));
-        try {
-            MediaSaver.getFfmpeg().loadBinary(new LoadBinaryResponseHandler() {
-                @Override
-                public void onStart() {}
-                @Override
-                public void onFailure() {}
-                @Override
-                public void onSuccess() {}
-                @Override
-                public void onFinish() {}
-            });
-        } catch (FFmpegNotSupportedException e) {
-            // Handle if FFmpeg is not supported by device
-        }
     }
 
     @Override
@@ -201,11 +202,12 @@ public class CameraFragment extends Fragment
             case GLOBAL_STATE_EDITOR:
                 mGlobalState = GLOBAL_STATE_CAMERA;
                 WolfpakPager.setActive(true);
+                Log.d(TAG, "Hiding Editor, showing camera");
                 mPictureEditorLayout.hide();
                 if(mCameraCloseThread != null) {
                     try {
                         Log.d(TAG, "Waiting for camera to finish pausing");
-                        mCameraCloseThread.join(); // wait until camera finishes closing before opening again
+                        mCameraCloseThread.join(2000); // wait (up to 2s) until camera finishes closing
                         Log.d(TAG, "Will show layout");
                     } catch(InterruptedException e) {
                         e.printStackTrace();

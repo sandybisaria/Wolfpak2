@@ -129,7 +129,7 @@ public class CameraLayout {
     private final CameraDevice.StateCallback mStateCallback = new CameraDevice.StateCallback()  {
         @Override
         public void onOpened(CameraDevice cameraDevice) {
-            //Log.d(TAG, "On opened, will start preview");
+            Log.d(TAG, "On opened, will start preview");
             // starts camera preview
             mCameraOpenCloseLock.release();
             mCameraDevice = cameraDevice;
@@ -138,6 +138,7 @@ public class CameraLayout {
 
         @Override
         public void onDisconnected(CameraDevice cameraDevice) {
+            Log.d(TAG, "Camera Disconnected");
             mCameraOpenCloseLock.release();
             cameraDevice.close();
             mCameraDevice = null;
@@ -316,11 +317,22 @@ public class CameraLayout {
     }
 
     public void onResume()  {
+        View decorView = mFragment.getActivity().getWindow().getDecorView();
+        // Hide the status bar.
+        decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_FULLSCREEN);
+
         mLockingForEditor = false;
         startBackgroundThread();
         // if activity resumes from pause, OnSurfaceTextureAvailable may not be called
-        if(mTextureView.isAvailable())
-            openCamera(mTextureView.getWidth(), mTextureView.getHeight(), mFace);
+        if(mTextureView.isAvailable()) {
+            try {
+                openCamera(mTextureView.getWidth(), mTextureView.getHeight(), mFace);
+            } catch(RuntimeException e) {
+                Log.e(TAG, "Couldn't open camera, releasing lock and trying again");
+                mCameraOpenCloseLock.release();
+                openCamera(mTextureView.getWidth(), mTextureView.getHeight(), mFace);
+            }
+        }
     }
 
     public void onClick(int id) {
@@ -484,18 +496,22 @@ public class CameraLayout {
     private void closeCamera() {
         try {
             mCameraOpenCloseLock.acquire();
+            Log.d(TAG, "Ending capture Session");
             if (null != mCaptureSession) {
                 mCaptureSession.close();
                 mCaptureSession = null;
             }
+            Log.d(TAG, "Ending camera device");
             if (null != mCameraDevice) {
                 mCameraDevice.close();
                 mCameraDevice = null;
             }
+            Log.d(TAG, "Ending media recoder");
             if (null != mMediaRecorder) {
                 mMediaRecorder.release();
                 mMediaRecorder = null;
             }
+            Log.d(TAG, "Ending image reader");
             if (null != mImageReader) {
                 mImageReader.close();
                 mImageReader = null;
@@ -923,10 +939,9 @@ public class CameraLayout {
             try {
                 mCaptureSession.capture(captureBuilder.build(), CaptureCallback, null);
             } catch(IllegalArgumentException e) {
-                Log.d(TAG, "Capture threw exception, trying again");
-                captureStillPicture();
+                Log.e(TAG, "Capture threw exception");
+                createCameraPreviewSession(); // restart camera
                 e.printStackTrace();
-                return;
             }
             // flash the screen like a camera, stall for time since capture tends to take a while
             if(mFlash == NO_FLASH || // if camera flash is used, don't screenflash now b/c it'll be too early!

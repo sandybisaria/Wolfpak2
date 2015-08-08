@@ -181,8 +181,15 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
                 Canvas canvas = mTextureView.lockCanvas();
 
                 Image img = mFragment.getImage();
-                int width = img.getWidth();
-                int height = img.getHeight();
+                int width = 0;
+                int height = 0;
+                try {
+                    width = img.getWidth();
+                    height = img.getHeight();
+                } catch(IllegalStateException e)    {
+                    // image probably wasn't initialized
+                    startCamera(); // go back to camera
+                }
 
                 // put image info from camera into buffer
                 ByteBuffer buffer = img.getPlanes()[0].getBuffer();
@@ -354,6 +361,10 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
     }
 
     public void onResume()  {
+        View decorView = mFragment.getActivity().getWindow().getDecorView();
+        // Hide the status bar.
+        decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_FULLSCREEN);
+
         if(!isImage)    {
             // video view doesn't need to wait for textureview to be ready
             displayMedia();
@@ -555,8 +566,6 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
     @Override
     public void onUploadCompleted() {
         Log.d(TAG, "Upload Completed");
-        if(!isImage)
-            mVideoView.start();
         // go back to camera
         startCamera();
     }

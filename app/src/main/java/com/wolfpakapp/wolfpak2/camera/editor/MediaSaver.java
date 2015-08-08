@@ -310,13 +310,7 @@ public class MediaSaver {
      */
     public static void uploadVideo(final MediaSaverListener listener, String videoPath,
                                    Bitmap overlay)   {
-        generateUploadParams(listener, null, false);
-        Log.d(TAG, "Saving video to file");
-        try {
-            saveVideotoFile(videoPath, overlay, true);
-        } catch(IOException e)  {
-            e.printStackTrace();
-        }
+        generateUploadParams(listener, null, false, videoPath, overlay);
     }
 
     /**
@@ -329,6 +323,19 @@ public class MediaSaver {
         if(isImage)   {
             Log.e(TAG, "Image attempted wrong upload call!");
         } else  {
+            // ensure file exists, otherwise wait for it.  Timeout after 5 minutes
+            // TODO explictly wait for dialog, don't do this thread sleeping business
+            for( int i = 0; file == null && i < 300; i++) {
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+            if(file == null) {
+                Log.e(TAG, "Did not receive saved video after 5 minutes");
+                return;
+            }
             // add the now saved video file (and thumbnail)
             try {
                 params.put("media", file);
@@ -390,7 +397,7 @@ public class MediaSaver {
         (new Thread(new Runnable()  {
             @Override
             public void run() {
-                // just wait 5s to buy some time
+                // just wait to buy some time
                 try {
                     Thread.sleep(3000);
                 } catch(InterruptedException e) {
@@ -404,6 +411,17 @@ public class MediaSaver {
         })).start();
     }
 
+    /**
+     * Reusable function to generate RequestParameters for upload.
+     * Displays an upload dialog for user defined parameters.
+     * Begins the upload after user inputs requested parameters.
+     * This version is a convenience function for images that don't require video paths
+     * @param file the file to be sent
+     */
+    public static void generateUploadParams(final MediaSaverListener listener,
+                                            final File file, final boolean isImage) {
+        generateUploadParams(listener, file, isImage, null, null);
+    }
 
     /**
      * Reusable function to generate RequestParameters for upload.
@@ -412,7 +430,8 @@ public class MediaSaver {
      * @param file the file to be sent
      */
     public static void generateUploadParams(final MediaSaverListener listener,
-                                            final File file, final boolean isImage)   {
+                                            final File file, final boolean isImage,
+                                            final String videoPath, final Bitmap overlay)   {
         Log.d(TAG, "Generate Upload Params");
         UploadDialog uploadDialog = new UploadDialog();
         uploadDialog.setUploadDialogListener(new UploadDialog.UploadDialogListener() {
@@ -421,7 +440,8 @@ public class MediaSaver {
                 // start progress dialog
                 progressDialog = ProgressDialog.show(mActivity, "Please Wait...", "Sending...", true);
                 Log.d(TAG, "Progress dialog shown");
-                stall(listener, true); // buy some time for video saving
+                if(!isImage)
+                    stall(listener, true); // buy some time for video saving
                 // initialize server params here
                 mMap.put("handle", dialog.getHandle());
                 mMap.put("is_nsfw", dialog.isNsfw() ? "true" : "false");
@@ -456,6 +476,16 @@ public class MediaSaver {
                 // upload file (but don't do it yet if it's video!!
                 if(isImage)
                     upload(listener, isImage);
+                else    { // unfortunately there's no way to know when dialog finishes
+                    // so as a result, saving can't begin until it finishes, so that upload
+                    // won't cause problems if saving finishes early.
+                    Log.d(TAG, "Saving video to file");
+                    try {
+                        saveVideotoFile(videoPath, overlay, true);
+                    } catch(IOException e)  {
+                        e.printStackTrace();
+                    }
+                }
 //                else    {
 //                    Log.d(TAG, "Closing progress dialog");
 //                    progressDialog.dismiss();
