@@ -111,70 +111,74 @@ public class Networking_MainFeed{
     /** Asynchronous HTTP Client - Pull Image/Video from Server **/
     public void getHowls(){
         AsyncHttpClient client = new AsyncHttpClient(true, 80, 443);
-        client.get("https://ec2-52-4-176-1.compute-1.amazonaws.com/posts/?user_id=" + "temp_test_id"
-                + "&latitude=" + latitude + "&longitude=" + longitude + "&isNSFW=true&limit=5/",
-                new AsyncHttpResponseHandler() {
+        if(location==null){
+            locationCheck();
+        }
+        else {
+            client.get("https://ec2-52-4-176-1.compute-1.amazonaws.com/posts/?user_id=" + "temp_test_id"
+                            + "&latitude=" + latitude + "&longitude=" + longitude + "&isNSFW=true&limit=5/",
+                    new AsyncHttpResponseHandler() {
 
-            @Override
-            public void onSuccess(int statusCode, Header[] headers, byte[] response) {
-                final JSONArray arr;
-                try {
-                    arr = new JSONArray(new String(response));
-
-                    mainFeed.getActivity().runOnUiThread(new Runnable() {
                         @Override
-                        public void run() {
-                            for (int x = 0; x < 5 || x < arr.length(); x++) {
-                                try {
-                                    HowlsURL[x] = arr.getJSONObject(x).optString("media_url");
-                                } catch (JSONException e) {
-                                    e.printStackTrace();
-                                }
-                                try {
-                                    HowlsIsImage[x] = arr.getJSONObject(x).optString("is_image");
-                                } catch (JSONException e) {
-                                    e.printStackTrace();
-                                }
-                                try {
-                                    HowlsUserID[x] = arr.getJSONObject(x).optString("user_id");
-                                } catch (JSONException e) {
-                                    e.printStackTrace();
-                                }
-                                try {
-                                    HowlsPostID[x] = arr.getJSONObject(x).optString("id");
-                                } catch (JSONException e) {
-                                    e.printStackTrace();
-                                }
-                                try {
-                                    HowlsHandle[x] = arr.getJSONObject(x).optString("handle");
-                                } catch (JSONException e) {
-                                    e.printStackTrace();
-                                }
-                            }
+                        public void onSuccess(int statusCode, Header[] headers, byte[] response) {
+                            final JSONArray arr;
+                            try {
+                                arr = new JSONArray(new String(response));
 
-                            customView.num = arr.length()-1;
-                            int size = arr.length() - 1;
-                            count = arr.length();
+                                mainFeed.getActivity().runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        for (int x = 0; x < 5 || x < arr.length(); x++) {
+                                            try {
+                                                HowlsURL[x] = arr.getJSONObject(x).optString("media_url");
+                                            } catch (JSONException e) {
+                                                e.printStackTrace();
+                                            }
+                                            try {
+                                                HowlsIsImage[x] = arr.getJSONObject(x).optString("is_image");
+                                            } catch (JSONException e) {
+                                                e.printStackTrace();
+                                            }
+                                            try {
+                                                HowlsUserID[x] = arr.getJSONObject(x).optString("user_id");
+                                            } catch (JSONException e) {
+                                                e.printStackTrace();
+                                            }
+                                            try {
+                                                HowlsPostID[x] = arr.getJSONObject(x).optString("id");
+                                            } catch (JSONException e) {
+                                                e.printStackTrace();
+                                            }
+                                            try {
+                                                HowlsHandle[x] = arr.getJSONObject(x).optString("handle");
+                                            } catch (JSONException e) {
+                                                e.printStackTrace();
+                                            }
+                                        }
 
-                            for (int x = size; x > -1; x--) {
-                                customView.loadViews(HowlsIsImage[x], HowlsHandle[x], HowlsURL[x]);
-                            }
+                                        customView.num = arr.length() - 1;
+                                        int size = arr.length() - 1;
+                                        count = arr.length();
 
-                            if(Objects.equals(HowlsIsImage[0], "false")){
-                                customView.views[0].mediaVideoView.start();
+                                        for (int x = size; x > -1; x--) {
+                                            customView.loadViews(HowlsIsImage[x], HowlsHandle[x], HowlsURL[x]);
+                                        }
+
+                                        if (Objects.equals(HowlsIsImage[0], "false")) {
+                                            customView.views[0].mediaVideoView.start();
+                                        }
+                                    }
+                                });
+                            } catch (JSONException e) {
+                                e.printStackTrace();
                             }
                         }
+
+                        @Override
+                        public void onFailure(int statusCode, Header[] headers, byte[] errorResponse, Throwable e) {
+                        }
                     });
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-            }
-
-            @Override
-            public void onFailure(int statusCode, Header[] headers, byte[] errorResponse, Throwable e) {
-            }
-        });
-
+        }
     }
 
     /** Asynchronous HTTP Client - Incr/Decr Image/Video in Server **/
@@ -289,5 +293,25 @@ public class Networking_MainFeed{
             sb1.append(c1);
         }
         random_string = sb1.toString();
+    }
+
+    public void locationCheck(){
+        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(mainFeed.getActivity());
+        alertDialogBuilder.setTitle("Please turn on your location services!");
+        alertDialogBuilder
+                .setMessage("CAPTCHA = " + random_string)
+                .setCancelable(false)
+                .setNeutralButton("OK!", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.cancel();
+                    }
+                });
+
+        // create alert dialog
+        AlertDialog alertDialog = alertDialogBuilder.create();
+
+        // show it
+        alertDialog.show();
     }
 }
