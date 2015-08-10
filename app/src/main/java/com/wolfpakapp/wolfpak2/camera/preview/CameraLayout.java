@@ -1053,9 +1053,9 @@ public class CameraLayout {
         a.setDuration(time);
         mScreenFlash.startAnimation(a);
     }
-    // todo change to "isFrontCamera" for more clarity
-    public static int getFace()    {
-        return mFace;
+
+    public static boolean isFrontCamera()   {
+        return (mFace == CameraCharacteristics.LENS_FACING_FRONT);
     }
 
     public static boolean isSound() {

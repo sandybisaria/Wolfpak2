@@ -54,8 +54,7 @@ public class VideoSavingService extends Service {
                 // Generate FFmpeg command: overlays image (overlay), rotates 90 degrees to
                 // vertical orientation (transpose) and compresses video (qscale)
                 String cmd, transpose, audio, speed;
-                transpose = (CameraLayout.getFace() ==
-                        CameraCharacteristics.LENS_FACING_FRONT) ? "3" : "1"; // 1=rotate, 3=rotate/flip
+                transpose = (CameraLayout.isFrontCamera()) ? "3" : "1"; // 1=rotate, 3=rotate/flip
                 audio = (CameraLayout.isSound()) ? "-map 0:a " : ""; // audio map
                 speed = isUploading ? "veryfast" : "ultrafast"; // server needs more compression so go slow
                 // actual command
