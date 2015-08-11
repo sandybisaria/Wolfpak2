@@ -4,13 +4,29 @@
     android:layout_height="wrap_content" android:layout_margin="@dimen/leaderboard_item_margin"
     android:background="@drawable/background_leaderboard_item" >
 
-    <com.wolfpakapp.wolfpak2.leaderboard.ThumbnailImageView
-        android:layout_width="@dimen/leaderboard_item_thumbnail_size"
-        android:layout_height="@dimen/leaderboard_item_thumbnail_size"
-        android:layout_margin="@dimen/leaderboard_item_thumbnail_margin"
-        android:scaleType="centerCrop"
-        android:cropToPadding="true"
-        android:id="@+id/leaderboard_item_thumbnail_image_view" />
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+
+        <ProgressBar
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="@dimen/leaderboard_item_thumbnail_margin"
+            android:layout_gravity="center"
+            android:layout_centerHorizontal="true"
+            android:layout_centerVertical="true"
+            style="@android:style/Widget.ProgressBar.Small"
+            android:id="@+id/progress_bar"/>
+
+        <com.wolfpakapp.wolfpak2.leaderboard.ThumbnailImageView
+            android:layout_width="@dimen/leaderboard_item_thumbnail_size"
+            android:layout_height="@dimen/leaderboard_item_thumbnail_size"
+            android:layout_margin="@dimen/leaderboard_item_thumbnail_margin"
+            android:scaleType="centerCrop"
+            android:cropToPadding="true"
+            android:id="@+id/leaderboard_item_thumbnail_image_view" />
+
+    </RelativeLayout>
 
     <RelativeLayout
         android:layout_width="match_parent"

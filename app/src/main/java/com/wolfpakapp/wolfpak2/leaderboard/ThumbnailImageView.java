@@ -20,8 +20,10 @@ import android.view.animation.AccelerateDecelerateInterpolator;
 import android.view.animation.Interpolator;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.VideoView;
 
+import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
 import com.wolfpakapp.wolfpak2.Post;
 import com.wolfpakapp.wolfpak2.R;
@@ -29,6 +31,7 @@ import com.wolfpakapp.wolfpak2.R;
 public class ThumbnailImageView extends ImageView {
     private LeaderboardTabManager mManager = null;
     private Post mPost = null;
+    private View parentItemView = null;
 
     public ThumbnailImageView(Context context) {
         super(context);
@@ -42,12 +45,25 @@ public class ThumbnailImageView extends ImageView {
         super(context, attrs, defStyleAttr);
     }
 
-    public void initialize(LeaderboardTabManager manager, Post post) {
+    public void initialize(LeaderboardTabManager manager, Post post, View parentItemView) {
         mManager = manager;
         mPost = post;
+        this.parentItemView = parentItemView;
+
+        final ProgressBar progressBar = (ProgressBar) parentItemView.findViewById(R.id.progress_bar);
 
         if (post.isImage()) {
-            Picasso.with(getContext()).load(post.getMediaUrl()).into(this);
+            Picasso.with(getContext()).load(post.getMediaUrl()).into(this, new Callback() {
+                @Override
+                public void onSuccess() {
+                    progressBar.setVisibility(GONE);
+                }
+
+                @Override
+                public void onError() {
+
+                }
+            });
         } else {
             // Overlay a play icon on top of the video thumbnail
             Drawable thumbnailDrawable;

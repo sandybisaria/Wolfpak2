@@ -66,7 +66,7 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
             handleTextView.setText(post.getHandle());
 
             voteCountTextView.initialize(mParentManager, post, itemView);
-            thumbnailImageView.initialize(mParentManager, post);
+            thumbnailImageView.initialize(mParentManager, post, itemView);
         }
     }
 }
