@@ -1,6 +1,7 @@
 package com.wolfpakapp.wolfpak2.camera.editor;
 
 import android.app.Service;
+import android.content.ContentValues;
 import android.content.Intent;
 import android.hardware.camera2.CameraCharacteristics;
 import android.os.Handler;
@@ -14,6 +15,7 @@ import android.widget.Toast;
 
 import com.github.hiteshsondhi88.libffmpeg.ExecuteBinaryResponseHandler;
 import com.github.hiteshsondhi88.libffmpeg.exceptions.FFmpegCommandAlreadyRunningException;
+import com.loopj.android.http.RequestParams;
 import com.wolfpakapp.wolfpak2.camera.preview.CameraLayout;
 
 import java.io.File;
@@ -51,11 +53,24 @@ public class VideoSavingService extends Service {
                 final String outputPath = (String) intent.getExtras().get(MediaSaver.OUTPUT_PATH);
                 final boolean isUploading = (boolean) intent.getExtras().get(MediaSaver.IS_UPLOADING);
 
+                // construct contentvalues if uploading
+                final ContentValues contentValues = new ContentValues();
+                if(isUploading) {
+                    for(String key : MediaSaver.keys)   {
+                        Object obj = intent.getExtras().get(key);
+                        if(obj != null) {
+                            if(obj.getClass().equals(String.class))
+                                contentValues.put(key, obj.toString());
+                            else if(obj.getClass().equals(Double.class))
+                                contentValues.put(key, (Double) obj);
+                        }
+                    }
+                }
+
                 // Generate FFmpeg command: overlays image (overlay), rotates 90 degrees to
                 // vertical orientation (transpose) and compresses video (qscale)
                 String cmd, transpose, audio, speed;
-                transpose = (CameraLayout.getFace() ==
-                        CameraCharacteristics.LENS_FACING_FRONT) ? "3" : "1"; // 1=rotate, 3=rotate/flip
+                transpose = (CameraLayout.isFrontCamera()) ? "3" : "1"; // 1=rotate, 3=rotate/flip
                 audio = (CameraLayout.isSound()) ? "-map 0:a " : ""; // audio map
                 speed = isUploading ? "veryfast" : "ultrafast"; // server needs more compression so go slow
                 // actual command
@@ -88,9 +103,23 @@ public class VideoSavingService extends Service {
                             // destroy the input temp files
                             (new File(videoPath)).delete();
                             (new File(overlayPath)).delete();
+
                             if(isUploading) {
-                                // continue and send it to the server
-                                MediaSaver.upload(new File(outputPath), false);
+                                // input content values
+                                String thumbnailPath = null;
+                                try {
+                                    thumbnailPath = MediaSaver.createVideoThumbnail(outputPath)
+                                            .getAbsolutePath();
+                                } catch(NullPointerException e) {
+                                    e.printStackTrace();
+                                }
+                                contentValues.put(MediaSaver.MEDIA, outputPath);
+                                contentValues.put(MediaSaver.THUMBNAIL, thumbnailPath);
+
+                                // cache and send it to the server
+                                MediaSaver.cacheMedia(contentValues);
+                                RequestParams params = MediaSaver.contentValuesToRequestParams(contentValues);
+                                MediaSaver.upload(params, false);
                             }
 
                             // Stop the service using the startId, so that we don't stop

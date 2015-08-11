@@ -204,7 +204,7 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
                 if (src.getWidth() > src.getHeight()) {
                     // transformation matrix that scales and rotates
                     Matrix matrix = new Matrix();
-                    if(CameraLayout.getFace() == CameraCharacteristics.LENS_FACING_FRONT)  {
+                    if(CameraLayout.isFrontCamera())  {
                         matrix.setScale(-1, 1);
                     }
                     matrix.postRotate(90);
@@ -234,7 +234,7 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
             } else  { // device likely resumed, so restore previous session
                 mOverlay.setBitmap(UndoManager.getLastScreenState());
             }
-            if(CameraLayout.getFace() == CameraCharacteristics.LENS_FACING_FRONT)   {
+            if(CameraLayout.isFrontCamera())   {
                 Matrix matrix = new Matrix();
                 matrix.setScale(1, -1, 0, mTextureView.getHeight() / 2);
                 mTextureView.setTransform(matrix);

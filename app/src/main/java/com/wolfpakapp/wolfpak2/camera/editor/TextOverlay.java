@@ -68,9 +68,9 @@ public class TextOverlay extends EditText {
     private float centerX;
     private float centerY;
 
-    Context context = null;
+    private Context context = null;
 
-    RelativeLayout.LayoutParams params;
+    private RelativeLayout.LayoutParams params;
 
     public TextOverlay(Context context)  {
         this(context, null);
@@ -143,7 +143,6 @@ public class TextOverlay extends EditText {
      * @param state
      */
     public void setState(int state) {
-    // TODO various restoration features have been commented out due to serious bugs
         switch(state)   {
             case TEXT_STATE_HIDDEN:
                 PictureEditorLayout.getColorPicker().setVisibility(View.GONE); // hide color picker
@@ -159,8 +158,6 @@ public class TextOverlay extends EditText {
                 requestFocus();
                 // resume center position
                 setX(0);
-                //setY(centerY);
-                //Log.d(TAG, "Recentering: " + centerX + ", " + centerY);
                 setBackgroundResource(R.drawable.text_bar);
                 break;
             case TEXT_STATE_VERTICAL:
@@ -168,17 +165,10 @@ public class TextOverlay extends EditText {
                 setFocusableInTouchMode(false); // cannot edit when transforming, moving, etc.
                 PictureEditorLayout.getColorPicker().setVisibility(View.VISIBLE); // also show color picker
                 setRotation(mRotation); // change back to whatever rotation it had
-                //setTextSize(TypedValue.COMPLEX_UNIT_PX, getTextSize() * mScale); // restore scale
                 setTextColor(mTextColor); // restore color
-                //Log.d(TAG, "Resuming Y: " + mY);
-                //setY(mY); // resume Y
-                // setVisibility(View.VISIBLE);
                 setBackground(null); // get rid of the bar
                 break;
             case TEXT_STATE_FREE:
-                //Log.d(TAG, "Resuming X: " + mX);
-                //setX(mX); // resume X
-                // setVisibility(View.VISIBLE);
                 break;
         }
         mState = state;
