@@ -10,6 +10,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 import com.wolfpakapp.wolfpak2.service.LocationProvider;
+import com.wolfpakapp.wolfpak2.service.SQLiteManager;
 import com.wolfpakapp.wolfpak2.service.ServerRestClient;
 import com.wolfpakapp.wolfpak2.service.UserIdManager;
 
@@ -39,6 +40,8 @@ public class MainActivity extends AppCompatActivity {
     private void setupManagers() {
         WolfpakServiceProvider.registerServiceManager(WolfpakServiceProvider.USERIDMANAGER,
                 new UserIdManager(this));
+        WolfpakServiceProvider.registerServiceManager(WolfpakServiceProvider.SQLITEMANAGER,
+                new SQLiteManager(this));
         WolfpakServiceProvider.registerServiceManager(WolfpakServiceProvider.SERVERRESTCLIENT,
                 new ServerRestClient(this));
         WolfpakServiceProvider.registerServiceManager(WolfpakServiceProvider.LOCATIONPROVIDER,

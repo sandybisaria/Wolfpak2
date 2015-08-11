@@ -29,8 +29,11 @@ import com.github.hiteshsondhi88.libffmpeg.exceptions.FFmpegNotSupportedExceptio
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
+import com.wolfpakapp.wolfpak2.WolfpakServiceProvider;
 import com.wolfpakapp.wolfpak2.camera.preview.CameraLayout;
 import com.wolfpakapp.wolfpak2.service.LocationProvider;
+import com.wolfpakapp.wolfpak2.service.SQLiteManager;
+import com.wolfpakapp.wolfpak2.service.UserIdManager;
 
 import org.apache.http.Header;
 
@@ -41,6 +44,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
@@ -69,7 +73,7 @@ public class MediaSaver {
     /**
      * Request parameters for server upload
      */
-    private static RequestParams params;
+    private static RequestParams params; // TODO video params need to be saved! they are overwritten otherwise
 
     private static FFmpeg mFfmpeg;
     private static Activity mActivity;
@@ -391,6 +395,41 @@ public class MediaSaver {
     }
 
     /**
+     * Caches media into SQLite database
+     */
+    private static void cacheMedia()    {
+
+        SQLiteManager sqLiteManager = (SQLiteManager) WolfpakServiceProvider
+                .getServiceManager(WolfpakServiceProvider.SQLITEMANAGER);
+        try {
+            sqLiteManager.open();
+        } catch(SQLException e) {
+            e.printStackTrace();
+        }
+
+        ContentValues values = new ContentValues();
+        // TODO ensure keys are same as those in sqlite database by using contants
+        for(String key : keys)  {
+            Object value = mMap.get(key);
+            if(value.getClass().equals(String.class))
+                values.put(key, (String) value);
+            else if(value.getClass().equals(Double.class)) // for lat and long
+                values.put(key, Double.toString((Double) value));
+        }
+
+        sqLiteManager.addEntry(values);
+
+        // TODO for debugging purposes
+        Log.d(TAG, "LISTING SQL CONTENTS:");
+        for(String handle : sqLiteManager.getMediaHandles())    {
+            Log.d(TAG, "HANDLE: " + handle);
+        }
+
+        sqLiteManager.close();
+
+    }
+
+    /**
      * Waits 5 seconds.  For stalling progress dialog to buy some time
      */
     private static void stall(final MediaSaverListener listener, final boolean isUpload) {
@@ -442,11 +481,17 @@ public class MediaSaver {
                 Log.d(TAG, "Progress dialog shown");
                 if(!isImage)
                     stall(listener, true); // buy some time for video saving
+
+                // TODO make this static and have user ID initialize upon app start?
+                UserIdManager userIdManager = (UserIdManager) WolfpakServiceProvider
+                        .getServiceManager(WolfpakServiceProvider.USERIDMANAGER);
+                String userId = userIdManager.getDeviceId();
+
                 // initialize server params here
                 mMap.put("handle", dialog.getHandle());
                 mMap.put("is_nsfw", dialog.isNsfw() ? "true" : "false");
                 mMap.put("is_image", PictureEditorLayout.isImage() ? "true" : "false");
-                mMap.put("user", "temp_test_id");
+                mMap.put("user", userId);
                 mMap.put("latitude", LocationProvider.getLastLocation().getLatitude());
                 mMap.put("longitude", LocationProvider.getLastLocation().getLongitude());
 

@@ -15,6 +15,7 @@ import java.util.Map;
 public class WolfpakServiceProvider {
 
     public static final String USERIDMANAGER = "Wolfpak.UserIdManager";
+    public static final String SQLITEMANAGER = "Wolfpak.SQLiteManager";
     public static final String SERVERRESTCLIENT = "Wolfpak.ServerRestClient";
     public static final String LOCATIONPROVIDER = "Wolfpak.LocationProvider";
 
