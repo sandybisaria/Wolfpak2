@@ -1,6 +1,8 @@
 package com.wolfpakapp.wolfpak2.service;
 
 import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.AsyncHttpResponseHandler;
@@ -32,10 +34,17 @@ public class ServerRestClient extends ServiceManager {
      * @param context The context of the activity constructing the manager.
      */
     public ServerRestClient(Context context) {
-        mClient = new AsyncHttpClient(true, 80, 443);
         mContext = context;
 
-        finishInitialize();
+        ConnectivityManager connectivityManager = (ConnectivityManager) context.
+                getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
+        if (networkInfo != null && networkInfo.isConnected()) {
+            mClient = new AsyncHttpClient(true, 80, 443);
+            finishInitialize();
+        } else {
+            //TODO Handle lack of connection.
+        }
     }
 
     /**

@@ -10,6 +10,7 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Matrix;
 import android.hardware.camera2.CameraCharacteristics;
+import android.location.Location;
 import android.media.ThumbnailUtils;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -472,14 +473,16 @@ public class MediaSaver {
      * @return updated ContentValues
      */
     private static void generateUploadParams(final ContentValues values)    {
-        // TODO make user id static and have user ID initialize upon app start?
         UserIdManager userIdManager = (UserIdManager) WolfpakServiceProvider
                 .getServiceManager(WolfpakServiceProvider.USERIDMANAGER);
         String userId = userIdManager.getDeviceId();
 
+        Location location = ((LocationProvider) WolfpakServiceProvider
+                .getServiceManager(WolfpakServiceProvider.LOCATIONPROVIDER)).getLastLocation();
+
         values.put(USER, userId);
-        values.put(LATITUDE, LocationProvider.getLastLocation().getLatitude());
-        values.put(LONGITUDE, LocationProvider.getLastLocation().getLongitude());
+        values.put(LATITUDE, location.getLatitude());
+        values.put(LONGITUDE, location.getLongitude());
     }
 
     /**

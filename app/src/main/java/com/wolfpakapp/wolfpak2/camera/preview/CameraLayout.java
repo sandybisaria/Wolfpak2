@@ -440,10 +440,6 @@ public class CameraLayout {
                 Size largest = Collections.max(
                         Arrays.asList(map.getOutputSizes(ImageFormat.JPEG)),
                         new CompareSizesByArea());
-//                mImageReader = ImageReader.newInstance(largest.getWidth(), largest.getHeight(),
-//                        ImageFormat.JPEG, /*maxImages*/2);
-//                mImageReader.setOnImageAvailableListener(
-//                        mOnImageAvailableListener, mBackgroundHandler);
 
                 mPreviewSize = chooseOptimalSize(map.getOutputSizes(SurfaceTexture.class),
                         width, height, largest);
@@ -453,8 +449,10 @@ public class CameraLayout {
                 mTextureView.setAspectRatio(
                         mPreviewSize.getHeight(), mPreviewSize.getWidth());
                 // set image size to be size of screen
-                mImageReader = ImageReader.newInstance(mPreviewSize.getWidth(), mPreviewSize.getHeight(),
-                        ImageFormat.JPEG, /*maxImages*/2);
+//                mImageReader = ImageReader.newInstance(mPreviewSize.getWidth(), mPreviewSize.getHeight(),
+//                        ImageFormat.JPEG, /*maxImages*/2);
+                mImageReader = ImageReader.newInstance(largest.getWidth(), largest.getHeight(),
+                        ImageFormat.JPEG, /*maxImages*/2); // Fix for Raziq's phone
                 mImageReader.setOnImageAvailableListener(
                         mOnImageAvailableListener, mBackgroundHandler);
 

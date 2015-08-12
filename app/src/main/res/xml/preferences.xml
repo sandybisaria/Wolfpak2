@@ -12,7 +12,7 @@
             android:layout_alignParentLeft="true"
             android:layout_alignParentTop="true"
             android:layout_marginTop="20dp"
-            android:key="showNSFW"
+            android:key="@string/nsfw_switch_key"
             android:title="Display NSFW Content" />
 
         <SwitchPreference

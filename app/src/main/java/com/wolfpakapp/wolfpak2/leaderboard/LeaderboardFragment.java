@@ -1,5 +1,8 @@
 package com.wolfpakapp.wolfpak2.leaderboard;
 
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.location.Location;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -12,6 +15,7 @@ import com.loopj.android.http.RequestParams;
 import com.wolfpakapp.wolfpak2.R;
 import com.wolfpakapp.wolfpak2.WolfpakServiceProvider;
 import com.wolfpakapp.wolfpak2.WolfpakTabHost;
+import com.wolfpakapp.wolfpak2.service.LocationProvider;
 import com.wolfpakapp.wolfpak2.service.UserIdManager;
 
 import java.util.HashMap;
@@ -122,13 +126,18 @@ public class LeaderboardFragment extends Fragment implements TabHost.TabContentF
         localParams.add("user_id", userId);
         denParams.add("user_id", userId);
 
-        //TODO GPS coordinates come from the manager
-        localParams.add("latitude", "40.518715");
-        localParams.add("longitude", "-74.412095");
+        Location location = ((LocationProvider) WolfpakServiceProvider
+                .getServiceManager(WolfpakServiceProvider.LOCATIONPROVIDER)).getLastLocation();
+        localParams.add("latitude", Double.toString(location.getLatitude()));
+        localParams.add("longitude", Double.toString(location.getLongitude()));
 
-        //TODO is_nsfw comes from the user settings
-        localParams.add("is_nsfw", "False");
-        allTimeParams.add("is_nsfw", "False");
+        //TODO If setting is changed while app is loaded, re-setup params.
+        SharedPreferences sharedPreferences = getActivity().getPreferences(Context.MODE_PRIVATE);
+        boolean isNSFW = sharedPreferences.getBoolean(getString(R.string.nsfw_switch_key), false);
+        String isNSFWString = Boolean.toString(isNSFW);
+        isNSFWString = isNSFWString.substring(0, 1).toUpperCase() + isNSFWString.substring(1);
+        localParams.add("is_nsfw", isNSFWString);
+        allTimeParams.add("is_nsfw", isNSFWString);
 
         mRequestParamsMap.put(LOCAL_TAG, localParams);
         mRequestParamsMap.put(ALL_TIME_TAG, allTimeParams);
@@ -148,8 +157,8 @@ public class LeaderboardFragment extends Fragment implements TabHost.TabContentF
      */
     private void setUpRelativeUrls() {
         mRelativeUrlsMap.put(LOCAL_TAG, "posts/local_leaderboard/");
-        mRelativeUrlsMap.put(ALL_TIME_TAG, "/posts/all_time_leaderboard/");
-        mRelativeUrlsMap.put(DEN_TAG, "/users/den/");
+        mRelativeUrlsMap.put(ALL_TIME_TAG, "posts/all_time_leaderboard/");
+        mRelativeUrlsMap.put(DEN_TAG, "users/den/");
     }
 
     /**

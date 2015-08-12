@@ -9,14 +9,6 @@ public abstract class ServiceManager {
     protected boolean isInitialized = false;
     protected ArrayList<OnInitializedCallback> mCallbacks = new ArrayList<>();
 
-    public ServiceManager() {
-
-    }
-
-    public boolean isInitialized() {
-        return isInitialized;
-    }
-
     /**
      * Set a callback for when the ServiceManager is finished initialization.
      * @param callback The callback to be invoked.

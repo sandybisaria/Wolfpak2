@@ -41,6 +41,8 @@
     <string name="default_summary">Which Platform?</string>
     <string name="share">Facebook</string>
 
+    <string name="nsfw_switch_key">showNSFW</string>
+
     <!--End of Strings for the Settings Screen-->
 
     <!--Strings that associate the icons for social media -->

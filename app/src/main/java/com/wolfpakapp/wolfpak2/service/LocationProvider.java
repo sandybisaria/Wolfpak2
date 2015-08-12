@@ -108,7 +108,7 @@ public class LocationProvider extends ServiceManager
 
     }
 
-    public static Location getLastLocation() {
+    public Location getLastLocation() {
         return mLastLocation;
     }
 

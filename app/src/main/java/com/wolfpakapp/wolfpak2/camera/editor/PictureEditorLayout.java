@@ -208,6 +208,9 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
                         matrix.setScale(-1, 1);
                     }
                     matrix.postRotate(90);
+                    //TODO Doesn't change anything (much)
+                    matrix.postScale(((float) canvas.getWidth()) / src.getHeight(),
+                            ((float) canvas.getHeight()) / src.getWidth());
                     Bitmap resizedBitmap = Bitmap.createBitmap(
                             src, 0, 0, src.getWidth(), src.getHeight(), matrix, true);
                     canvas.drawBitmap(resizedBitmap, 0, 0, null);
