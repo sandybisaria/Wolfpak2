@@ -55,8 +55,8 @@ public class VoteCountTextView extends TextView {
         this.parentItemView = parentItemView;
         refresh();
 
-        // If this is in the den, then disable the onTouchEvent() method.
-        isTouchEnabled = !manager.getTag().equals(LeaderboardFragment.DEN_TAG);
+        // If this is in the local leaderboard, then enable the onTouchEvent() method.
+        isTouchEnabled = manager.getTag().equals(LeaderboardFragment.LOCAL_TAG);
     }
 
     /**
