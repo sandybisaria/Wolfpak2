@@ -23,7 +23,7 @@
             android:layout_alignParentTop="true"
             android:layout_marginTop="20dp"
             android:key="mute"
-            android:title="Mute Nofications" />
+            android:title="Mute Notifications" />
 
         <Preference
             android:key="@string/rate"

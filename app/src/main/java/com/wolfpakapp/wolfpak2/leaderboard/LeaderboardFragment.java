@@ -1,9 +1,9 @@
 package com.wolfpakapp.wolfpak2.leaderboard;
 
-import android.content.Context;
 import android.content.SharedPreferences;
 import android.location.Location;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -42,7 +42,7 @@ public class LeaderboardFragment extends Fragment implements TabHost.TabContentF
         // Initialize the HashMaps that will be used by the fragment.
         mTabManagerMap = new HashMap<>();
         mRequestParamsMap = new HashMap<>();
-        setUpRequestParams();
+        setupRequestParams();
         mRelativeUrlsMap = new HashMap<>();
         setUpRelativeUrls();
     }
@@ -115,7 +115,7 @@ public class LeaderboardFragment extends Fragment implements TabHost.TabContentF
     /**
      * Set up the request parameters that each tab will use to retrieve posts from the server.
      */
-    private void setUpRequestParams() {
+    private void setupRequestParams() {
         RequestParams localParams = new RequestParams();
         RequestParams allTimeParams = new RequestParams();
         RequestParams denParams = new RequestParams();
@@ -132,7 +132,7 @@ public class LeaderboardFragment extends Fragment implements TabHost.TabContentF
         localParams.add("longitude", Double.toString(location.getLongitude()));
 
         //TODO If setting is changed while app is loaded, re-setup params.
-        SharedPreferences sharedPreferences = getActivity().getPreferences(Context.MODE_PRIVATE);
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
         boolean isNSFW = sharedPreferences.getBoolean(getString(R.string.nsfw_switch_key), false);
         String isNSFWString = Boolean.toString(isNSFW);
         isNSFWString = isNSFWString.substring(0, 1).toUpperCase() + isNSFWString.substring(1);
