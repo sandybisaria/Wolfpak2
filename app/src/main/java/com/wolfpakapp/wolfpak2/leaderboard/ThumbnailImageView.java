@@ -57,6 +57,7 @@ public class ThumbnailImageView extends ImageView {
                 @Override
                 public void onSuccess() {
                     progressBar.setVisibility(GONE);
+                    setOnClickListener(new ThumbnailOnClickListener());
                 }
 
                 @Override
@@ -82,8 +83,6 @@ public class ThumbnailImageView extends ImageView {
             setImageDrawable(new LayerDrawable(layers));
             setBackgroundColor(Color.BLACK);
         }
-
-        setOnClickListener(new ThumbnailOnClickListener());
     }
 
     /**
@@ -113,15 +112,24 @@ public class ThumbnailImageView extends ImageView {
 
             if (mPost.isImage()) {
                 // Create an expanded ImageView.
-                ImageView expandedImageView = new ImageView(getContext());
+                final ImageView expandedImageView = new ImageView(getContext());
 
                 expandedImageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
                 expandedImageView.setVisibility(View.GONE);
                 expandedImageView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN);
-                Picasso.with(getContext()).load(mPost.getMediaUrl()).into(expandedImageView);
-                baseFrameLayout.addView(expandedImageView);
+                Picasso.with(getContext()).load(mPost.getMediaUrl()).into(expandedImageView, new Callback() {
+                    @Override
+                    public void onSuccess() {
+                        baseFrameLayout.addView(expandedImageView);
 
-                animateViewExpansion(expandedImageView);
+                        animateViewExpansion(expandedImageView);
+                    }
+
+                    @Override
+                    public void onError() {
+
+                    }
+                });
             } else {
                 // Create an expanded VideoView.
                 VideoView expandedVideoView = new VideoView(getContext());
