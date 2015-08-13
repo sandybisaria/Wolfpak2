@@ -22,7 +22,8 @@ public class UserIdManager extends ServiceManager {
     public UserIdManager(Context context) {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
         mDeviceId = sharedPreferences.getString(userIdKey, null);
-        if (mDeviceId == null) {
+        //TODO Once in production, remove...
+        if (true || mDeviceId == null) {
             mDeviceId = generateDeviceId(context);
             SharedPreferences.Editor editor = sharedPreferences.edit();
             editor.putString(userIdKey, mDeviceId);

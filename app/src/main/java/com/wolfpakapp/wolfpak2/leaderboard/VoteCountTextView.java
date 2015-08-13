@@ -288,8 +288,8 @@ public class VoteCountTextView extends TextView {
         }
     }
 
-    private boolean isVibrating = false;
-    private long VIBRATE_DURATION = 200;
+    private static boolean isVibrating = false;
+    private static final long VIBRATE_DURATION = 200;
 
     private void vibrateOnError() {
         Vibrator vibrator = (Vibrator) getContext().getSystemService(Context.VIBRATOR_SERVICE);

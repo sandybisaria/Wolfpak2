@@ -147,6 +147,7 @@ public class LeaderboardFragment extends Fragment implements TabHost.TabContentF
      * @return The request parameters associated with the tab.
      */
     public RequestParams getRequestParams(String tag) {
+        refreshRequestParams();
         return mRequestParamsMap.get(tag);
     }
 
@@ -161,7 +162,6 @@ public class LeaderboardFragment extends Fragment implements TabHost.TabContentF
         localParams.remove("longitude");
         localParams.add("longitude", Double.toString(location.getLongitude()));
 
-        //TODO If setting is changed while app is loaded, re-setup params.
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
         boolean isNSFW = sharedPreferences.getBoolean(getString(R.string.nsfw_switch_key), false);
         String isNSFWString = Boolean.toString(isNSFW);
