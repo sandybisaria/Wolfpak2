@@ -44,7 +44,7 @@ public class LeaderboardFragment extends Fragment implements TabHost.TabContentF
         mRequestParamsMap = new HashMap<>();
         setupRequestParams();
         mRelativeUrlsMap = new HashMap<>();
-        setUpRelativeUrls();
+        setupRelativeUrls();
     }
 
     @Override
@@ -120,9 +120,8 @@ public class LeaderboardFragment extends Fragment implements TabHost.TabContentF
         RequestParams allTimeParams = new RequestParams();
         RequestParams denParams = new RequestParams();
 
-        UserIdManager userIdManager = (UserIdManager) WolfpakServiceProvider
-                .getServiceManager(WolfpakServiceProvider.USERIDMANAGER);
-        String userId = userIdManager.getDeviceId();
+        String userId = ((UserIdManager) WolfpakServiceProvider
+                .getServiceManager(WolfpakServiceProvider.USERIDMANAGER)).getDeviceId();
         localParams.add("user_id", userId);
         denParams.add("user_id", userId);
 
@@ -131,7 +130,6 @@ public class LeaderboardFragment extends Fragment implements TabHost.TabContentF
         localParams.add("latitude", Double.toString(location.getLatitude()));
         localParams.add("longitude", Double.toString(location.getLongitude()));
 
-        //TODO If setting is changed while app is loaded, re-setup params.
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
         boolean isNSFW = sharedPreferences.getBoolean(getString(R.string.nsfw_switch_key), false);
         String isNSFWString = Boolean.toString(isNSFW);
@@ -152,10 +150,32 @@ public class LeaderboardFragment extends Fragment implements TabHost.TabContentF
         return mRequestParamsMap.get(tag);
     }
 
+    public void refreshRequestParams() {
+        RequestParams localParams = mRequestParamsMap.get(LOCAL_TAG);
+        RequestParams allTimeParams = mRequestParamsMap.get(ALL_TIME_TAG);
+
+        Location location = ((LocationProvider) WolfpakServiceProvider
+                .getServiceManager(WolfpakServiceProvider.LOCATIONPROVIDER)).getLastLocation();
+        localParams.remove("latitude");
+        localParams.add("latitude", Double.toString(location.getLatitude()));
+        localParams.remove("longitude");
+        localParams.add("longitude", Double.toString(location.getLongitude()));
+
+        //TODO If setting is changed while app is loaded, re-setup params.
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
+        boolean isNSFW = sharedPreferences.getBoolean(getString(R.string.nsfw_switch_key), false);
+        String isNSFWString = Boolean.toString(isNSFW);
+        isNSFWString = isNSFWString.substring(0, 1).toUpperCase() + isNSFWString.substring(1);
+        localParams.remove("is_nsfw");
+        localParams.add("is_nsfw", isNSFWString);
+        allTimeParams.remove("is_nsfw");
+        allTimeParams.add("is_nsfw", isNSFWString);
+    }
+
     /**
      * Set up the relative URLs that each tab will use to retrieve posts from the server.
      */
-    private void setUpRelativeUrls() {
+    private void setupRelativeUrls() {
         mRelativeUrlsMap.put(LOCAL_TAG, "posts/local_leaderboard/");
         mRelativeUrlsMap.put(ALL_TIME_TAG, "posts/all_time_leaderboard/");
         mRelativeUrlsMap.put(DEN_TAG, "users/den/");

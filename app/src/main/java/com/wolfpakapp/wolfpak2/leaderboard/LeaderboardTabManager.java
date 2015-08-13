@@ -239,7 +239,6 @@ public class LeaderboardTabManager {
             @Override
             public void onFailure(int statusCode, Header[] headers, byte[] responseBody,
                                   Throwable error) {
-//                Toast.makeText(mParentFragment.getActivity(), "Failed", Toast.LENGTH_SHORT).show();
                 Log.d("Failure", Integer.toString(statusCode));
             }
         });

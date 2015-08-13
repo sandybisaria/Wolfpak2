@@ -222,7 +222,7 @@ public class VoteCountTextView extends TextView {
                     public void onFailure(int statusCode, Header[] headers,
                                           byte[] responseBody, Throwable error) {
                         try {
-                            Log.d(Integer.toString(statusCode), new String(responseBody));
+                            Log.d("Failure", Integer.toString(statusCode));
                         } catch (Exception e) {
                             e.printStackTrace();
                         }

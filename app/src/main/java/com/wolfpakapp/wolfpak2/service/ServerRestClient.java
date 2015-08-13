@@ -3,6 +3,8 @@ package com.wolfpakapp.wolfpak2.service;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.os.Handler;
+import android.widget.Toast;
 
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.AsyncHttpResponseHandler;
@@ -35,16 +37,9 @@ public class ServerRestClient extends ServiceManager {
      */
     public ServerRestClient(Context context) {
         mContext = context;
+        mClient = new AsyncHttpClient(true, 80, 443);
 
-        ConnectivityManager connectivityManager = (ConnectivityManager) context.
-                getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
-        if (networkInfo != null && networkInfo.isConnected()) {
-            mClient = new AsyncHttpClient(true, 80, 443);
-            finishInitialize();
-        } else {
-            //TODO Handle lack of connection.
-        }
+        finishInitialize();
     }
 
     /**
@@ -54,6 +49,10 @@ public class ServerRestClient extends ServiceManager {
      * @param handler The response handler.
      */
     public void get(String url, RequestParams params, AsyncHttpResponseHandler handler) {
+        if (!checkInternetConnection()) {
+            handler.onFailure(0, null, null, null);
+            return;
+        }
         mClient.get(getAbsoluteUrl(url), params, handler);
     }
 
@@ -65,6 +64,10 @@ public class ServerRestClient extends ServiceManager {
      * @param handler The response handler.
      */
     public void post(String url, HttpEntity entity, String contentType, AsyncHttpResponseHandler handler) {
+        if (!checkInternetConnection()) {
+            handler.onFailure(0, null, null, null);
+            return;
+        }
         mClient.post(mContext, getAbsoluteUrl(url), entity, contentType, handler);
     }
 
@@ -76,6 +79,10 @@ public class ServerRestClient extends ServiceManager {
      */
     public void updateLikeStatus(int postId, final Post.VoteStatus voteStatus,
                                  AsyncHttpResponseHandler handler) {
+        if (!checkInternetConnection()) {
+            handler.onFailure(0, null, null, null);
+            return;
+        }
         final String likeStatusUrl = "like_status/";
         try {
             JSONObject jsonObject = new JSONObject();
@@ -102,5 +109,33 @@ public class ServerRestClient extends ServiceManager {
      */
     private String getAbsoluteUrl(String relativeUrl) {
         return BASE_URL + relativeUrl;
+    }
+
+    private boolean isAlerting = false;
+
+    /**
+     * Checks the Internet connection status, and toasts if there is no connection.
+     * @return True if connected.
+     */
+    private boolean checkInternetConnection() {
+        ConnectivityManager connectivityManager = (ConnectivityManager) mContext.
+                getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
+        if (networkInfo != null && networkInfo.isConnected()) {
+            return true;
+        } else {
+            if (!isAlerting) {
+                isAlerting = true;
+                Toast.makeText(mContext, "Unable to connect to the Internet", Toast.LENGTH_SHORT).show();
+                new Handler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        isAlerting = false;
+                    }
+                }, 2000);
+            }
+
+            return false;
+        }
     }
 }
