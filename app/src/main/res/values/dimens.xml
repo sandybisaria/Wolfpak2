@@ -20,5 +20,5 @@
     <dimen name="color_picker_dialog_preview_width">65dp</dimen>
     <dimen name="color_picker_dialog_preview_height">32dp</dimen>
 
-    <dimen name="leaderboard_item_elevation">10dp</dimen>
+    <dimen name="leaderboard_item_elevation">2dp</dimen>
 </resources>
