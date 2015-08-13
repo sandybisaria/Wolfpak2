@@ -7,6 +7,8 @@ import android.animation.ObjectAnimator;
 import android.content.Context;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Vibrator;
 import android.support.v4.view.MotionEventCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.RecyclerView;
@@ -18,6 +20,7 @@ import android.view.ViewGroup;
 import android.view.ViewParent;
 import android.view.animation.OvershootInterpolator;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.wolfpakapp.wolfpak2.Post;
@@ -93,7 +96,9 @@ public class VoteCountTextView extends TextView {
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         if (!isTouchEnabled) {
-            return false;
+            vibrateOnError();
+            
+            return true;
         }
 
         final int action = MotionEventCompat.getActionMasked(event);
@@ -280,6 +285,23 @@ public class VoteCountTextView extends TextView {
                 ((ViewGroup) parent).setClipChildren(clipChildren);
             }
             parent = parent.getParent();
+        }
+    }
+
+    private boolean isVibrating = false;
+    private long VIBRATE_DURATION = 200;
+
+    private void vibrateOnError() {
+        Vibrator vibrator = (Vibrator) getContext().getSystemService(Context.VIBRATOR_SERVICE);
+        if (vibrator.hasVibrator() && !isVibrating) {
+            isVibrating = true;
+            vibrator.vibrate(VIBRATE_DURATION);
+            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    isVibrating = false;
+                }
+            }, VIBRATE_DURATION);
         }
     }
 }
