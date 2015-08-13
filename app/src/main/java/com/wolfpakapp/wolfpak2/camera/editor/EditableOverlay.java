@@ -6,6 +6,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
+import android.os.Handler;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.util.TypedValue;
@@ -39,6 +40,10 @@ public class EditableOverlay extends View {
 
     private float mX, mY;
     private static final float TOUCH_TOLERANCE = 4;
+
+    private Handler mDrawHandler; // performs the actual blitting path onto textureview
+    private static final int BLITTING_OVERLAY = 1;
+    private boolean mTouched;
 
     private TextOverlay mTextOverlay;
     private ScaleGestureDetector mScaleDetector;
@@ -125,6 +130,9 @@ public class EditableOverlay extends View {
         mTextOverlay.init();
 
         mTextureView = textureView;
+
+        mDrawHandler = new Handler();
+        mTouched = false;
 
         mScaleDetector = new ScaleGestureDetector(getContext(), mOnScaleListener);
         mRotationDetector = new RotationGestureDetector(mOnRotationListener);
@@ -213,7 +221,7 @@ public class EditableOverlay extends View {
                 float dx = Math.abs(x - mX);
                 float dy = Math.abs(y - mY);
                 if (dx >= TOUCH_TOLERANCE || dy >= TOUCH_TOLERANCE) {
-                    mPath.quadTo(mX, mY, (x + mX)/2, (y + mY)/2);
+                    mPath.quadTo(mX, mY, (x + mX) / 2, (y + mY) / 2);
                     mX = x;
                     mY = y;
                 }
@@ -229,22 +237,35 @@ public class EditableOverlay extends View {
                 mCanvas.drawPath(mPath, mPaint);
                 // kill this so we don't double draw
                 mPath.reset();
-                if(PictureEditorLayout.isImage()) {
-                    // if image, combine overlay and textureview onto textureview surface
-                    Canvas canvas = mTextureView.lockCanvas();
-                    Bitmap b = Bitmap.createBitmap(mTextureView.getBitmap());
-                    Canvas canvas2 = new Canvas(b); // for saving undo state
-                    canvas.drawBitmap(mTextureView.getBitmap(), 0, 0, null);
-                    canvas.drawBitmap(mBitmap, 0, 0, null);
-                    canvas2.drawBitmap(mBitmap, 0, 0, null);
-                    mTextureView.unlockCanvasAndPost(canvas);
-                    UndoManager.addScreenState(b); // save state
-                    clearBitmap();
-                } else  { // if not image, only save overlay
+                if (PictureEditorLayout.isImage()) {
+                    blitOverlay();
+                } else { // if not image, only save overlay
                     UndoManager.addScreenState(Bitmap.createBitmap(mBitmap));
                 }
                 break;
         }
+    }
+
+    /**
+     * Blits the overlay onto the image and saves an undo state instance
+     */
+    private void blitOverlay()  {
+        mDrawHandler.post(new Runnable()    {
+            @Override
+            public void run() {
+                // if image, combine overlay and textureview onto textureview surface
+                Canvas canvas = mTextureView.lockCanvas();
+                Bitmap b = Bitmap.createBitmap(mTextureView.getBitmap());
+                Canvas canvas2 = new Canvas(b); // for saving undo state
+                canvas.drawBitmap(mTextureView.getBitmap(), 0, 0, null);
+                canvas.drawBitmap(mBitmap, 0, 0, null);
+                canvas2.drawBitmap(mBitmap, 0, 0, null);
+                mTextureView.unlockCanvasAndPost(canvas);
+                UndoManager.addScreenState(b); // save state
+                clearBitmap();
+            }
+        });
+        mDrawHandler.sendEmptyMessage(BLITTING_OVERLAY);
     }
 
     private boolean performTouchEvent(MotionEvent event, int state) {
@@ -253,13 +274,18 @@ public class EditableOverlay extends View {
         float y = event.getY();
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
+                mTouched = true; // finger detected; this may not happen if mDrawHandler didn't finish
                 touch_start(x, y, state);
                 break;
             case MotionEvent.ACTION_MOVE:
-                touch_move(x, y, state);
+                if(mTouched) // if finger has been detected, continue drawing
+                    touch_move(x, y, state);
                 break;
             case MotionEvent.ACTION_UP:
-                touch_up(state);
+                if(mTouched) {// if finger started drawing, finish drawing
+                    mTouched = false;
+                    touch_up(state);
+                }
                 break;
         }
         invalidate();
@@ -276,12 +302,13 @@ public class EditableOverlay extends View {
         float x = event.getX();
         float y = event.getY();
 
-        switch (event.getAction()) {
-            case MotionEvent.ACTION_DOWN:
-                Log.d(TAG, "Action Down");
-            case MotionEvent.ACTION_MOVE:
-            case MotionEvent.ACTION_UP:
-                return performTouchEvent(event, mState);
+        if(!mDrawHandler.hasMessages(BLITTING_OVERLAY)) {
+            switch (event.getAction()) {
+                case MotionEvent.ACTION_DOWN:
+                case MotionEvent.ACTION_MOVE:
+                case MotionEvent.ACTION_UP:
+                    return performTouchEvent(event, mState);
+            }
         }
         return false; // touch event not consumed - pass this on to textureview
     }

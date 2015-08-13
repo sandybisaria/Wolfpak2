@@ -42,3 +42,9 @@ android-support-v4-preferencefragment/build/intermediates/res/androidTest/debug/
 android-support-v4-preferencefragment/build/intermediates/res/androidTest/debug/values-sw320dp/values-sw320dp.xml
 android-support-v4-preferencefragment/build/intermediates/res/androidTest/debug/values-v21/values-v21.xml
 android-support-v4-preferencefragment/build/intermediates/res/androidTest/debug/values-w720dp/values-w720dp.xml
+android-support-v4-preferencefragment/build/intermediates/bundles/release/res/values-sw320dp/values-sw320dp.xml
+android-support-v4-preferencefragment/build/intermediates/bundles/release/res/values-v21/values-v21.xml
+android-support-v4-preferencefragment/build/intermediates/bundles/release/res/values-w720dp/values-w720dp.xml
+android-support-v4-preferencefragment/build/intermediates/bundles/release/res/values/values.xml
+android-support-v4-preferencefragment/build/intermediates/incremental/mergeAssets/release/merger.xml
+android-support-v4-preferencefragment/build/intermediates/incremental/packageResources/release/merger.xml
