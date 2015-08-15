@@ -16,6 +16,7 @@ import com.wolfpakapp.wolfpak2.R;
 import com.wolfpakapp.wolfpak2.WolfpakServiceProvider;
 import com.wolfpakapp.wolfpak2.WolfpakTabHost;
 import com.wolfpakapp.wolfpak2.service.LocationProvider;
+import com.wolfpakapp.wolfpak2.service.NoLocationException;
 import com.wolfpakapp.wolfpak2.service.UserIdManager;
 
 import java.util.HashMap;
@@ -42,7 +43,11 @@ public class LeaderboardFragment extends Fragment implements TabHost.TabContentF
         // Initialize the HashMaps that will be used by the fragment.
         mTabManagerMap = new HashMap<>();
         mRequestParamsMap = new HashMap<>();
-        setupRequestParams();
+        try {
+            refreshRequestParams(null);
+        } catch (NoLocationException e) {
+            // Do nothing; let the tab manager handle the exception.
+        }
         mRelativeUrlsMap = new HashMap<>();
         setupRelativeUrls();
     }
@@ -113,63 +118,51 @@ public class LeaderboardFragment extends Fragment implements TabHost.TabContentF
     }
 
     /**
-     * Set up the request parameters that each tab will use to retrieve posts from the server.
-     */
-    private void setupRequestParams() {
-        RequestParams localParams = new RequestParams();
-        RequestParams allTimeParams = new RequestParams();
-        RequestParams denParams = new RequestParams();
-
-        String userId = ((UserIdManager) WolfpakServiceProvider
-                .getServiceManager(WolfpakServiceProvider.USERIDMANAGER)).getDeviceId();
-        localParams.add("user_id", userId);
-        denParams.add("user_id", userId);
-
-        Location location = ((LocationProvider) WolfpakServiceProvider
-                .getServiceManager(WolfpakServiceProvider.LOCATIONPROVIDER)).getLastLocation();
-        localParams.add("latitude", Double.toString(location.getLatitude()));
-        localParams.add("longitude", Double.toString(location.getLongitude()));
-
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
-        boolean isNSFW = sharedPreferences.getBoolean(getString(R.string.nsfw_switch_key), false);
-        String isNSFWString = Boolean.toString(isNSFW);
-        isNSFWString = isNSFWString.substring(0, 1).toUpperCase() + isNSFWString.substring(1);
-        localParams.add("is_nsfw", isNSFWString);
-        allTimeParams.add("is_nsfw", isNSFWString);
-
-        mRequestParamsMap.put(LOCAL_TAG, localParams);
-        mRequestParamsMap.put(ALL_TIME_TAG, allTimeParams);
-        mRequestParamsMap.put(DEN_TAG, denParams);
-    }
-
-    /**
      * @param tag The tag of the current tab.
      * @return The request parameters associated with the tab.
      */
-    public RequestParams getRequestParams(String tag) {
-        refreshRequestParams();
+    public RequestParams getRequestParams(String tag) throws NoLocationException {
+        refreshRequestParams(tag);
         return mRequestParamsMap.get(tag);
     }
 
-    public void refreshRequestParams() {
+    /**
+     * Refresh the request params (or initialize them if not set).
+     * @param tag The tag of the specific request parameter (or null if all)
+     */
+    public void refreshRequestParams(String tag) throws NoLocationException {
         RequestParams localParams = mRequestParamsMap.get(LOCAL_TAG);
         RequestParams allTimeParams = mRequestParamsMap.get(ALL_TIME_TAG);
 
-        Location location = ((LocationProvider) WolfpakServiceProvider
-                .getServiceManager(WolfpakServiceProvider.LOCATIONPROVIDER)).getLastLocation();
-        localParams.remove("latitude");
-        localParams.add("latitude", Double.toString(location.getLatitude()));
-        localParams.remove("longitude");
-        localParams.add("longitude", Double.toString(location.getLongitude()));
+        // If localParams is null, set up the
+        if (localParams == null) {
+            localParams = new RequestParams();
+            allTimeParams = new RequestParams();
+            RequestParams denParams = new RequestParams();
+
+            String userId = ((UserIdManager) WolfpakServiceProvider
+                    .getServiceManager(WolfpakServiceProvider.USERIDMANAGER)).getDeviceId();
+            localParams.add("user_id", userId);
+            denParams.add("user_id", userId);
+
+            mRequestParamsMap.put(LOCAL_TAG, localParams);
+            mRequestParamsMap.put(ALL_TIME_TAG, allTimeParams);
+            mRequestParamsMap.put(DEN_TAG, denParams);
+        }
 
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
         boolean isNSFW = sharedPreferences.getBoolean(getString(R.string.nsfw_switch_key), false);
         String isNSFWString = Boolean.toString(isNSFW);
         isNSFWString = isNSFWString.substring(0, 1).toUpperCase() + isNSFWString.substring(1);
-        localParams.remove("is_nsfw");
         localParams.add("is_nsfw", isNSFWString);
-        allTimeParams.remove("is_nsfw");
         allTimeParams.add("is_nsfw", isNSFWString);
+
+        if (LOCAL_TAG.equals(tag)) {
+            Location location = ((LocationProvider) WolfpakServiceProvider
+                    .getServiceManager(WolfpakServiceProvider.LOCATIONPROVIDER)).getLastLocation();
+            localParams.add("latitude", Double.toString(location.getLatitude()));
+            localParams.add("longitude", Double.toString(location.getLongitude()));
+        }
     }
 
     /**

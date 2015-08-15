@@ -34,6 +34,7 @@ import com.wolfpakapp.wolfpak2.WolfpakSQLiteHelper;
 import com.wolfpakapp.wolfpak2.WolfpakServiceProvider;
 import com.wolfpakapp.wolfpak2.camera.preview.CameraLayout;
 import com.wolfpakapp.wolfpak2.service.LocationProvider;
+import com.wolfpakapp.wolfpak2.service.NoLocationException;
 import com.wolfpakapp.wolfpak2.service.SQLiteManager;
 import com.wolfpakapp.wolfpak2.service.UserIdManager;
 
@@ -477,12 +478,17 @@ public class MediaSaver {
                 .getServiceManager(WolfpakServiceProvider.USERIDMANAGER);
         String userId = userIdManager.getDeviceId();
 
-        Location location = ((LocationProvider) WolfpakServiceProvider
-                .getServiceManager(WolfpakServiceProvider.LOCATIONPROVIDER)).getLastLocation();
+        try {
+            Location location = ((LocationProvider) WolfpakServiceProvider
+                    .getServiceManager(WolfpakServiceProvider.LOCATIONPROVIDER)).getLastLocation();
+
+            values.put(LATITUDE, location.getLatitude());
+            values.put(LONGITUDE, location.getLongitude());
+        } catch (NoLocationException e) {
+            //TODO Handle lack of location
+        }
 
         values.put(USER, userId);
-        values.put(LATITUDE, location.getLatitude());
-        values.put(LONGITUDE, location.getLongitude());
     }
 
     /**

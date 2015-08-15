@@ -50,6 +50,7 @@ public class ServerRestClient extends ServiceManager {
      */
     public void get(String url, RequestParams params, AsyncHttpResponseHandler handler) {
         if (!checkInternetConnection()) {
+            toastNoConnection();
             handler.onFailure(0, null, null, null);
             return;
         }
@@ -65,6 +66,7 @@ public class ServerRestClient extends ServiceManager {
      */
     public void post(String url, HttpEntity entity, String contentType, AsyncHttpResponseHandler handler) {
         if (!checkInternetConnection()) {
+            toastNoConnection();
             handler.onFailure(0, null, null, null);
             return;
         }
@@ -80,6 +82,7 @@ public class ServerRestClient extends ServiceManager {
     public void updateLikeStatus(int postId, final Post.VoteStatus voteStatus,
                                  AsyncHttpResponseHandler handler) {
         if (!checkInternetConnection()) {
+            toastNoConnection();
             handler.onFailure(0, null, null, null);
             return;
         }
@@ -112,30 +115,26 @@ public class ServerRestClient extends ServiceManager {
     }
 
     private boolean isAlerting = false;
+    private void toastNoConnection() {
+        if (!isAlerting) {
+            isAlerting = true;
+            Toast.makeText(mContext, "Unable to connect to the Internet", Toast.LENGTH_SHORT).show();
+            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    isAlerting = false;
+                }
+            }, 2000);
+        }
+    }
 
     /**
-     * Checks the Internet connection status, and toasts if there is no connection.
-     * @return True if connected.
+     * @return True if connected to the Internet (via Wi-Fi, cellular, etc.)
      */
-    private boolean checkInternetConnection() {
+    public boolean checkInternetConnection() {
         ConnectivityManager connectivityManager = (ConnectivityManager) mContext.
                 getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
-        if (networkInfo != null && networkInfo.isConnected()) {
-            return true;
-        } else {
-            if (!isAlerting) {
-                isAlerting = true;
-                Toast.makeText(mContext, "Unable to connect to the Internet", Toast.LENGTH_SHORT).show();
-                new Handler().postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        isAlerting = false;
-                    }
-                }, 2000);
-            }
-
-            return false;
-        }
+        return networkInfo != null && networkInfo.isConnected();
     }
 }

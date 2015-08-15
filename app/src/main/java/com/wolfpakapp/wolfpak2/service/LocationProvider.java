@@ -4,7 +4,8 @@ import android.content.Context;
 import android.content.IntentSender;
 import android.location.Location;
 import android.os.Bundle;
-import android.util.Log;
+import android.os.Handler;
+import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -58,7 +59,7 @@ public class LocationProvider extends ServiceManager
                         // All location settings are satisfied. The client can initialize location
                         // requests here.
                         canObtainLocation = true;
-                        retrieveLocation();
+                        obtainLocation();
                         break;
                     }
                     case LocationSettingsStatusCodes.RESOLUTION_REQUIRED: {
@@ -90,7 +91,7 @@ public class LocationProvider extends ServiceManager
      * Signify that the LocationProvider can start getting the last user location. Note that this
      * method will only work under the appropriate situation.
      */
-    public void retrieveLocation() {
+    public void obtainLocation() {
         if (canObtainLocation) {
             //TODO Set a timer to wait for the user location to be obtained (not always instant)
             mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mClient);
@@ -108,8 +109,27 @@ public class LocationProvider extends ServiceManager
 
     }
 
-    public Location getLastLocation() {
-        return mLastLocation;
+    public Location getLastLocation() throws NoLocationException {
+        if (mLastLocation != null) {
+            return mLastLocation;
+        }
+
+        toastNoLocation();
+        throw new NoLocationException("No location available");
+    }
+
+    private boolean isAlerting = false;
+    private void toastNoLocation() {
+        if (!isAlerting) {
+            isAlerting = true;
+            Toast.makeText(mContext, "Unable to obtain a location", Toast.LENGTH_SHORT).show();
+            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    isAlerting = false;
+                }
+            }, 2000);
+        }
     }
 
 }

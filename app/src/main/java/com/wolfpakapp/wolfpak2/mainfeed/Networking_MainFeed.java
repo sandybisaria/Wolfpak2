@@ -75,8 +75,12 @@ public class Networking_MainFeed{
         /** Setting Location for get() query string **/
         lm = (LocationManager) mainFeed.getActivity().getSystemService(Context.LOCATION_SERVICE);
         location = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-        longitude = location.getLongitude();
-        latitude = location.getLatitude();
+        if (location == null) {
+            locationCheck();
+        } else {
+            longitude = location.getLongitude();
+            latitude = location.getLatitude();
+        }
 
         /** Location Update Detector **/
         final LocationListener locationListener = new LocationListener() {

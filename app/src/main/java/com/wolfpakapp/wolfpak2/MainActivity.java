@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
@@ -96,16 +95,18 @@ public class MainActivity extends AppCompatActivity {
             case REQUEST_CHECK_SETTINGS: {
                 switch (resultCode) {
                     case Activity.RESULT_OK: {
-                        // All required changes were successfully made, so retrieve the location
+                        // All required changes were successfully made, so retrieve the location.
                         ((LocationProvider) WolfpakServiceProvider
                                 .getServiceManager(WolfpakServiceProvider.LOCATIONPROVIDER))
-                                .retrieveLocation();
+                                .obtainLocation();
                         break;
                     }
                     case Activity.RESULT_CANCELED: {
-                        // The user was asked to change settings, but chose not to
+                        // The user was asked to change settings, but chose not to.
                         //TODO Define app behaviors when required services aren't available!
-//                        returnHome();
+                        ((LocationProvider) WolfpakServiceProvider
+                                .getServiceManager(WolfpakServiceProvider.LOCATIONPROVIDER))
+                                .obtainLocation();
                         break;
                     }
                     default: {

@@ -14,6 +14,7 @@ import android.widget.TextView;
 import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.wolfpakapp.wolfpak2.Post;
 import com.wolfpakapp.wolfpak2.R;
+import com.wolfpakapp.wolfpak2.service.NoLocationException;
 import com.wolfpakapp.wolfpak2.service.ServerRestClient;
 import com.wolfpakapp.wolfpak2.WolfpakServiceProvider;
 import com.wolfpakapp.wolfpak2.service.UserIdManager;
@@ -30,6 +31,8 @@ import java.util.ArrayList;
  * methods for the LeaderboardTabAdapter.
  */
 public class LeaderboardTabManager {
+    private static final String LOGTAG = "Tag_LeaderboardTabManag";
+
     private SwipeRefreshLayout mSwipeRefreshLayout;
     private RecyclerView mRecyclerView;
     private LeaderboardTabAdapter mTabAdapter;
@@ -70,7 +73,7 @@ public class LeaderboardTabManager {
         mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
-                    safeEnableSwipeRefreshLayout();
+                safeEnableSwipeRefreshLayout();
             }
         });
 
@@ -80,82 +83,120 @@ public class LeaderboardTabManager {
 
         mRecyclerView.setAdapter(mTabAdapter);
 
-        mClient = (ServerRestClient) WolfpakServiceProvider
-                .getServiceManager(WolfpakServiceProvider.SERVERRESTCLIENT);
-
-        // Retrieve the set of posts from the server (and visibly indicate this).
-        mSwipeRefreshLayout.post(new Runnable() {
-            @Override public void run() {
-                mSwipeRefreshLayout.setRefreshing(true);
-            }
-        });
-        mClient.get(mParentFragment.getRelativeUrl(tag), mParentFragment.getRequestParams(tag),
-                new AsyncHttpResponseHandler() {
-                    @Override
-                    public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
-                        final JSONArray resArray;
-                        try {
-                            resArray = new JSONArray(new String(responseBody));
-                            for (int idx = 0; idx < resArray.length(); idx++) {
-                                mPosts.add(Post.parsePostJSONObject(tag, resArray.getJSONObject(idx)));
-                            }
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                        mTabAdapter.notifyDataSetChanged();
-                        mSwipeRefreshLayout.setRefreshing(false);
-                    }
-
-                    @Override
-                    public void onFailure(int statusCode, Header[] headers, byte[] responseBody,
-                                          Throwable error) {
-                        Log.d("Failure", Integer.toString(statusCode));
-                        mSwipeRefreshLayout.setRefreshing(false);
-                    }
-                });
-        // When the SwipeRefreshLayout is refreshed, retrieve a fresh set of posts.
-        mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-            @Override
-            public void onRefresh() {
-                mClient.get(mParentFragment.getRelativeUrl(tag), mParentFragment.getRequestParams(tag),
-                        new AsyncHttpResponseHandler() {
-                    @Override
-                    public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
-                        final JSONArray resArray;
-                        // The naive approach is to clear the leaderboard of posts and rebuild
-                        mPosts.clear();
-                        try {
-                            resArray = new JSONArray(new String(responseBody));
-                            for (int idx = 0; idx < resArray.length(); idx++) {
-                                mPosts.add(Post.parsePostJSONObject(tag, resArray.getJSONObject(idx)));
-                            }
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                        mTabAdapter.notifyDataSetChanged();
-                        mSwipeRefreshLayout.setRefreshing(false);
-                    }
-
-                    @Override
-                    public void onFailure(int statusCode, Header[] headers, byte[] responseBody,
-                                          Throwable error) {
-                        Log.d("Failure", Integer.toString(statusCode));
-                        mSwipeRefreshLayout.setRefreshing(false);
-                    }
-                });
-                if (tag.equals(LeaderboardFragment.DEN_TAG)){
-                    // Refresh the karma count on refresh, too.
-                    refreshKarmaCount();
-                }
-            }
-        });
-
         // Set up the karma TextView if this is the den tab.
         if (tag.equals(LeaderboardFragment.DEN_TAG)) {
             karmaTextView = (TextView) mSwipeRefreshLayout.findViewById(R.id.leaderboard_den_karma_text_view);
             karmaTextView.setVisibility(View.VISIBLE);
-            refreshKarmaCount();
         }
+
+        mClient = (ServerRestClient) WolfpakServiceProvider
+                .getServiceManager(WolfpakServiceProvider.SERVERRESTCLIENT);
+
+        // Retrieve the set of posts from the server.
+        try {
+            mClient.get(mParentFragment.getRelativeUrl(tag), mParentFragment.getRequestParams(tag),
+                    new AsyncHttpResponseHandler() {
+                        @Override
+                        public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
+                            mSwipeRefreshLayout.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    mSwipeRefreshLayout.setRefreshing(true);
+                                }
+                            });
+                            final JSONArray resArray;
+                            try {
+                                resArray = new JSONArray(new String(responseBody));
+                                //TODO If there are no posts, display "no content"
+                                for (int idx = 0; idx < resArray.length(); idx++) {
+                                    mPosts.add(Post.parsePostJSONObject(tag, resArray.getJSONObject(idx)));
+                                }
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                            mTabAdapter.notifyDataSetChanged();
+                            if (tag.equals(LeaderboardFragment.DEN_TAG)) {
+                                // Refresh the karma count on refresh, too.
+                                refreshKarmaCount();
+                            } else {
+                                mSwipeRefreshLayout.post(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        mSwipeRefreshLayout.setRefreshing(false);
+                                    }
+                                });
+                            }
+                        }
+
+                        @Override
+                        public void onFailure(int statusCode, Header[] headers, byte[] responseBody,
+                                              Throwable error) {
+                            Log.d(LOGTAG, Integer.toString(statusCode));
+                            mSwipeRefreshLayout.setRefreshing(false);
+                            if (!mClient.checkInternetConnection()) {
+                                //TODO Replace background with "unable to connect to network"
+                            }
+                        }
+                    });
+        } catch (NoLocationException e) {
+            Log.e(LOGTAG, "No location is available");
+            mSwipeRefreshLayout.setRefreshing(false);
+            //TODO Replace background with "unable to connect to network" (see above)
+        }
+
+
+        // When the SwipeRefreshLayout is refreshed, retrieve a fresh set of posts.
+        mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                try {
+                    mClient.get(mParentFragment.getRelativeUrl(tag), mParentFragment.getRequestParams(tag),
+                            new AsyncHttpResponseHandler() {
+                                @Override
+                                public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
+                                    final JSONArray resArray;
+                                    // The naive approach is to clear the leaderboard of posts and rebuild
+                                    mPosts.clear();
+                                    try {
+                                        resArray = new JSONArray(new String(responseBody));
+                                        //TODO If there are no posts, display "no content" (see above)
+                                        for (int idx = 0; idx < resArray.length(); idx++) {
+                                            mPosts.add(Post.parsePostJSONObject(tag, resArray.getJSONObject(idx)));
+                                        }
+                                    } catch (Exception e) {
+                                        e.printStackTrace();
+                                    }
+                                    mTabAdapter.notifyDataSetChanged();
+                                    if (tag.equals(LeaderboardFragment.DEN_TAG)) {
+                                        // Refresh the karma count on refresh, too.
+                                        refreshKarmaCount();
+                                    } else {
+                                        mSwipeRefreshLayout.post(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                mSwipeRefreshLayout.setRefreshing(false);
+                                            }
+                                        });
+                                    }
+                                }
+
+                                @Override
+                                public void onFailure(int statusCode, Header[] headers, byte[] responseBody,
+                                                      Throwable error) {
+                                    Log.d(LOGTAG, Integer.toString(statusCode));
+                                    if (tag.equals(LeaderboardFragment.DEN_TAG)) {
+                                        // Refresh the karma count on refresh, too.
+                                        refreshKarmaCount();
+                                    }
+                                    mSwipeRefreshLayout.setRefreshing(false);
+                                }
+                            });
+                } catch (NoLocationException e) {
+                    Log.e(LOGTAG, "No location is available");
+                    mSwipeRefreshLayout.setRefreshing(false);
+                }
+            }
+        });
     }
 
     public SwipeRefreshLayout getSwipeRefreshLayout() {
@@ -224,7 +265,7 @@ public class LeaderboardTabManager {
                     for (int idx = 0; idx < resArray.length(); idx++) {
                         JSONObject userObject = resArray.getJSONObject(idx);
                         UserIdManager userIdManager = (UserIdManager) WolfpakServiceProvider
-                            .getServiceManager(WolfpakServiceProvider.USERIDMANAGER);
+                                .getServiceManager(WolfpakServiceProvider.USERIDMANAGER);
                         String userId = userIdManager.getDeviceId();
                         if (userObject.optString("user_id").equals(userId)) {
                             int totalLikes = userObject.getInt("total_likes");
@@ -234,12 +275,19 @@ public class LeaderboardTabManager {
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
+                mSwipeRefreshLayout.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        mSwipeRefreshLayout.setRefreshing(false);
+                    }
+                });
             }
 
             @Override
             public void onFailure(int statusCode, Header[] headers, byte[] responseBody,
                                   Throwable error) {
-                Log.d("Failure", Integer.toString(statusCode));
+                Log.d(LOGTAG, Integer.toString(statusCode));
+                mSwipeRefreshLayout.setRefreshing(false);
             }
         });
     }
@@ -249,7 +297,7 @@ public class LeaderboardTabManager {
     }
 
     public void requestDisallowInterceptTouchEventForParents(View v,
-                                                              boolean disallowIntercept) {
+                                                             boolean disallowIntercept) {
         ViewParent parent = v.getParent();
         while (parent != null) {
             parent.requestDisallowInterceptTouchEvent(disallowIntercept);
