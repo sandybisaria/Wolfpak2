@@ -62,7 +62,7 @@ import java.util.concurrent.TimeUnit;
  *
  * @author Roland Fong
  */
-public class CameraLayout {
+public class CameraLayout implements CameraView.StateCallback {
 
     private static final String TAG = "TAG-CameraLayout";
 
@@ -90,7 +90,8 @@ public class CameraLayout {
      * The Fragment container
      */
     private CameraFragment mFragment;
-    private AutoFitTextureView mTextureView;
+//    private AutoFitTextureView mTextureView;
+    private CameraView mCameraView;
 
     /*CAMERA DEVICE DETAILS*/
     private String mCameraId;
@@ -264,7 +265,10 @@ public class CameraLayout {
      */
     public CameraLayout(CameraFragment fragment, View view) {
         mFragment = fragment;
-        mTextureView = fragment.getTextureView();
+//        mTextureView = fragment.getTextureView();
+        mCameraView = (CameraView) view.findViewById(R.id.camera_view);
+        mCameraView.setStateCallback(this);
+
         // set up buttons
         mCaptureButton = (Button) view.findViewById(R.id.btn_takepicture); // take picture button
         mCaptureButton.setOnTouchListener(fragment);
@@ -301,14 +305,26 @@ public class CameraLayout {
         };
     }
 
-    /**
-     * Actions to perform when surface texture is available in fragment
-     * @param width
-     * @param height
-     */
-    public void onSurfaceTextureAvailable(int width, int height)   {
+//    /**
+//     * Actions to perform when surface texture is available in fragment
+//     * @param width
+//     * @param height
+//     */
+//    public void onSurfaceTextureAvailable(int width, int height)   {
+//        mFace = CameraCharacteristics.LENS_FACING_BACK;
+//        openCamera(width, height, CameraCharacteristics.LENS_FACING_BACK);
+//    }
+
+    @Override
+    public void onReady(CameraView cv, int height, int width) {
         mFace = CameraCharacteristics.LENS_FACING_BACK;
-        openCamera(width, height, CameraCharacteristics.LENS_FACING_BACK);
+        openCamera(width, height, mFace);
+    }
+
+    @Override
+    public void onDestroyed(CameraView cv) {
+        // closeCamera();
+        // stopBackgroundThread();
     }
 
     public void onPause()   {
@@ -324,13 +340,22 @@ public class CameraLayout {
         mLockingForEditor = false;
         startBackgroundThread();
         // if activity resumes from pause, OnSurfaceTextureAvailable may not be called
-        if(mTextureView.isAvailable()) {
+//        if(mTextureView.isAvailable()) {
+//            try {
+//                openCamera(mTextureView.getWidth(), mTextureView.getHeight(), mFace);
+//            } catch(RuntimeException e) {
+//                Log.e(TAG, "Couldn't open camera, releasing lock and trying again");
+//                mCameraOpenCloseLock.release();
+//                openCamera(mTextureView.getWidth(), mTextureView.getHeight(), mFace);
+//            }
+//        }
+        if(mCameraView.isAvailable())   {
             try {
-                openCamera(mTextureView.getWidth(), mTextureView.getHeight(), mFace);
+                openCamera(mPreviewSize.getWidth(), mPreviewSize.getHeight(), mFace);
             } catch(RuntimeException e) {
                 Log.e(TAG, "Couldn't open camera, releasing lock and trying again");
                 mCameraOpenCloseLock.release();
-                openCamera(mTextureView.getWidth(), mTextureView.getHeight(), mFace);
+                openCamera(mPreviewSize.getWidth(), mPreviewSize.getHeight(), mFace);
             }
         }
     }
@@ -388,36 +413,6 @@ public class CameraLayout {
     }
 
     /**
-     * Given sizes supported by camera, chooses smallest one whose width and height are at least as
-     * large as respective requested values and whose aspect ratio matches specified value
-     * @param choices   list of choices supported by camera
-     * @param width     minimum width
-     * @param height    minimum height
-     * @param aspectRatio
-     * @return  Optimal size or otherwise arbitrary
-     */
-    private static Size chooseOptimalSize(Size[] choices, int width, int height, Size aspectRatio)  {
-        // Collect supported resolutions at least as big as preview surface
-        List<Size> bigEnough = new ArrayList<Size>();
-        int w = aspectRatio.getWidth();
-        int h = aspectRatio.getHeight();
-        for(Size option : choices)  {
-            if (option.getHeight() == option.getWidth() * h / w &&
-                    option.getWidth() >= width && option.getHeight() >= height) {
-                bigEnough.add(option);
-            }
-        }
-
-        // Pick the smallest of those, assuming we found any
-        if (bigEnough.size() > 0) {
-            return Collections.min(bigEnough, new CompareSizesByArea());
-        } else {
-            Log.e(TAG, "Couldn't find any suitable preview size");
-            return choices[0];
-        }
-    }
-
-    /**
      * Sets up member vars related to camera and picks specified camera
      * @param width
      * @param height
@@ -427,11 +422,14 @@ public class CameraLayout {
         CameraManager manager = (CameraManager) activity.getSystemService(Context.CAMERA_SERVICE);
         try {
             for (String cameraId : manager.getCameraIdList()) {
+                mCameraId = cameraId; // set global var here in case lensFacing never evaluates true
                 CameraCharacteristics characteristics
                         = manager.getCameraCharacteristics(cameraId);
 
                 if (characteristics.get(CameraCharacteristics.LENS_FACING) != lensFacing) {
-                    continue;
+                    // check if it's the last camera, if not, go to next camera
+                    if(cameraId != manager.getCameraIdList()[manager.getCameraIdList().length - 1])
+                        continue;
                 }
 
                 StreamConfigurationMap map = characteristics.get(
@@ -439,15 +437,22 @@ public class CameraLayout {
 
                 Size largest = Collections.max(
                         Arrays.asList(map.getOutputSizes(ImageFormat.JPEG)),
-                        new CompareSizesByArea());
+                        new CameraUtils.CompareSizesByArea());
 
-                mPreviewSize = chooseOptimalSize(map.getOutputSizes(SurfaceTexture.class),
+                for(Size size : map.getOutputSizes(ImageFormat.JPEG))   {
+                    Log.d(TAG, "Available sizes: " + size.getWidth() + ", " + size.getHeight());
+                }
+                Log.d(TAG, "Largest Size: " + largest.getWidth() + ", " + largest.getHeight());
+
+                mPreviewSize = CameraUtils.chooseOptimalSize(Arrays.asList(map.getOutputSizes(SurfaceTexture.class)),
                         width, height, largest);
-                mVideoSize = chooseOptimalSize(map.getOutputSizes(MediaRecorder.class),
+                Log.d(TAG, "Preview Size: " + mPreviewSize.getWidth() + ", " + mPreviewSize.getHeight());
+                mVideoSize = CameraUtils.chooseOptimalSize(Arrays.asList(map.getOutputSizes(MediaRecorder.class)),
                         width, height, largest);
                 // if app ever will support landscape, aspect ratio needs to be changed here.
-                mTextureView.setAspectRatio(
-                        mPreviewSize.getHeight(), mPreviewSize.getWidth());
+//                mTextureView.setAspectRatio(
+//                        mPreviewSize.getHeight(), mPreviewSize.getWidth());
+                mCameraView.setPreviewSize(mPreviewSize);
                 // set image size to be size of screen
 //                mImageReader = ImageReader.newInstance(mPreviewSize.getWidth(), mPreviewSize.getHeight(),
 //                        ImageFormat.JPEG, /*maxImages*/2);
@@ -472,7 +477,7 @@ public class CameraLayout {
     private void openCamera(int width, int height, int lensFacing) {
         Log.d(TAG, "Opening Camera");
         setUpCameraOutputs(width, height, lensFacing);
-        configureTransform(width, height);
+//        configureTransform(width, height);
         mMediaRecorder = new MediaRecorder();
         Activity activity = mFragment.getActivity();
         CameraManager manager = (CameraManager) activity.getSystemService(Context.CAMERA_SERVICE);
@@ -568,7 +573,8 @@ public class CameraLayout {
     private void createCameraPreviewSession() {
         Log.d(TAG, "Creating cam preview session");
         try {
-            SurfaceTexture texture = mTextureView.getSurfaceTexture();
+//            SurfaceTexture texture = mTextureView.getSurfaceTexture();
+            SurfaceTexture texture = mCameraView.getSurfaceTexture();
             assert texture != null;
 
             // We configure the size of default buffer to be the size of camera preview we want.
@@ -667,36 +673,36 @@ public class CameraLayout {
         }
     }
 
-    /**
-     * Configures the necessary {@link android.graphics.Matrix} transformation to `mTextureView`.
-     * This method should be called after the camera preview size is determined in
-     * setUpCameraOutputs and also the size of `mTextureView` is fixed.
-     *
-     * @param viewWidth  The width of `mTextureView`
-     * @param viewHeight The height of `mTextureView`
-     */
-    public void configureTransform(int viewWidth, int viewHeight) {
-        Activity activity = mFragment.getActivity();
-        if (null == mTextureView || null == mPreviewSize || null == activity) {
-            return;
-        }
-        int rotation = activity.getWindowManager().getDefaultDisplay().getRotation();
-        Matrix matrix = new Matrix();
-        RectF viewRect = new RectF(0, 0, viewWidth, viewHeight);
-        RectF bufferRect = new RectF(0, 0, mPreviewSize.getHeight(), mPreviewSize.getWidth());
-        float centerX = viewRect.centerX();
-        float centerY = viewRect.centerY();
-        if (Surface.ROTATION_90 == rotation || Surface.ROTATION_270 == rotation) {
-            bufferRect.offset(centerX - bufferRect.centerX(), centerY - bufferRect.centerY());
-            matrix.setRectToRect(viewRect, bufferRect, Matrix.ScaleToFit.FILL);
-            float scale = Math.max(
-                    (float) viewHeight / mPreviewSize.getHeight(),
-                    (float) viewWidth / mPreviewSize.getWidth());
-            matrix.postScale(scale, scale, centerX, centerY);
-            matrix.postRotate(90 * (rotation - 2), centerX, centerY);
-        }
-        mTextureView.setTransform(matrix);
-    }
+//    /**
+//     * Configures the necessary {@link android.graphics.Matrix} transformation to `mTextureView`.
+//     * This method should be called after the camera preview size is determined in
+//     * setUpCameraOutputs and also the size of `mTextureView` is fixed.
+//     *
+//     * @param viewWidth  The width of `mTextureView`
+//     * @param viewHeight The height of `mTextureView`
+//     */
+//    public void configureTransform(int viewWidth, int viewHeight) {
+//        Activity activity = mFragment.getActivity();
+//        if (null == mTextureView || null == mPreviewSize || null == activity) {
+//            return;
+//        }
+//        int rotation = activity.getWindowManager().getDefaultDisplay().getRotation();
+//        Matrix matrix = new Matrix();
+//        RectF viewRect = new RectF(0, 0, viewWidth, viewHeight);
+//        RectF bufferRect = new RectF(0, 0, mPreviewSize.getHeight(), mPreviewSize.getWidth());
+//        float centerX = viewRect.centerX();
+//        float centerY = viewRect.centerY();
+//        if (Surface.ROTATION_90 == rotation || Surface.ROTATION_270 == rotation) {
+//            bufferRect.offset(centerX - bufferRect.centerX(), centerY - bufferRect.centerY());
+//            matrix.setRectToRect(viewRect, bufferRect, Matrix.ScaleToFit.FILL);
+//            float scale = Math.max(
+//                    (float) viewHeight / mPreviewSize.getHeight(),
+//                    (float) viewWidth / mPreviewSize.getWidth());
+//            matrix.postScale(scale, scale, centerX, centerY);
+//            matrix.postRotate(90 * (rotation - 2), centerX, centerY);
+//        }
+//        mTextureView.setTransform(matrix);
+//    }
 
     /**
      * Sets up video specs
@@ -831,7 +837,7 @@ public class CameraLayout {
         else
             mFace = CameraCharacteristics.LENS_FACING_BACK;
         closeCamera();
-        openCamera(mTextureView.getWidth(), mTextureView.getHeight(), mFace);
+        openCamera(mPreviewSize.getWidth(), mPreviewSize.getHeight(), mFace);
     }
 
     /**
@@ -849,7 +855,7 @@ public class CameraLayout {
         mFlash = (mFlash + 1) % 3; // cycles through 0, 1, 2 or AUTO_FLASH, NO_FLASH, ALWAYS_FLASH
 
         Log.d(TAG, "New flash: " + mFlash);
-        openCamera(mTextureView.getWidth(), mTextureView.getHeight(), mFace);
+        openCamera(mPreviewSize.getWidth(), mPreviewSize.getHeight(), mFace);
     }
 
     /**
@@ -1110,17 +1116,5 @@ public class CameraLayout {
                   mSoundButton.setVisibility(View.VISIBLE);
               }
           });
-    }
-
-    /**
-     * Compares two {@code Size}s based on their areas.
-     */
-    static class CompareSizesByArea implements Comparator<Size> {
-        @Override
-        public int compare(Size lhs, Size rhs) {
-            // We cast here to ensure the multiplications won't overflow
-            return Long.signum((long) lhs.getWidth() * lhs.getHeight() -
-                    (long) rhs.getWidth() * rhs.getHeight());
-        }
     }
 }

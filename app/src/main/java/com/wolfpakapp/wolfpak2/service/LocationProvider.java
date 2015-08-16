@@ -109,7 +109,15 @@ public class LocationProvider extends ServiceManager
     }
 
     public Location getLastLocation() {
-        return mLastLocation;
+        if(mLastLocation == null)   {
+            // TODO remove hardcoded values, handle null location
+            Location l = new Location("Dummy Provider");
+            l.setLatitude(40.3443640);
+            l.setLongitude(-74.4646780);
+            return l;
+        } else {
+            return mLastLocation;
+        }
     }
 
 }

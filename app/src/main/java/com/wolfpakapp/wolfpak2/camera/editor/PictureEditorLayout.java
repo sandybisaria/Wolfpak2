@@ -478,7 +478,8 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
 
     public boolean onTouch(int id, MotionEvent event) {
         switch(id)   {
-            case R.id.texture:
+            case R.id.edit_texture: // the edit layout textureview
+            case R.id.camera_view: // the camera preview
                 if(mOverlay.getState() == EditableOverlay.STATE_BLUR) {
                     blurImage(event.getAction(), event.getX(), event.getY());
                 }
