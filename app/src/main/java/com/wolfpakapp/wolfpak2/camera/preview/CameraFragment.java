@@ -1,12 +1,10 @@
 package com.wolfpakapp.wolfpak2.camera.preview;
 
-import android.graphics.SurfaceTexture;
-import android.media.Image;
+import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.MotionEvent;
-import android.view.TextureView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -30,71 +28,22 @@ public class CameraFragment extends Fragment
 
     private static final String TAG = "TAG-CameraFragment";
 
-    /* CAMERA AND EDITING STATES */
-    private static int mGlobalState;
-    public static final int GLOBAL_STATE_CAMERA = 0;
-    public static final int GLOBAL_STATE_EDITOR = 1;
-
-    /* FILE HANDLING TYPE */
-    private static int mFileType;
-    public static final int FILE_TYPE_IMAGE = 0;
-    public static final int FILE_TYPE_VIDEO = 1;
-
-    /**
-     * Image buffer provided directly from camera for editor
-     */
-    private Image mImage;
-    /**
-     * Temporary file path for video provided from mediarecorder for editor
-     */
-    private String mVideoPath;
-
     private static CameraLayout mCameraLayout;
     private static PictureEditorLayout mPictureEditorLayout;
 
+    private String mVideoPath;
+    private Bitmap mImageBitmap;
+
     private Thread mCameraCloseThread = null;
 
-//    private AutoFitTextureView mTextureView;
-
-//    /**
-//     * Handles lifecycle events on {@link TextureView}
-//     */
-//    private final TextureView.SurfaceTextureListener mSurfaceTextureListener
-//            = new TextureView.SurfaceTextureListener()  {
-//        @Override
-//        public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
-//            switch(mGlobalState)    {
-//                case GLOBAL_STATE_CAMERA:
-//                    mCameraLayout.onSurfaceTextureAvailable(width, height);
-//                    break;
-//            }
-//        }
-//        @Override
-//        public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {
-//            if(mGlobalState == CameraFragment.GLOBAL_STATE_CAMERA)
-//                mCameraLayout.configureTransform(width, height);
-//        }
-//        @Override
-//        public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
-//            return true;
-//        }
-//        @Override
-//        public void onSurfaceTextureUpdated(SurfaceTexture surface) {}
-//    };
-
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // clear the temporary directory of lingering files not deleted by videosaverservice
-        File root = getActivity().getExternalFilesDir(null);
-        File[] Files = root.listFiles();
-        if(Files != null) {
-            int j;
-            for(j = 0; j < Files.length; j++) {
-                Log.d(TAG, "DELETING: " + Files[j].getAbsolutePath());
-                Files[j].delete();
-            }
-        }
+
+        deleteTemporaryFiles();
 
         MediaSaver.setActivity(getActivity());
         Log.d(TAG, "initing FFMPEG");
@@ -116,6 +65,25 @@ public class CameraFragment extends Fragment
         }
     }
 
+    /**
+     * Clear the temporary files just in case {@link com.wolfpakapp.wolfpak2.camera.editor.VideoSavingService}
+     * failed to delete them (e.g. service was force stopped)
+     */
+    private void deleteTemporaryFiles() {
+        File root = getActivity().getExternalFilesDir(null);
+        File[] Files = root.listFiles();
+        if (Files != null) {
+            int j;
+            for (j = 0; j < Files.length; j++) {
+                Log.d(TAG, "DELETING: " + Files[j].getAbsolutePath());
+                Files[j].delete();
+            }
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -123,68 +91,37 @@ public class CameraFragment extends Fragment
         return inflater.inflate(R.layout.fragment_camera, container, false);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         // init global state variables
-        mGlobalState = GLOBAL_STATE_CAMERA;
-        mFileType = FILE_TYPE_IMAGE;
-
-//        // init texture view
-//        mTextureView = (AutoFitTextureView) view.findViewById(R.id.texture);
-//        mTextureView.setOnTouchListener(this);
+        CameraStates.CAMERA_GLOBAL_STATE = CameraStates.GLOBAL_STATE_PREVIEW;
+        CameraStates.FILE_TYPE = CameraStates.FILE_IMAGE;
 
         // init camera layout and picture editor layout
         mCameraLayout = new CameraLayout(this, view);
         mPictureEditorLayout = new PictureEditorLayout(this, view);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        //mImageFile = new File(getActivity().getExternalFilesDir(null), "pic.jpeg");
     }
 
-    public static int getGlobalState() {
-        return mGlobalState;
-    }
-
-    public static void setGlobalState(int mGlobalState) {
-        CameraFragment.mGlobalState = mGlobalState;
-    }
-
-    public static int getFileType() {
-        return mFileType;
-    }
-
-    public static void setFileType(int mFileType) {
-        CameraFragment.mFileType = mFileType;
-    }
-
-    public Image getImage()   {
-        return mImage;
-    }
-
-    public void setImage(Image i)   {
-        mImage = i;
-    }
-
-    public String getVideoPath() {
-        return mVideoPath;
-    }
-
-    public void setVideoPath(String v)   {
-        mVideoPath = v;
-    }
-
-//    public AutoFitTextureView getTextureView()  {
-//        return mTextureView;
-//    }
-
-    public void switchLayouts()  {
-        switch(mGlobalState)    {
-            case GLOBAL_STATE_CAMERA:
-                mGlobalState = GLOBAL_STATE_EDITOR;
+    /**
+     * Switches the layouts
+     * @param state the current state
+     */
+    public void switchLayouts(int state)  {
+        switch(state)    {
+            case CameraStates.GLOBAL_STATE_PREVIEW:
+                CameraStates.CAMERA_GLOBAL_STATE = CameraStates.GLOBAL_STATE_EDITOR;
                 WolfpakPager.setActive(false);
                 Log.d(TAG, "Hiding camera, showing editor");
                 mCameraLayout.hide();
@@ -199,8 +136,8 @@ public class CameraFragment extends Fragment
                 mCameraCloseThread.start();
                 mPictureEditorLayout.show();
                 break;
-            case GLOBAL_STATE_EDITOR:
-                mGlobalState = GLOBAL_STATE_CAMERA;
+            case CameraStates.GLOBAL_STATE_EDITOR:
+                CameraStates.CAMERA_GLOBAL_STATE = CameraStates.GLOBAL_STATE_PREVIEW;
                 WolfpakPager.setActive(true);
                 Log.d(TAG, "Hiding Editor, showing camera");
                 mPictureEditorLayout.hide();
@@ -221,6 +158,37 @@ public class CameraFragment extends Fragment
         }
     }
 
+    /**
+     * @return the path where video is saved
+     */
+    public String getVideoPath() {
+        return mVideoPath;
+    }
+
+    /**
+     * @param path the path where video is saved
+     */
+    public void setVideoPath(String path) {
+        mVideoPath = path;
+    }
+
+    /**
+     * @return the decoded image bitmap
+     */
+    public Bitmap getImageBitmap() {
+        return mImageBitmap;
+    }
+
+    /**
+     * @param bmp the image bitmap
+     */
+    public void setImageBitmap(Bitmap bmp) {
+        mImageBitmap = bmp;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void onResume() {
         super.onResume();
@@ -228,13 +196,14 @@ public class CameraFragment extends Fragment
         // Hide the status bar.
         decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_FULLSCREEN);
         mCameraLayout.onResume();
-        if(mGlobalState == GLOBAL_STATE_EDITOR)
+        if(CameraStates.CAMERA_GLOBAL_STATE == CameraStates.GLOBAL_STATE_EDITOR)
             mPictureEditorLayout.onResume();
 
-//        if(!mTextureView.isAvailable())
-//            mTextureView.setSurfaceTextureListener(mSurfaceTextureListener);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void onPause() {
         mCameraLayout.onPause();
@@ -242,28 +211,33 @@ public class CameraFragment extends Fragment
         super.onPause();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void onClick(View v) {
-        switch(mGlobalState)    {
-            case GLOBAL_STATE_CAMERA:
+        switch(CameraStates.CAMERA_GLOBAL_STATE)    {
+            case CameraStates.GLOBAL_STATE_PREVIEW:
                 mCameraLayout.onClick(v.getId());
                 break;
-            case GLOBAL_STATE_EDITOR:
+            case CameraStates.GLOBAL_STATE_EDITOR:
                 mPictureEditorLayout.onClick(v.getId());
                 break;
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean onTouch(View v, MotionEvent event) {
-        switch(mGlobalState)    {
-            case GLOBAL_STATE_CAMERA:
+        switch(CameraStates.CAMERA_GLOBAL_STATE)    {
+            case CameraStates.GLOBAL_STATE_PREVIEW:
                 return mCameraLayout.onTouch(v.getId(), event);
-            case GLOBAL_STATE_EDITOR:
+            case CameraStates.GLOBAL_STATE_EDITOR:
                 return mPictureEditorLayout.onTouch(v.getId(), event);
         }
         return true;
     }
-
 
 }
