@@ -3,6 +3,7 @@ package com.wolfpakapp.wolfpak2.service;
 import android.content.Context;
 import android.content.IntentSender;
 import android.location.Location;
+import android.location.LocationListener;
 import android.os.Bundle;
 import android.os.Handler;
 import android.widget.Toast;
@@ -93,8 +94,23 @@ public class LocationProvider extends ServiceManager
      */
     public void obtainLocation() {
         if (canObtainLocation) {
-            //TODO Set a timer to wait for the user location to be obtained (not always instant)
             mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mClient);
+
+            // Set up a recurring location request to update the location.
+            LocationRequest locationRequest = new LocationRequest();
+            locationRequest.setPriority(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY);
+            int fastestInterval = 1000 * 60; // 1 minute in milliseconds
+            locationRequest.setFastestInterval(fastestInterval);
+            int interval = 1000 * 60 * 30; // 30 minutes in milliseconds
+            locationRequest.setInterval(interval);
+            LocationServices.FusedLocationApi.requestLocationUpdates(mClient, locationRequest,
+                    new com.google.android.gms.location.LocationListener() {
+                @Override
+                public void onLocationChanged(Location location) {
+                    mLastLocation = location;
+                }
+            });
+
             finishInitialize();
         }
     }
@@ -118,7 +134,11 @@ public class LocationProvider extends ServiceManager
         throw new NoLocationException("No location available");
     }
 
-    private boolean isAlerting = false;
+    private static boolean isAlerting = false;
+
+    /**
+     * Toast that there is no location available.
+     */
     private void toastNoLocation() {
         if (!isAlerting) {
             isAlerting = true;

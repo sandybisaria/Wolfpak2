@@ -114,7 +114,11 @@ public class ServerRestClient extends ServiceManager {
         return BASE_URL + relativeUrl;
     }
 
-    private boolean isAlerting = false;
+    private static boolean isAlerting = false;
+
+    /**
+     * Toast that there is no location available.
+     */
     private void toastNoConnection() {
         if (!isAlerting) {
             isAlerting = true;

@@ -82,6 +82,8 @@ public class ThumbnailImageView extends ImageView {
             Drawable[] layers = {thumbnailDrawable, overlayDrawable};
             setImageDrawable(new LayerDrawable(layers));
             setBackgroundColor(Color.BLACK);
+
+            setOnClickListener(new ThumbnailOnClickListener());
         }
     }
 

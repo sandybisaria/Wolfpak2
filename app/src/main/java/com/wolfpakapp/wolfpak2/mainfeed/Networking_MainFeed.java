@@ -15,6 +15,10 @@ import android.widget.EditText;
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
+import com.wolfpakapp.wolfpak2.WolfpakServiceProvider;
+import com.wolfpakapp.wolfpak2.service.LocationProvider;
+import com.wolfpakapp.wolfpak2.service.NoLocationException;
+import com.wolfpakapp.wolfpak2.service.UserIdManager;
 
 import org.apache.http.Header;
 import org.json.JSONArray;
@@ -43,7 +47,7 @@ public class Networking_MainFeed{
 
 
     /** Location **/
-    public LocationManager lm;
+//    public LocationManager lm;
     public Location location;
     private double longitude;
     private double latitude;
@@ -71,127 +75,135 @@ public class Networking_MainFeed{
         random_input = "";
     }
 
-    public void initializeQueryString() {
-        /** Setting Location for get() query string **/
-        lm = (LocationManager) mainFeed.getActivity().getSystemService(Context.LOCATION_SERVICE);
-        location = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-        if (location == null) {
-            locationCheck();
-        } else {
+    public void initializeQueryString() throws NoLocationException {
+        deviceId = ((UserIdManager) WolfpakServiceProvider
+                .getServiceManager(WolfpakServiceProvider.USERIDMANAGER)).getDeviceId();
+
+        try {
+            /** Setting Location for get() query string **/
+            location = ((LocationProvider) WolfpakServiceProvider
+                    .getServiceManager(WolfpakServiceProvider.LOCATIONPROVIDER)).getLastLocation();
             longitude = location.getLongitude();
             latitude = location.getLatitude();
+        } catch (NoLocationException e) {
+            // If a location was never set, throw the exception.
+            // Otherwise, just use the previously set location
+            if (location == null) {
+                throw e;
+            }
         }
 
-        /** Location Update Detector **/
-        final LocationListener locationListener = new LocationListener() {
-            @Override
-            public void onStatusChanged(String provider, int status, Bundle extras) {
-            }
+//        if (location == null) {
+//            locationCheck();
+//        } else {
+//            longitude = location.getLongitude();
+//            latitude = location.getLatitude();
+//        }
 
-            @Override
-            public void onProviderEnabled(String provider) {
-            }
-
-            @Override
-            public void onProviderDisabled(String provider) {
-            }
-
-            public void onLocationChanged(Location location) {
-                longitude = location.getLongitude();
-                latitude = location.getLatitude();
-            }
-        };
-        lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 2000, 10, locationListener);
-
-        /** Android System Unique ID **/
-        final TelephonyManager tm = (TelephonyManager) mainFeed.getActivity().getBaseContext()
-                .getSystemService(Context.TELEPHONY_SERVICE);
-        final String tmDevice, tmSerial, androidId;
-        tmDevice = "" + tm.getDeviceId();
-        tmSerial = "" + tm.getSimSerialNumber();
-        androidId = "" + android.provider.Settings.Secure.getString(
-                mainFeed.getActivity().getContentResolver(), android.provider.Settings.Secure.ANDROID_ID);
-        UUID deviceUuid = new UUID(androidId.hashCode(),
-                ((long) tmDevice.hashCode() << 32) | tmSerial.hashCode());
-        deviceId = deviceUuid.toString();
+//        /** Location Update Detector **/
+//        final LocationListener locationListener = new LocationListener() {
+//            @Override
+//            public void onStatusChanged(String provider, int status, Bundle extras) {
+//            }
+//
+//            @Override
+//            public void onProviderEnabled(String provider) {
+//            }
+//
+//            @Override
+//            public void onProviderDisabled(String provider) {
+//            }
+//
+//            public void onLocationChanged(Location location) {
+//                longitude = location.getLongitude();
+//                latitude = location.getLatitude();
+//            }
+//        };
+//        lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 2000, 10, locationListener);
     }
 
     /** Asynchronous HTTP Client - Pull Image/Video from Server **/
     public void getHowls(){
-        AsyncHttpClient client = new AsyncHttpClient(true, 80, 443);
-        if(location==null){
-            locationCheck();
-        }
-        else {
-            client.get("https://ec2-52-4-176-1.compute-1.amazonaws.com/posts/?user_id=" + "temp_test_id"
-                            + "&latitude=" + latitude + "&longitude=" + longitude + "&isNSFW=true&limit=5/",
-                    new AsyncHttpResponseHandler() {
+        try {
+            // Refresh the query string with the latest location.
+            initializeQueryString();
+            AsyncHttpClient client = new AsyncHttpClient(true, 80, 443);
+            if(location==null){
+//            locationCheck();
+            }
+            else {
+                client.get("https://ec2-52-4-176-1.compute-1.amazonaws.com/posts/?user_id=" + "temp_test_id"
+                                + "&latitude=" + latitude + "&longitude=" + longitude + "&isNSFW=true&limit=5/",
+                        new AsyncHttpResponseHandler() {
 
-                        @Override
-                        public void onSuccess(int statusCode, Header[] headers, byte[] response) {
-                            final JSONArray arr;
-                            try {
-                                arr = new JSONArray(new String(response));
+                            @Override
+                            public void onSuccess(int statusCode, Header[] headers, byte[] response) {
+                                final JSONArray arr;
+                                try {
+                                    arr = new JSONArray(new String(response));
 
-                                mainFeed.getActivity().runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        for (int x = 0; x < 5 || x < arr.length(); x++) {
-                                            try {
-                                                HowlsURL[x] = arr.getJSONObject(x).optString("media_url");
-                                            } catch (JSONException e) {
-                                                e.printStackTrace();
+                                    mainFeed.getActivity().runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            for (int x = 0; x < 5 || x < arr.length(); x++) {
+                                                try {
+                                                    HowlsURL[x] = arr.getJSONObject(x).optString("media_url");
+                                                } catch (JSONException e) {
+                                                    e.printStackTrace();
+                                                }
+                                                try {
+                                                    HowlsIsImage[x] = arr.getJSONObject(x).optString("is_image");
+                                                } catch (JSONException e) {
+                                                    e.printStackTrace();
+                                                }
+                                                try {
+                                                    HowlsUserID[x] = arr.getJSONObject(x).optString("user_id");
+                                                } catch (JSONException e) {
+                                                    e.printStackTrace();
+                                                }
+                                                try {
+                                                    HowlsPostID[x] = arr.getJSONObject(x).optString("id");
+                                                } catch (JSONException e) {
+                                                    e.printStackTrace();
+                                                }
+                                                try {
+                                                    HowlsHandle[x] = arr.getJSONObject(x).optString("handle");
+                                                } catch (JSONException e) {
+                                                    e.printStackTrace();
+                                                }
+                                                try {
+                                                    HowlsThumbnail[x] = arr.getJSONObject(x).optString("thumbnail_url");
+                                                    Log.d("CHECK",HowlsThumbnail[x]);
+                                                } catch (JSONException e) {
+                                                    e.printStackTrace();
+                                                }
                                             }
-                                            try {
-                                                HowlsIsImage[x] = arr.getJSONObject(x).optString("is_image");
-                                            } catch (JSONException e) {
-                                                e.printStackTrace();
+
+                                            customView.num = arr.length() - 1;
+                                            int size = arr.length() - 1;
+                                            count = arr.length();
+
+                                            for (int x = size; x > -1; x--) {
+                                                customView.loadViews(HowlsIsImage[x], HowlsHandle[x], HowlsURL[x],HowlsThumbnail[x]);
                                             }
-                                            try {
-                                                HowlsUserID[x] = arr.getJSONObject(x).optString("user_id");
-                                            } catch (JSONException e) {
-                                                e.printStackTrace();
-                                            }
-                                            try {
-                                                HowlsPostID[x] = arr.getJSONObject(x).optString("id");
-                                            } catch (JSONException e) {
-                                                e.printStackTrace();
-                                            }
-                                            try {
-                                                HowlsHandle[x] = arr.getJSONObject(x).optString("handle");
-                                            } catch (JSONException e) {
-                                                e.printStackTrace();
-                                            }
-                                            try {
-                                                HowlsThumbnail[x] = arr.getJSONObject(x).optString("thumbnail_url");
-                                                Log.d("CHECK",HowlsThumbnail[x]);
-                                            } catch (JSONException e) {
-                                                e.printStackTrace();
+
+                                            if (Objects.equals(HowlsIsImage[0], "false")) {
+                                                customView.views[0].mediaVideoView.start();
                                             }
                                         }
-
-                                        customView.num = arr.length() - 1;
-                                        int size = arr.length() - 1;
-                                        count = arr.length();
-
-                                        for (int x = size; x > -1; x--) {
-                                            customView.loadViews(HowlsIsImage[x], HowlsHandle[x], HowlsURL[x],HowlsThumbnail[x]);
-                                        }
-
-                                        if (Objects.equals(HowlsIsImage[0], "false")) {
-                                            customView.views[0].mediaVideoView.start();
-                                        }
-                                    }
-                                });
-                            } catch (JSONException e) {
-                                e.printStackTrace();
+                                    });
+                                } catch (JSONException e) {
+                                    e.printStackTrace();
+                                }
                             }
-                        }
 
-                        @Override
-                        public void onFailure(int statusCode, Header[] headers, byte[] errorResponse, Throwable e) {
-                        }
-                    });
+                            @Override
+                            public void onFailure(int statusCode, Header[] headers, byte[] errorResponse, Throwable e) {
+                            }
+                        });
+            }
+        } catch (NoLocationException e) {
+            e.printStackTrace();
         }
     }
 
@@ -309,6 +321,7 @@ public class Networking_MainFeed{
         random_string = sb1.toString();
     }
 
+    @Deprecated
     public void locationCheck(){
         AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(mainFeed.getActivity());
         alertDialogBuilder.setTitle("Please turn on your location services!");
