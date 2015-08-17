@@ -54,33 +54,33 @@ public class CameraFragment extends Fragment
 
     private Thread mCameraCloseThread = null;
 
-    private AutoFitTextureView mTextureView;
+//    private AutoFitTextureView mTextureView;
 
-    /**
-     * Handles lifecycle events on {@link TextureView}
-     */
-    private final TextureView.SurfaceTextureListener mSurfaceTextureListener
-            = new TextureView.SurfaceTextureListener()  {
-        @Override
-        public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
-            switch(mGlobalState)    {
-                case GLOBAL_STATE_CAMERA:
-                    mCameraLayout.onSurfaceTextureAvailable(width, height);
-                    break;
-            }
-        }
-        @Override
-        public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {
-            if(mGlobalState == CameraFragment.GLOBAL_STATE_CAMERA)
-                mCameraLayout.configureTransform(width, height);
-        }
-        @Override
-        public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
-            return true;
-        }
-        @Override
-        public void onSurfaceTextureUpdated(SurfaceTexture surface) {}
-    };
+//    /**
+//     * Handles lifecycle events on {@link TextureView}
+//     */
+//    private final TextureView.SurfaceTextureListener mSurfaceTextureListener
+//            = new TextureView.SurfaceTextureListener()  {
+//        @Override
+//        public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
+//            switch(mGlobalState)    {
+//                case GLOBAL_STATE_CAMERA:
+//                    mCameraLayout.onSurfaceTextureAvailable(width, height);
+//                    break;
+//            }
+//        }
+//        @Override
+//        public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {
+//            if(mGlobalState == CameraFragment.GLOBAL_STATE_CAMERA)
+//                mCameraLayout.configureTransform(width, height);
+//        }
+//        @Override
+//        public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
+//            return true;
+//        }
+//        @Override
+//        public void onSurfaceTextureUpdated(SurfaceTexture surface) {}
+//    };
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -130,9 +130,9 @@ public class CameraFragment extends Fragment
         mGlobalState = GLOBAL_STATE_CAMERA;
         mFileType = FILE_TYPE_IMAGE;
 
-        // init texture view
-        mTextureView = (AutoFitTextureView) view.findViewById(R.id.texture);
-        mTextureView.setOnTouchListener(this);
+//        // init texture view
+//        mTextureView = (AutoFitTextureView) view.findViewById(R.id.texture);
+//        mTextureView.setOnTouchListener(this);
 
         // init camera layout and picture editor layout
         mCameraLayout = new CameraLayout(this, view);
@@ -177,9 +177,9 @@ public class CameraFragment extends Fragment
         mVideoPath = v;
     }
 
-    public AutoFitTextureView getTextureView()  {
-        return mTextureView;
-    }
+//    public AutoFitTextureView getTextureView()  {
+//        return mTextureView;
+//    }
 
     public void switchLayouts()  {
         switch(mGlobalState)    {
@@ -231,8 +231,8 @@ public class CameraFragment extends Fragment
         if(mGlobalState == GLOBAL_STATE_EDITOR)
             mPictureEditorLayout.onResume();
 
-        if(!mTextureView.isAvailable())
-            mTextureView.setSurfaceTextureListener(mSurfaceTextureListener);
+//        if(!mTextureView.isAvailable())
+//            mTextureView.setSurfaceTextureListener(mSurfaceTextureListener);
     }
 
     @Override

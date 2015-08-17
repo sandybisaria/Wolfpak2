@@ -6,8 +6,15 @@
     android:focusable="true"
     android:focusableInTouchMode="true">
 
-    <com.wolfpakapp.wolfpak2.camera.preview.AutoFitTextureView
-        android:id="@+id/texture"
+    <!--<com.wolfpakapp.wolfpak2.camera.preview.AutoFitTextureView-->
+        <!--android:id="@+id/texture"-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="match_parent"-->
+        <!--android:layout_alignParentStart="true"-->
+        <!--android:layout_alignParentTop="true" />-->
+
+    <com.wolfpakapp.wolfpak2.camera.preview.CameraView
+        android:id="@+id/camera_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_alignParentStart="true"
