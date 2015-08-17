@@ -75,23 +75,12 @@ public class Networking_MainFeed{
         /** Setting Location for get() query string **/
         lm = (LocationManager) mainFeed.getActivity().getSystemService(Context.LOCATION_SERVICE);
         location = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-<<<<<<< HEAD
         if (location == null) {
             locationCheck();
         } else {
             longitude = location.getLongitude();
             latitude = location.getLatitude();
         }
-=======
-        if(location == null)    {
-            // TODO remove hardcoded values, handle null location
-            location = new Location("Dummy Provider");
-            location.setLatitude(40.3443640);
-            location.setLongitude(-74.4646780);
-        }
-        longitude = location.getLongitude();
-        latitude = location.getLatitude();
->>>>>>> 66c93d8f8ab7994dda2495310cca73d1fb520709
 
         /** Location Update Detector **/
         final LocationListener locationListener = new LocationListener() {
