@@ -1,7 +1,6 @@
 package com.wolfpakapp.wolfpak2.camera.editor;
 
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Matrix;
@@ -11,8 +10,6 @@ import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.SurfaceTexture;
-import android.hardware.camera2.CameraCharacteristics;
-import android.media.Image;
 import android.media.MediaPlayer;
 import android.renderscript.Allocation;
 import android.renderscript.Element;
@@ -28,7 +25,7 @@ import android.widget.VideoView;
 import com.wolfpakapp.wolfpak2.R;
 import com.wolfpakapp.wolfpak2.camera.editor.colorpicker.ColorPickerView;
 import com.wolfpakapp.wolfpak2.camera.preview.CameraFragment;
-import com.wolfpakapp.wolfpak2.camera.preview.CameraLayout;
+import com.wolfpakapp.wolfpak2.camera.preview.CameraStates;
 
 import java.nio.ByteBuffer;
 
@@ -50,16 +47,11 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
 
     private static String mVideoPath;
 
-    //private MediaSaver mMediaSaver;
-
     // for blurring
     private static final int BLUR_RADIUS = 20;
     private static final int BLUR_SIDE = 100;
     private RenderScript mBlurScript = null;
     private ScriptIntrinsicBlur mIntrinsicScript = null;
-    private Bitmap mTextureBitmap = null;
-    private Bitmap mBlurredBitmap = null;
-    private Canvas blurCanvas = null;
 
     // buttons
     private ImageButton mBackButton;
@@ -107,6 +99,7 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
         mFragment = fragment;
         mTextureView = (TextureView) view.findViewById(R.id.edit_texture);
         mTextureView.setSurfaceTextureListener(mSurfaceTextureListener);
+        mTextureView.setOnTouchListener(mFragment);
         // set up color picker
         mColorPicker = (ColorPickerView)
                 view.findViewById(R.id.color_picker_view);
@@ -169,10 +162,11 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
      * Displays media onto textureview
      */
     private void displayMedia() {
-        Log.d(TAG, "FILE TYPE1: " + mFragment.getFileType());
-        if(mFragment.getFileType() == CameraFragment.FILE_TYPE_IMAGE) {
+        if(CameraStates.FILE_TYPE == CameraStates.FILE_IMAGE)   {
+            Log.d(TAG, "File type image");
             isImage = true;
-        } else if(mFragment.getFileType() == CameraFragment.FILE_TYPE_VIDEO)    {
+        } else if(CameraStates.FILE_TYPE == CameraStates.FILE_VIDEO)    {
+            Log.d(TAG, "File type video");
             isImage = false;
         }
 
@@ -180,31 +174,14 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
             if(UndoManager.getNumberOfStates() == 0) {
                 Canvas canvas = mTextureView.lockCanvas();
 
-                Image img = mFragment.getImage();
-                int width = 0;
-                int height = 0;
-                try {
-                    width = img.getWidth();
-                    height = img.getHeight();
-                } catch(IllegalStateException e)    {
-                    // image probably wasn't initialized
-                    startCamera(); // go back to camera
-                }
+                Bitmap src = mFragment.getImageBitmap();
 
-                // put image info from camera into buffer
-                ByteBuffer buffer = img.getPlanes()[0].getBuffer();
-                byte[] bytes = new byte[buffer.remaining()];
-                buffer.get(bytes);
-                Bitmap src = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-                mFragment.getImage().close(); // don't forget to close the image buffer!
-                //mFragment.setImage(null); // so we know to skip initing image upon resume
-                Log.d(TAG, "Image size: " + width + ", " + height);
                 Log.d(TAG, "Bitmap size: " + src.getWidth() + ", " + src.getHeight());
                 // resize horizontally oriented images
                 if (src.getWidth() > src.getHeight()) {
                     // transformation matrix that scales and rotates
                     Matrix matrix = new Matrix();
-                    if(CameraLayout.isFrontCamera())  {
+                    if(CameraStates.isFrontCamera())  {
                         matrix.setScale(-1, 1);
                     }
                     matrix.postRotate(90);
@@ -230,14 +207,14 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
             }
         } else  {
             if(UndoManager.getNumberOfStates() == 0) {
-                mVideoPath = mFragment.getVideoPath().toString();
+                mVideoPath = mFragment.getVideoPath();
                 UndoManager.addScreenState(Bitmap.createBitmap(// initial state, empty screen
                         mTextureView.getWidth(), mTextureView.getHeight(), null));
                 // mFragment.setVideoPath(null); // so we know to skip initing upon resume
             } else  { // device likely resumed, so restore previous session
                 mOverlay.setBitmap(UndoManager.getLastScreenState());
             }
-            if(CameraLayout.isFrontCamera())   {
+            if(CameraStates.isFrontCamera())   {
                 Matrix matrix = new Matrix();
                 matrix.setScale(1, -1, 0, mTextureView.getHeight() / 2);
                 mTextureView.setTransform(matrix);
@@ -268,16 +245,9 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
     }
 
     /**
-     * Sets the bitmap on TextureView
-     * @param bitmap
-     */
-    public void setBitmap(Bitmap bitmap)    {
-    }
-
-    /**
      * Takes a square bitmap and turns it into a circle
-     * @param bitmap
-     * @return
+     * @param bitmap the square bitmap
+     * @return the circle bitmap
      */
     public static Bitmap getRoundedCornerBitmap(Bitmap bitmap) {
         Bitmap output = Bitmap.createBitmap(bitmap.getWidth(),
@@ -304,18 +274,18 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
     /**
      * Blurs image at specified coordinates by producing a circular bitmap and blitting it
      * to the textureview
-     * @param action
-     * @param x
-     * @param y
+     * @param action the action (draw or blur)
+     * @param x the x coordinate on the screen
+     * @param y the y coordinate on the screen
      */
     private void blurImage(int action, float x, float y)    {
         switch(action)  {
             case MotionEvent.ACTION_DOWN:
             case MotionEvent.ACTION_MOVE:
-                blurCanvas = mTextureView.lockCanvas();
-                mTextureBitmap = mTextureView.getBitmap();
+                Canvas blurCanvas = mTextureView.lockCanvas();
+                Bitmap txbmp = mTextureView.getBitmap();
                 // Blur bitmap
-                mBlurredBitmap = Bitmap.createBitmap(BLUR_SIDE, BLUR_SIDE, mTextureBitmap.getConfig());
+                Bitmap blurredbmp = Bitmap.createBitmap(BLUR_SIDE, BLUR_SIDE, txbmp.getConfig());
 
                 // prevent errors when blur rectangle exceeds bounds
                 if((int) x - BLUR_SIDE / 2 <= 0)
@@ -323,26 +293,26 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
                 if((int) y - BLUR_SIDE / 2 <= 0)
                     y = BLUR_SIDE / 2;
 
-                if((int) x + BLUR_SIDE > mTextureBitmap.getWidth())
-                    x = mTextureBitmap.getWidth() - BLUR_SIDE / 2;
-                if((int) y + BLUR_SIDE > mTextureBitmap.getHeight())
-                    y = mTextureBitmap.getHeight() - BLUR_SIDE / 2;
+                if((int) x + BLUR_SIDE > txbmp.getWidth())
+                    x = txbmp.getWidth() - BLUR_SIDE / 2;
+                if((int) y + BLUR_SIDE > txbmp.getHeight())
+                    y = txbmp.getHeight() - BLUR_SIDE / 2;
 
-                final Bitmap blurSource = Bitmap.createBitmap(mTextureBitmap,
+                final Bitmap blurSource = Bitmap.createBitmap(txbmp,
                         (int) x - BLUR_SIDE / 2, (int) y - BLUR_SIDE / 2, BLUR_SIDE, BLUR_SIDE);
 
                 final Allocation inAlloc = Allocation.createFromBitmap(mBlurScript,
                         blurSource, Allocation.MipmapControl.MIPMAP_NONE, Allocation.USAGE_GRAPHICS_TEXTURE);
-                final Allocation outAlloc = Allocation.createFromBitmap(mBlurScript, mBlurredBitmap);
+                final Allocation outAlloc = Allocation.createFromBitmap(mBlurScript, blurredbmp);
 
                 mIntrinsicScript.setRadius(BLUR_RADIUS);
                 mIntrinsicScript.setInput(inAlloc);
                 mIntrinsicScript.forEach(outAlloc);
-                outAlloc.copyTo(mBlurredBitmap);
+                outAlloc.copyTo(blurredbmp);
 
                 // first draw what's on textureview, then draw blur
-                blurCanvas.drawBitmap(mTextureBitmap, 0, 0, null);
-                blurCanvas.drawBitmap(getRoundedCornerBitmap(mBlurredBitmap), (int) x - BLUR_SIDE / 2, (int)y - BLUR_SIDE / 2, null);
+                blurCanvas.drawBitmap(txbmp, 0, 0, null);
+                blurCanvas.drawBitmap(getRoundedCornerBitmap(blurredbmp), (int) x - BLUR_SIDE / 2, (int) y - BLUR_SIDE / 2, null);
                 mTextureView.unlockCanvasAndPost(blurCanvas);
                 break;
             case MotionEvent.ACTION_UP:
@@ -479,7 +449,6 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
     public boolean onTouch(int id, MotionEvent event) {
         switch(id)   {
             case R.id.edit_texture: // the edit layout textureview
-            case R.id.camera_view: // the camera preview
                 if(mOverlay.getState() == EditableOverlay.STATE_BLUR) {
                     blurImage(event.getAction(), event.getX(), event.getY());
                 }
@@ -499,7 +468,7 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
                 mOverlay.getTextOverlay().setState(TextOverlay.TEXT_STATE_HIDDEN);
                 // clear the overlay
                 mOverlay.clearBitmap();
-                mFragment.switchLayouts();
+                mFragment.switchLayouts(CameraStates.GLOBAL_STATE_EDITOR);
             }
         });
     }
@@ -537,7 +506,6 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
         mFragment.getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                //Log.d(TAG, "Showing Editor");
                 mOverlay.setVisibility(View.VISIBLE);
                 mUndoButton.setVisibility(View.VISIBLE);
                 mTextButton.setVisibility(View.VISIBLE);
@@ -547,7 +515,7 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
                 mDownloadButton.setVisibility(View.VISIBLE);
                 mUploadButton.setVisibility(View.VISIBLE);
 
-                if(mFragment.getFileType() == CameraFragment.FILE_TYPE_IMAGE) {
+                if(CameraStates.FILE_TYPE == CameraStates.FILE_IMAGE) {
                     //Log.d(TAG, "Showing TextureView");
                     mTextureView.setVisibility(View.VISIBLE);
                     if (mIsTextureReady) {
@@ -566,10 +534,8 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
     @Override
     public void onDownloadCompleted() {
         Log.d(TAG, "Download Completed");
-        if(!isImage) {
+        if(!isImage)
             mVideoView.start();
-            //Log.d(TAG, "Resuming Video");
-        }
     }
 
     @Override

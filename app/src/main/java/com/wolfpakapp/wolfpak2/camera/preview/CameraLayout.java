@@ -1,34 +1,12 @@
 package com.wolfpakapp.wolfpak2.camera.preview;
 
-import android.app.Activity;
-import android.content.Context;
-import android.graphics.ImageFormat;
-import android.graphics.Matrix;
-import android.graphics.RectF;
-import android.graphics.SurfaceTexture;
-import android.hardware.camera2.CameraAccessException;
-import android.hardware.camera2.CameraCaptureSession;
+import android.graphics.Bitmap;
 import android.hardware.camera2.CameraCharacteristics;
-import android.hardware.camera2.CameraDevice;
-import android.hardware.camera2.CameraManager;
-import android.hardware.camera2.CameraMetadata;
-import android.hardware.camera2.CaptureRequest;
-import android.hardware.camera2.CaptureResult;
-import android.hardware.camera2.TotalCaptureResult;
-import android.hardware.camera2.params.StreamConfigurationMap;
-import android.media.CamcorderProfile;
-import android.media.Image;
-import android.media.ImageReader;
-import android.media.MediaRecorder;
-import android.os.AsyncTask;
 import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.util.Log;
-import android.util.Size;
-import android.util.SparseIntArray;
 import android.view.MotionEvent;
-import android.view.Surface;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.Transformation;
@@ -38,20 +16,8 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 
 import com.wolfpakapp.wolfpak2.R;
-import com.wolfpakapp.wolfpak2.camera.preview.AutoFitTextureView;
-import com.wolfpakapp.wolfpak2.camera.preview.CameraFragment;
 
-import java.io.File;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.List;
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Layout handler that contains camera preview.  Performs photo capture and video recording
@@ -62,55 +28,19 @@ import java.util.concurrent.TimeUnit;
  *
  * @author Roland Fong
  */
-public class CameraLayout implements CameraView.StateCallback {
+public class CameraLayout implements CameraController.CameraActionCallback {
 
     private static final String TAG = "TAG-CameraLayout";
-
-    /* CAMERA STILL CAPTURE STATES*/
-    private static final int STATE_PREVIEW = 0;
-    private static final int STATE_WAITING_LOCK = 1;
-    private static final int STATE_WAITING_PRECAPTURE = 2;
-    private static final int STATE_WAITING_NON_PRECAPTURE= 3;
-    private static final int STATE_PICTURE_TAKEN = 4;
-
-    private static int mState = STATE_PREVIEW;
-
-    /**
-     * Conversions from screen rotation to JPEG Orientation
-     */
-    private static final SparseIntArray ORIENTATIONS = new SparseIntArray();
-    static {
-        ORIENTATIONS.append(Surface.ROTATION_0, 90);
-        ORIENTATIONS.append(Surface.ROTATION_90, 0);
-        ORIENTATIONS.append(Surface.ROTATION_180, 270);
-        ORIENTATIONS.append(Surface.ROTATION_270, 180);
-    }
 
     /**
      * The Fragment container
      */
     private CameraFragment mFragment;
-//    private AutoFitTextureView mTextureView;
-    private CameraView mCameraView;
+    private static CameraView mCameraView;
+    private CameraController mCameraController;
 
-    /*CAMERA DEVICE DETAILS*/
-    private String mCameraId;
-    private CameraCaptureSession mCaptureSession;
-    private CameraDevice mCameraDevice;
-    private Size mPreviewSize;
-    private Size mVideoSize;
-    private MediaRecorder mMediaRecorder;
-
-    public static final int AUTO_FLASH = 0;
-    public static final int NO_FLASH = 1;
-    public static final int ALWAYS_FLASH = 2;
-
-    private static int mFlash; // what state of flash to use
-    private static int mFace; // which direction camera is facing
-    private static boolean mSound; // true if sound is on
     private static boolean mLockingForEditor; // true if about to switch to picture editor
     private static boolean mIsRecordingVideo;
-    private boolean mFlashOnAuto = false; // if true, camera highly likely to flash
 
     private Button mCaptureButton;
     private ImageButton mSwitchButton;
@@ -122,55 +52,10 @@ public class CameraLayout implements CameraView.StateCallback {
     private CountDownTimer mCountDownTimer; // to limit video recording to 10s
     private int count;
 
-    /**
-     * Prevents app from exiting before closing camera
-     */
-    private Semaphore mCameraOpenCloseLock = new Semaphore(1);
-
-    private final CameraDevice.StateCallback mStateCallback = new CameraDevice.StateCallback()  {
-        @Override
-        public void onOpened(CameraDevice cameraDevice) {
-            Log.d(TAG, "On opened, will start preview");
-            // starts camera preview
-            mCameraOpenCloseLock.release();
-            mCameraDevice = cameraDevice;
-            createCameraPreviewSession();
-        }
-
-        @Override
-        public void onDisconnected(CameraDevice cameraDevice) {
-            Log.d(TAG, "Camera Disconnected");
-            mCameraOpenCloseLock.release();
-            cameraDevice.close();
-            mCameraDevice = null;
-        }
-
-        @Override
-        public void onError(CameraDevice cameraDevice, int error) {
-            Log.e(TAG, "An Error Occurred: " + error);
-            if(error != CameraDevice.StateCallback.ERROR_CAMERA_IN_USE) {
-                mCameraOpenCloseLock.release();
-                cameraDevice.close();
-                mCameraDevice = null;
-                if(null != mFragment.getActivity())   {
-                    mFragment.getActivity().finish();
-                }
-            }
-        }
-
-        @Override
-        public void onClosed(CameraDevice camera) {
-            super.onClosed(camera);
-        }
-    };
-
     /*THREAD & IMAGE HANDLING*/
     private Handler mTouchHandler;
     private HandlerThread mVideoStarterThread;
     private Handler mVideoStarterHandler;
-    private HandlerThread mBackgroundThread;
-    private Handler mBackgroundHandler;
-    private ImageReader mImageReader;
 
     private Runnable videoRunner = new Runnable()   {
         @Override
@@ -182,82 +67,6 @@ public class CameraLayout implements CameraView.StateCallback {
         }
     };
 
-    private final ImageReader.OnImageAvailableListener mOnImageAvailableListener
-            = new ImageReader.OnImageAvailableListener() {
-        @Override
-        public void onImageAvailable(ImageReader reader) {
-            //Log.d(TAG, "Image Avail and set");
-            mFragment.setImage(reader.acquireNextImage());
-        }
-    };
-
-    /*CAMERA CAPTURE HANDLING*/
-    private CaptureRequest.Builder mPreviewRequestBuilder;
-    private CaptureRequest mPreviewRequest;
-
-    private CameraCaptureSession.CaptureCallback mCaptureCallback
-            = new CameraCaptureSession.CaptureCallback()    {
-        private void process(CaptureResult result)  {
-            // check if auto will flash
-            Integer ae = result.get(CaptureResult.CONTROL_AE_STATE);
-            if(mState != STATE_PREVIEW && mFlash == AUTO_FLASH && ae != null &&
-                    ae == CaptureRequest.CONTROL_AE_STATE_FLASH_REQUIRED)   {
-                mFlashOnAuto = true;
-                Log.d(TAG, "Will flash on auto; state: " + mState);
-            }
-            // process result
-            switch(mState)  {
-                case STATE_PREVIEW: break;
-                case STATE_WAITING_LOCK:
-                    int afState = result.get(CaptureResult.CONTROL_AF_STATE);
-                    // front camera is always autofocused, so ignore focus if front camera
-                    if (CaptureResult.CONTROL_AF_STATE_FOCUSED_LOCKED == afState ||
-                            CaptureResult.CONTROL_AF_STATE_NOT_FOCUSED_LOCKED == afState ||
-                            mFace == CameraCharacteristics.LENS_FACING_FRONT) {
-                        Integer aeState = result.get(CaptureResult.CONTROL_AE_STATE);
-                        if (aeState == null ||
-                                aeState == CaptureResult.CONTROL_AE_STATE_CONVERGED) {
-                            mState = STATE_WAITING_NON_PRECAPTURE;
-                            //mState = STATE_PICTURE_TAKEN;
-                            captureStillPicture();
-                        } else {
-                            runPrecaptureSequence();
-                        }
-                    }
-                    break;
-                case STATE_WAITING_PRECAPTURE:
-                    Integer aeState = result.get(CaptureResult.CONTROL_AE_STATE);
-                    if (aeState == null ||
-                            aeState == CaptureResult.CONTROL_AE_STATE_PRECAPTURE ||
-                            aeState == CaptureRequest.CONTROL_AE_STATE_FLASH_REQUIRED) {
-                        mState = STATE_WAITING_NON_PRECAPTURE;
-                    }
-                    break;
-                case STATE_WAITING_NON_PRECAPTURE:
-                    Integer aeState1 = result.get(CaptureResult.CONTROL_AE_STATE);
-                    if (aeState1 == null || aeState1 != CaptureResult.CONTROL_AE_STATE_PRECAPTURE) {
-                        mState = STATE_PICTURE_TAKEN;
-                        captureStillPicture();
-                    }
-                    break;
-            }
-        }
-
-        @Override
-        public void onCaptureProgressed(CameraCaptureSession session,
-                                        CaptureRequest request, CaptureResult partialResult) {
-            super.onCaptureProgressed(session, request, partialResult);
-            process(partialResult);
-        }
-
-        @Override
-        public void onCaptureCompleted(CameraCaptureSession session,
-                                       CaptureRequest request, TotalCaptureResult result) {
-            super.onCaptureCompleted(session, request, result);
-            process(result);
-        }
-    };
-
     /**
      * Creates the layout.
      * @param fragment the fragment container
@@ -265,9 +74,16 @@ public class CameraLayout implements CameraView.StateCallback {
      */
     public CameraLayout(CameraFragment fragment, View view) {
         mFragment = fragment;
-//        mTextureView = fragment.getTextureView();
+        // TODO add code to check phone api
+        mCameraController = new CameraController2(fragment.getActivity());
+        mCameraController.setCameraActionCallback(this);
         mCameraView = (CameraView) view.findViewById(R.id.camera_view);
-        mCameraView.setStateCallback(this);
+        mCameraView.setStateCallback((CameraController2) mCameraController);
+
+        // set global state defaults
+        CameraStates.FLASH_STATE = CameraStates.AUTO_FLASH;
+        CameraStates.IS_SOUND = true;
+        CameraStates.CAMERA_FACE = CameraStates.BACK;
 
         // set up buttons
         mCaptureButton = (Button) view.findViewById(R.id.btn_takepicture); // take picture button
@@ -278,13 +94,10 @@ public class CameraLayout implements CameraView.StateCallback {
 
         mFlashButton = (ImageButton) view.findViewById(R.id.btn_flash); // flash button
         mFlashButton.setOnClickListener(fragment);
-        mFlash = AUTO_FLASH; // set auto flash default
         mFlashButton.setImageResource(R.drawable.auto_flash);
 
         mSoundButton = (ImageButton) view.findViewById(R.id.btn_sound); // sound button
         mSoundButton.setOnClickListener(fragment);
-        mSound = true; // set to sound on default;
-
         mScreenFlash = (ImageView) view.findViewById(R.id.screen_flash);
 
         // progress bar and timer for video recording
@@ -305,31 +118,8 @@ public class CameraLayout implements CameraView.StateCallback {
         };
     }
 
-//    /**
-//     * Actions to perform when surface texture is available in fragment
-//     * @param width
-//     * @param height
-//     */
-//    public void onSurfaceTextureAvailable(int width, int height)   {
-//        mFace = CameraCharacteristics.LENS_FACING_BACK;
-//        openCamera(width, height, CameraCharacteristics.LENS_FACING_BACK);
-//    }
-
-    @Override
-    public void onReady(CameraView cv, int height, int width) {
-        mFace = CameraCharacteristics.LENS_FACING_BACK;
-        openCamera(width, height, mFace);
-    }
-
-    @Override
-    public void onDestroyed(CameraView cv) {
-        // closeCamera();
-        // stopBackgroundThread();
-    }
-
     public void onPause()   {
-        closeCamera();
-        stopBackgroundThread(); // background thread is closed after camera closes
+        mCameraController.closeCamera();
     }
 
     public void onResume()  {
@@ -338,24 +128,12 @@ public class CameraLayout implements CameraView.StateCallback {
         decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_FULLSCREEN);
 
         mLockingForEditor = false;
-        startBackgroundThread();
-        // if activity resumes from pause, OnSurfaceTextureAvailable may not be called
-//        if(mTextureView.isAvailable()) {
-//            try {
-//                openCamera(mTextureView.getWidth(), mTextureView.getHeight(), mFace);
-//            } catch(RuntimeException e) {
-//                Log.e(TAG, "Couldn't open camera, releasing lock and trying again");
-//                mCameraOpenCloseLock.release();
-//                openCamera(mTextureView.getWidth(), mTextureView.getHeight(), mFace);
-//            }
-//        }
+
         if(mCameraView.isAvailable())   {
             try {
-                openCamera(mPreviewSize.getWidth(), mPreviewSize.getHeight(), mFace);
+                mCameraController.openCamera();
             } catch(RuntimeException e) {
-                Log.e(TAG, "Couldn't open camera, releasing lock and trying again");
-                mCameraOpenCloseLock.release();
-                openCamera(mPreviewSize.getWidth(), mPreviewSize.getHeight(), mFace);
+                Log.e(TAG, "Couldn't open camera");
             }
         }
     }
@@ -363,13 +141,25 @@ public class CameraLayout implements CameraView.StateCallback {
     public void onClick(int id) {
         switch(id)    {
             case R.id.btn_switch:
-                switchCamera();
+                mCameraController.toggleCamera();
                 break;
             case R.id.btn_flash:
-                toggleFlash();
+                if(CameraStates.FLASH_STATE == CameraStates.AUTO_FLASH)  {
+                    mFlashButton.setImageResource(R.drawable.no_flash);
+                } else if (CameraStates.FLASH_STATE == CameraStates.NO_FLASH)  {
+                    mFlashButton.setImageResource(R.drawable.flash);
+                } else  {
+                    mFlashButton.setImageResource(R.drawable.auto_flash);
+                }
+                mCameraController.toggleFlash();
                 break;
             case R.id.btn_sound:
-                toggleSound();
+                if(CameraStates.IS_SOUND)  {
+                    mSoundButton.setImageResource(R.drawable.no_sound);
+                } else  {
+                    mSoundButton.setImageResource(R.drawable.sound);
+                }
+                mCameraController.toggleSound();
                 break;
         }
     }
@@ -404,150 +194,15 @@ public class CameraLayout implements CameraView.StateCallback {
                         stopRecordingVideo();
                     } else if (!mLockingForEditor)  {
                         // else mIsRecordingVideo is false, so take picture if not going to editor (from video)
-                        takePicture();
+                        if(CameraStates.FLASH_STATE != CameraStates.ALWAYS_FLASH)   {
+                            startFlashAnimation();
+                        }
+                        mCameraController.takePicture();
                     }
                 }
                 break;
         }
         return false; // when set true, the state_pressed won't activate!
-    }
-
-    /**
-     * Sets up member vars related to camera and picks specified camera
-     * @param width
-     * @param height
-     */
-    public void setUpCameraOutputs(int width, int height, int lensFacing)   {
-        Activity activity = mFragment.getActivity();
-        CameraManager manager = (CameraManager) activity.getSystemService(Context.CAMERA_SERVICE);
-        try {
-            for (String cameraId : manager.getCameraIdList()) {
-                mCameraId = cameraId; // set global var here in case lensFacing never evaluates true
-                CameraCharacteristics characteristics
-                        = manager.getCameraCharacteristics(cameraId);
-
-                if (characteristics.get(CameraCharacteristics.LENS_FACING) != lensFacing) {
-                    // check if it's the last camera, if not, go to next camera
-                    if(cameraId != manager.getCameraIdList()[manager.getCameraIdList().length - 1])
-                        continue;
-                }
-
-                StreamConfigurationMap map = characteristics.get(
-                        CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
-
-                Size largest = Collections.max(
-                        Arrays.asList(map.getOutputSizes(ImageFormat.JPEG)),
-                        new CameraUtils.CompareSizesByArea());
-
-                for(Size size : map.getOutputSizes(ImageFormat.JPEG))   {
-                    Log.d(TAG, "Available sizes: " + size.getWidth() + ", " + size.getHeight());
-                }
-                Log.d(TAG, "Largest Size: " + largest.getWidth() + ", " + largest.getHeight());
-
-                mPreviewSize = CameraUtils.chooseOptimalSize(Arrays.asList(map.getOutputSizes(SurfaceTexture.class)),
-                        width, height, largest);
-                Log.d(TAG, "Preview Size: " + mPreviewSize.getWidth() + ", " + mPreviewSize.getHeight());
-                mVideoSize = CameraUtils.chooseOptimalSize(Arrays.asList(map.getOutputSizes(MediaRecorder.class)),
-                        width, height, largest);
-                // if app ever will support landscape, aspect ratio needs to be changed here.
-//                mTextureView.setAspectRatio(
-//                        mPreviewSize.getHeight(), mPreviewSize.getWidth());
-                mCameraView.setPreviewSize(mPreviewSize);
-                // set image size to be size of screen
-//                mImageReader = ImageReader.newInstance(mPreviewSize.getWidth(), mPreviewSize.getHeight(),
-//                        ImageFormat.JPEG, /*maxImages*/2);
-                mImageReader = ImageReader.newInstance(largest.getWidth(), largest.getHeight(),
-                        ImageFormat.JPEG, /*maxImages*/2); // Fix for Raziq's phone
-                mImageReader.setOnImageAvailableListener(
-                        mOnImageAvailableListener, mBackgroundHandler);
-
-                mCameraId = cameraId;
-                return;
-            }
-        } catch (CameraAccessException e) {
-            e.printStackTrace();
-        } catch (NullPointerException e) {
-            e.printStackTrace();
-        }
-    }
-
-    /**
-     * Opens the camera specified by ID
-     */
-    private void openCamera(int width, int height, int lensFacing) {
-        Log.d(TAG, "Opening Camera");
-        setUpCameraOutputs(width, height, lensFacing);
-//        configureTransform(width, height);
-        mMediaRecorder = new MediaRecorder();
-        Activity activity = mFragment.getActivity();
-        CameraManager manager = (CameraManager) activity.getSystemService(Context.CAMERA_SERVICE);
-        try {
-            if (!mCameraOpenCloseLock.tryAcquire(2500, TimeUnit.MILLISECONDS)) {
-                throw new RuntimeException("Time out waiting to lock camera opening.");
-            }
-            manager.openCamera(mCameraId, mStateCallback, mBackgroundHandler);
-        } catch (CameraAccessException e) {
-            e.printStackTrace();
-        } catch (InterruptedException e) {
-            throw new RuntimeException("Interrupted while trying to lock camera opening.", e);
-        }
-    }
-
-    /**
-     * Closes the current {@link CameraDevice}.
-     */
-    private void closeCamera() {
-        try {
-            Log.d(TAG, "Acquiring lock");
-            mCameraOpenCloseLock.acquire();
-            Log.d(TAG, "Ending capture Session");
-            if (null != mCaptureSession) {
-                mCaptureSession.close();
-                mCaptureSession = null;
-            }
-            Log.d(TAG, "Ending camera device");
-            if (null != mCameraDevice) {
-                mCameraDevice.close();
-                mCameraDevice = null;
-            }
-            Log.d(TAG, "Ending media recoder");
-            if (null != mMediaRecorder) {
-                mMediaRecorder.release();
-                mMediaRecorder = null;
-            }
-            Log.d(TAG, "Ending image reader");
-            if (null != mImageReader) {
-                mImageReader.close();
-                mImageReader = null;
-            }
-        } catch (InterruptedException e) {
-            throw new RuntimeException("Interrupted while trying to lock camera closing.", e);
-        } finally {
-            mCameraOpenCloseLock.release();
-        }
-    }
-
-    /**
-     * Starts a background thread and its {@link Handler}.
-     */
-    private void startBackgroundThread() {
-        mBackgroundThread = new HandlerThread("CameraBackground");
-        mBackgroundThread.start();
-        mBackgroundHandler = new Handler(mBackgroundThread.getLooper());
-    }
-
-    /**
-     * Stops the background thread and its {@link Handler}.
-     */
-    private void stopBackgroundThread() {
-        try {
-            mBackgroundThread.quitSafely();
-            mBackgroundThread.join(); // if it hangs, just go ahead and end it
-            mBackgroundThread = null;
-            mBackgroundHandler = null;
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 
     private void startVideoStarterThread()  {
@@ -568,174 +223,6 @@ public class CameraLayout implements CameraView.StateCallback {
     }
 
     /**
-     * Creates a new {@link CameraCaptureSession} for camera preview.
-     */
-    private void createCameraPreviewSession() {
-        Log.d(TAG, "Creating cam preview session");
-        try {
-//            SurfaceTexture texture = mTextureView.getSurfaceTexture();
-            SurfaceTexture texture = mCameraView.getSurfaceTexture();
-            assert texture != null;
-
-            // We configure the size of default buffer to be the size of camera preview we want.
-            texture.setDefaultBufferSize(mPreviewSize.getWidth(), mPreviewSize.getHeight());
-
-            List<Surface> surfaces = new ArrayList<Surface>();
-            // This is the output Surface we need to start preview.
-            Surface previewSurface = new Surface(texture);
-            surfaces.add(previewSurface);
-
-            // We set up a CaptureRequest.Builder with the output Surface.
-            if(mIsRecordingVideo)   {
-                setUpMediaRecorder();
-                Surface recorderSurface = mMediaRecorder.getSurface();
-                surfaces.add(recorderSurface);
-                mPreviewRequestBuilder
-                        = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_RECORD);
-                mPreviewRequestBuilder.addTarget(recorderSurface);
-            } else  {
-                surfaces.add(mImageReader.getSurface());
-                if(mCameraDevice != null) {
-                    mPreviewRequestBuilder
-                            = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
-                } else {
-                    // something went wrong
-                    onPause();
-                    onResume();
-                }
-            }
-            mPreviewRequestBuilder.addTarget(previewSurface);
-
-            Log.d(TAG, "Finishing camera preview session creation");
-
-            try {
-                // Here, we create a CameraCaptureSession for camera preview.
-                mCameraDevice.createCaptureSession(surfaces,
-                        new CameraCaptureSession.StateCallback() {
-
-                            @Override
-                            public void onConfigured(CameraCaptureSession cameraCaptureSession) {
-                                // The camera is already closed
-                                if (null == mCameraDevice) {
-                                    return;
-                                }
-
-                                // When the session is ready, we start displaying the preview.
-                                mCaptureSession = cameraCaptureSession;
-                                try {
-                                    // Auto focus should be continuous for camera preview.
-                                    mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE,
-                                            CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
-
-                                    if (mFlash == AUTO_FLASH) {
-                                        mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE,
-                                                CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH); // auto flash
-                                    } else if (mFlash == NO_FLASH) {
-                                        mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE,
-                                                CaptureRequest.CONTROL_AE_MODE_ON); // no flash
-                                    } else {
-                                        mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE,
-                                                CaptureRequest.CONTROL_AE_MODE_ON_ALWAYS_FLASH); // always flash
-                                    }
-
-                                    // Finally, we start displaying the camera preview.
-                                    mPreviewRequest = mPreviewRequestBuilder.build();
-                                    Log.d(TAG, "Starting preview repeating request");
-                                    try {
-                                        mCaptureSession.setRepeatingRequest(mPreviewRequest,
-                                                mCaptureCallback, mBackgroundHandler);
-                                    } catch (IllegalStateException e) {
-                                        Log.d(TAG, "Preview request failed, trying again");
-                                        createCameraPreviewSession();
-                                        e.printStackTrace();
-                                        return;
-                                    }
-                                } catch (CameraAccessException e) {
-                                    e.printStackTrace();
-                                }
-                            }
-
-                            @Override
-                            public void onConfigureFailed(CameraCaptureSession cameraCaptureSession) {
-                                Log.e(TAG, "Configure Failed");
-//                            createCameraPreviewSession(); // try again
-                            }
-                        }, null
-                );
-            } catch(IllegalStateException e)    {
-                e.printStackTrace();
-            }
-            Log.d(TAG, "Finished createcapturesession");
-        } catch (CameraAccessException e) {
-            e.printStackTrace();
-        } catch(IOException e1) {
-            e1.printStackTrace();
-        }
-    }
-
-//    /**
-//     * Configures the necessary {@link android.graphics.Matrix} transformation to `mTextureView`.
-//     * This method should be called after the camera preview size is determined in
-//     * setUpCameraOutputs and also the size of `mTextureView` is fixed.
-//     *
-//     * @param viewWidth  The width of `mTextureView`
-//     * @param viewHeight The height of `mTextureView`
-//     */
-//    public void configureTransform(int viewWidth, int viewHeight) {
-//        Activity activity = mFragment.getActivity();
-//        if (null == mTextureView || null == mPreviewSize || null == activity) {
-//            return;
-//        }
-//        int rotation = activity.getWindowManager().getDefaultDisplay().getRotation();
-//        Matrix matrix = new Matrix();
-//        RectF viewRect = new RectF(0, 0, viewWidth, viewHeight);
-//        RectF bufferRect = new RectF(0, 0, mPreviewSize.getHeight(), mPreviewSize.getWidth());
-//        float centerX = viewRect.centerX();
-//        float centerY = viewRect.centerY();
-//        if (Surface.ROTATION_90 == rotation || Surface.ROTATION_270 == rotation) {
-//            bufferRect.offset(centerX - bufferRect.centerX(), centerY - bufferRect.centerY());
-//            matrix.setRectToRect(viewRect, bufferRect, Matrix.ScaleToFit.FILL);
-//            float scale = Math.max(
-//                    (float) viewHeight / mPreviewSize.getHeight(),
-//                    (float) viewWidth / mPreviewSize.getWidth());
-//            matrix.postScale(scale, scale, centerX, centerY);
-//            matrix.postRotate(90 * (rotation - 2), centerX, centerY);
-//        }
-//        mTextureView.setTransform(matrix);
-//    }
-
-    /**
-     * Sets up video specs
-     * @throws IOException
-     */
-    private void setUpMediaRecorder() throws IOException {
-        final Activity activity = mFragment.getActivity();
-        if (null == activity) {
-            return;
-        }
-        if(mSound) {
-            mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
-        }
-        mMediaRecorder.setVideoSource(MediaRecorder.VideoSource.SURFACE);
-        mMediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
-        mFragment.setVideoPath((new File(activity.getExternalFilesDir(null), "video.mp4")).getAbsolutePath());
-        mMediaRecorder.setOutputFile(mFragment.getVideoPath());
-        mMediaRecorder.setVideoEncodingBitRate(10000000);
-        mMediaRecorder.setVideoFrameRate(16);
-        mMediaRecorder.setVideoSize(mVideoSize.getWidth(), mVideoSize.getHeight());
-        mMediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.H264);
-        if(mSound)
-            mMediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
-        int rotation = activity.getWindowManager().getDefaultDisplay().getRotation();
-        int orientation = ORIENTATIONS.get(rotation);
-        if(mFace == CameraCharacteristics.LENS_FACING_FRONT)    {
-            orientation += 180; // hopefully this will cause video to save right side up
-        }
-        mMediaRecorder.setOrientationHint(orientation);
-        mMediaRecorder.prepare();
-    }
-
-    /**
      * Starts video Recording
      */
     private void startRecordingVideo() {
@@ -744,34 +231,15 @@ public class CameraLayout implements CameraView.StateCallback {
         mVideoStarterHandler.post(new Runnable() {
             @Override
             public void run() {
-                Runnable createPreviewRunnable = new Runnable() {
-                    @Override
-                    public void run() {
-                        createCameraPreviewSession();
-                        synchronized (this) {
-                            this.notify();
-                        }
-                    }
-                };
                 try {
                     mIsRecordingVideo = true;
-                    mFragment.setFileType(CameraFragment.FILE_TYPE_VIDEO);
-                    mMediaRecorder.reset();
-
-                    synchronized (createPreviewRunnable) {
-                        mFragment.getActivity().runOnUiThread(createPreviewRunnable);
-                        createPreviewRunnable.wait(); // let preview finish before starting mediarecord
-                    }
-
                     mCountDownTimer.start();
-                    Log.d(TAG, "Starting media recorder");
-                    mMediaRecorder.start();// Start recording
-                    //Log.d(TAG, "Media Recorder Started");
+
+                    mCameraController.startRecording();
+
                     Thread.sleep(1000); // make sure the video lasts at least 1s
                     Log.d(TAG, "1s wait");
                     mVideoStarterThread.quitSafely();
-                } catch (IllegalStateException e) {
-                    e.printStackTrace();
                 } catch (InterruptedException e1) {
                     e1.printStackTrace();
                 }
@@ -786,213 +254,12 @@ public class CameraLayout implements CameraView.StateCallback {
     private void stopRecordingVideo() {
         mIsRecordingVideo = false;
         mLockingForEditor = true; // prevent action_up from accidentally taking picture
-        Log.d(TAG, "Media recorder stop");
-        mMediaRecorder.stop();// Stop recording
-        Log.d(TAG, "media Recorder reset");
-        mMediaRecorder.reset();
+        mCameraController.stopRecording();
         Log.d(TAG, "Progress bar set 0");
         mProgressBar.setProgress(0);
         count=0;
         Log.d(TAG, "Start editor");
         startEditor();
-    }
-
-    /**
-     * Initiate a still image capture.
-     */
-    private void takePicture() {
-        mFragment.setFileType(CameraFragment.FILE_TYPE_IMAGE);
-        lockFocus();
-    }
-
-    /**
-     * Lock the focus as the first step for a still image capture.
-     */
-    private void lockFocus() {
-        try {
-            // This is how to tell the camera to lock focus.
-            mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER,
-                    CameraMetadata.CONTROL_AF_TRIGGER_START);
-            // Tell #mCaptureCallback to wait for the lock.
-            mState = STATE_WAITING_LOCK;
-            try {
-                mCaptureSession.setRepeatingRequest(mPreviewRequestBuilder.build(), mCaptureCallback,
-                        mBackgroundHandler);
-            } catch(IllegalArgumentException e) {
-                Log.e(TAG, "Lock Focus Request failed");
-                createCameraPreviewSession();
-                e.printStackTrace();
-            }
-        } catch (CameraAccessException e) {
-            e.printStackTrace();
-        }
-    }
-
-    /**
-     * Switches between front and back cameras
-     */
-    public void switchCamera()  {
-        if(mFace == CameraCharacteristics.LENS_FACING_BACK)
-            mFace = CameraCharacteristics.LENS_FACING_FRONT;
-        else
-            mFace = CameraCharacteristics.LENS_FACING_BACK;
-        closeCamera();
-        openCamera(mPreviewSize.getWidth(), mPreviewSize.getHeight(), mFace);
-    }
-
-    /**
-     * Toggle flash on and off
-     */
-    public void toggleFlash()   {
-        if(mFlash == AUTO_FLASH)  {
-            mFlashButton.setImageResource(R.drawable.no_flash);
-        } else if (mFlash == NO_FLASH)  {
-            mFlashButton.setImageResource(R.drawable.flash);
-        } else  {
-            mFlashButton.setImageResource(R.drawable.auto_flash);
-        }
-        closeCamera();
-        mFlash = (mFlash + 1) % 3; // cycles through 0, 1, 2 or AUTO_FLASH, NO_FLASH, ALWAYS_FLASH
-
-        Log.d(TAG, "New flash: " + mFlash);
-        openCamera(mPreviewSize.getWidth(), mPreviewSize.getHeight(), mFace);
-    }
-
-    /**
-     * Toggle sound on and off
-     */
-    public void toggleSound()   {
-        if(mSound)  {
-            mSoundButton.setImageResource(R.drawable.no_sound);
-        } else  {
-            mSoundButton.setImageResource(R.drawable.sound);
-        }
-
-        mSound = !mSound;
-
-        mMediaRecorder.reset();
-        try {
-            setUpMediaRecorder();
-        } catch(IOException e)  {
-            e.printStackTrace();
-        }
-    }
-
-    /**
-     * Run the precapture sequence for capturing a still image. This method should be called when we
-     * get a response in {@link #mCaptureCallback} from {@link #lockFocus()}.
-     */
-    private void runPrecaptureSequence() {
-        try {
-            // This is how to tell the camera to trigger.
-            mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_PRECAPTURE_TRIGGER,
-                    CaptureRequest.CONTROL_AE_PRECAPTURE_TRIGGER_START);
-            // Tell #mCaptureCallback to wait for the precapture sequence to be set.
-            mState = STATE_WAITING_PRECAPTURE;
-            mCaptureSession.capture(mPreviewRequestBuilder.build(), mCaptureCallback,
-                    mBackgroundHandler);
-        } catch (CameraAccessException e) {
-            e.printStackTrace();
-        }
-    }
-
-    /**
-     * Capture a still picture. This method should be called when we get a response in
-     * {@link #mCaptureCallback} from both {@link #lockFocus()}.
-     */
-    private void captureStillPicture() {
-
-        try {
-            final Activity activity = mFragment.getActivity();
-            if (null == activity || null == mCameraDevice) {
-                return;
-            }
-            // This is the CaptureRequest.Builder that we use to take a picture.
-            final CaptureRequest.Builder captureBuilder =
-                    mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE);
-            captureBuilder.addTarget(mImageReader.getSurface());
-
-            // Use the same AE and AF modes as the preview.
-            captureBuilder.set(CaptureRequest.CONTROL_AF_MODE,
-                    CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
-
-            if(mFlash == AUTO_FLASH) {
-                captureBuilder.set(CaptureRequest.CONTROL_AE_MODE,
-                        CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH); // auto flash
-            } else if(mFlash == NO_FLASH)  {
-                captureBuilder.set(CaptureRequest.CONTROL_AE_MODE,
-                        CaptureRequest.CONTROL_AE_MODE_ON); // no flash
-            } else  {
-                captureBuilder.set(CaptureRequest.CONTROL_AE_MODE,
-                        CaptureRequest.CONTROL_AE_MODE_ON_ALWAYS_FLASH); // always flash
-            }
-
-            // Orientation
-            int rotation = activity.getWindowManager().getDefaultDisplay().getRotation();
-            captureBuilder.set(CaptureRequest.JPEG_ORIENTATION, ORIENTATIONS.get(rotation));
-
-            CameraCaptureSession.CaptureCallback CaptureCallback
-                    = new CameraCaptureSession.CaptureCallback() {
-
-                @Override
-                public void onCaptureCompleted(CameraCaptureSession session, CaptureRequest request,
-                                               TotalCaptureResult result) {
-                    if(mFlash == ALWAYS_FLASH || // if camera flashed, do screen flash here
-                            (mFlash == AUTO_FLASH && mFlashOnAuto == true)) {
-                        mFlashOnAuto = false;
-                        startFlashAnimation();
-                    }
-                    unlockFocus();
-                    startEditor();
-                }
-            };
-
-            mCaptureSession.stopRepeating();
-            try {
-                mCaptureSession.capture(captureBuilder.build(), CaptureCallback, null);
-            } catch(IllegalArgumentException e) {
-                Log.e(TAG, "Capture threw exception");
-                createCameraPreviewSession(); // restart camera
-                e.printStackTrace();
-            }
-            // flash the screen like a camera, stall for time since capture tends to take a while
-            if(mFlash == NO_FLASH || // if camera flash is used, don't screenflash now b/c it'll be too early!
-                    (mFlash == AUTO_FLASH && mFlashOnAuto == false))
-                startFlashAnimation();
-        } catch (CameraAccessException e) {
-            e.printStackTrace();
-        }
-    }
-
-    /**
-     * Unlock the focus. This method should be called when still image capture sequence is finished.
-     */
-    private void unlockFocus() {
-        try {
-            // Reset the autofucos trigger
-            mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER,
-                    CameraMetadata.CONTROL_AF_TRIGGER_CANCEL);
-
-            if(mFlash == AUTO_FLASH) {
-                mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE,
-                        CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH); // auto flash
-            } else if(mFlash == NO_FLASH)  {
-                mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE,
-                        CaptureRequest.CONTROL_AE_MODE_ON); // no flash
-            } else  {
-                mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE,
-                        CaptureRequest.CONTROL_AE_MODE_ON_ALWAYS_FLASH); // always flash
-            }
-            mCaptureSession.capture(mPreviewRequestBuilder.build(), mCaptureCallback,
-                    mBackgroundHandler);
-
-            // After this, the camera will go back to the normal state of preview.
-            mState = STATE_PREVIEW;
-            mCaptureSession.setRepeatingRequest(mPreviewRequest, mCaptureCallback,
-                    mBackgroundHandler);
-        } catch (CameraAccessException e) {
-            e.printStackTrace();
-        }
     }
 
     /**
@@ -1058,12 +325,8 @@ public class CameraLayout implements CameraView.StateCallback {
         mScreenFlash.startAnimation(a);
     }
 
-    public static boolean isFrontCamera()   {
-        return (mFace == CameraCharacteristics.LENS_FACING_FRONT);
-    }
-
-    public static boolean isSound() {
-        return mSound;
+    public static CameraView getCameraView()   {
+        return mCameraView;
     }
 
     public void startTouchHandler() {
@@ -1075,16 +338,44 @@ public class CameraLayout implements CameraView.StateCallback {
     }
 
     private void startEditor()   {
-        //closeCamera();
-        // release the lock
-        mCameraOpenCloseLock.release();
+        // note camera is closing on onpause
         Log.d(TAG, "Starting editor function");
         mFragment.getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                mFragment.switchLayouts();
+                mFragment.switchLayouts(CameraStates.GLOBAL_STATE_PREVIEW);
             }
         });
+    }
+
+    @Override
+    public void onCameraOpened() {
+    }
+
+    @Override
+    public void onCameraClosed() {
+    }
+
+    @Override
+    public void onCameraError() {
+    }
+
+    @Override
+    public void onCaptureCompleted() {
+        if(CameraStates.FLASH_STATE == CameraStates.ALWAYS_FLASH)
+            startFlashAnimation();
+    }
+
+    @Override
+    public void onImageAvailable(Bitmap img) {
+        mFragment.setImageBitmap(img);
+        startEditor();
+    }
+
+    @Override
+    public void onRecordingCompleted(String path) {
+        mFragment.setVideoPath(path);
+        startEditor();
     }
 
     /**

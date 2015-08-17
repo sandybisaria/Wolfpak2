@@ -1,7 +1,11 @@
 package com.wolfpakapp.wolfpak2.camera.preview;
 
+import android.content.Context;
+import android.content.res.Configuration;
 import android.util.Log;
 import android.util.Size;
+import android.view.Surface;
+import android.view.WindowManager;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -15,6 +19,25 @@ import java.util.List;
 public class CameraUtils {
 
     private static final String TAG = "TAG-CameraUtils";
+
+    /**
+     * Returns the device rotation; Surface.ROTATION_0, ROTATION_90, etc.
+     * @param context
+     * @return
+     */
+    public static int getRotation(Context context) {
+        WindowManager windowManager =  (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+        return windowManager.getDefaultDisplay().getRotation();
+    }
+
+    /**
+     * Returns the largest size given a list of choices
+     * @param choices
+     * @return
+     */
+    public static Size getLargestSize(List<Size> choices)   {
+        return Collections.max(choices, new CameraUtils.CompareSizesByArea());
+    }
 
     /**
      * Given sizes supported by camera, chooses smallest one whose width and height are at least as

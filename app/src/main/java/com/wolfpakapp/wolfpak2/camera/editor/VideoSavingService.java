@@ -17,6 +17,7 @@ import com.github.hiteshsondhi88.libffmpeg.ExecuteBinaryResponseHandler;
 import com.github.hiteshsondhi88.libffmpeg.exceptions.FFmpegCommandAlreadyRunningException;
 import com.loopj.android.http.RequestParams;
 import com.wolfpakapp.wolfpak2.camera.preview.CameraLayout;
+import com.wolfpakapp.wolfpak2.camera.preview.CameraStates;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -70,8 +71,8 @@ public class VideoSavingService extends Service {
                 // Generate FFmpeg command: overlays image (overlay), rotates 90 degrees to
                 // vertical orientation (transpose) and compresses video (qscale)
                 String cmd, transpose, audio, speed;
-                transpose = (CameraLayout.isFrontCamera()) ? "3" : "1"; // 1=rotate, 3=rotate/flip
-                audio = (CameraLayout.isSound()) ? "-map 0:a " : ""; // audio map
+                transpose = (CameraStates.isFrontCamera()) ? "3" : "1"; // 1=rotate, 3=rotate/flip
+                audio = (CameraStates.IS_SOUND) ? "-map 0:a " : ""; // audio map
                 speed = isUploading ? "veryfast" : "ultrafast"; // server needs more compression so go slow
                 // actual command
                 cmd = "-y -i " + videoPath + " -i " + overlayPath +
