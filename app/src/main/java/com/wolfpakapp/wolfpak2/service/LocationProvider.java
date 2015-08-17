@@ -109,6 +109,7 @@ public class LocationProvider extends ServiceManager
 
     }
 
+<<<<<<< HEAD
     public Location getLastLocation() throws NoLocationException {
         if (mLastLocation != null) {
             return mLastLocation;
@@ -130,6 +131,18 @@ public class LocationProvider extends ServiceManager
                 }
             }, 2000);
         }
+=======
+    public Location getLastLocation() {
+        if(mLastLocation == null)   {
+            // TODO remove hardcoded values, handle null location
+            Location l = new Location("Dummy Provider");
+            l.setLatitude(40.3443640);
+            l.setLongitude(-74.4646780);
+            return l;
+        } else {
+            return mLastLocation;
+        }
+>>>>>>> 66c93d8f8ab7994dda2495310cca73d1fb520709
     }
 
 }
