@@ -162,13 +162,7 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
      * Displays media onto textureview
      */
     private void displayMedia() {
-        if(CameraStates.FILE_TYPE == CameraStates.FILE_IMAGE)   {
-            Log.d(TAG, "File type image");
-            isImage = true;
-        } else if(CameraStates.FILE_TYPE == CameraStates.FILE_VIDEO)    {
-            Log.d(TAG, "File type video");
-            isImage = false;
-        }
+        isImage = (CameraStates.FILE_TYPE == CameraStates.FILE_IMAGE) ? true : false;
 
         if(isImage) {
             if(UndoManager.getNumberOfStates() == 0) {
@@ -185,9 +179,8 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
                         matrix.setScale(-1, 1);
                     }
                     matrix.postRotate(90);
-                    //TODO Doesn't change anything (much)
-                    matrix.postScale(((float) canvas.getWidth()) / src.getHeight(),
-                            ((float) canvas.getHeight()) / src.getWidth());
+                    matrix.postScale(((float) CameraStates.SCREEN_SIZE.getWidth()) / src.getHeight(),
+                            ((float) CameraStates.SCREEN_SIZE.getHeight()) / src.getWidth());
                     Bitmap resizedBitmap = Bitmap.createBitmap(
                             src, 0, 0, src.getWidth(), src.getHeight(), matrix, true);
                     canvas.drawBitmap(resizedBitmap, 0, 0, null);
@@ -209,15 +202,10 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
             if(UndoManager.getNumberOfStates() == 0) {
                 mVideoPath = mFragment.getVideoPath();
                 UndoManager.addScreenState(Bitmap.createBitmap(// initial state, empty screen
-                        mTextureView.getWidth(), mTextureView.getHeight(), null));
+                        CameraStates.SCREEN_SIZE.getWidth(), CameraStates.SCREEN_SIZE.getHeight(), null));
                 // mFragment.setVideoPath(null); // so we know to skip initing upon resume
             } else  { // device likely resumed, so restore previous session
                 mOverlay.setBitmap(UndoManager.getLastScreenState());
-            }
-            if(CameraStates.isFrontCamera())   {
-                Matrix matrix = new Matrix();
-                matrix.setScale(1, -1, 0, mTextureView.getHeight() / 2);
-                mTextureView.setTransform(matrix);
             }
             // play the video
             try {

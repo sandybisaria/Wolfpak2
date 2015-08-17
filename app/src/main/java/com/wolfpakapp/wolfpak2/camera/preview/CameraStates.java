@@ -1,6 +1,7 @@
 package com.wolfpakapp.wolfpak2.camera.preview;
 
 import android.hardware.camera2.CameraCharacteristics;
+import android.util.Size;
 
 /**
  * Holds the global states of the camera for access across all camera classes
@@ -28,6 +29,8 @@ public class CameraStates {
     public static boolean IS_SOUND; // true if sound is on
 
     public static int FILE_TYPE; // whether image or video is taken
+
+    public static Size SCREEN_SIZE;
 
     public static boolean isFrontCamera()   {
         return (CAMERA_FACE == FRONT);

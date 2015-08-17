@@ -755,7 +755,8 @@ public class CameraController2 extends CameraController implements CameraView.St
     public void onReady(CameraView cv, int width, int height) {
         Log.d(TAG, "CameraView ready");
         mCameraView = cv;
-        mScreenSize = new Size(width, height);
+        CameraStates.SCREEN_SIZE = new Size(width, height);
+        mScreenSize = CameraStates.SCREEN_SIZE;
         openCamera();
     }
 
