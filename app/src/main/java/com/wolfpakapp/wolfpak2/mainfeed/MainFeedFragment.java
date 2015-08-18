@@ -67,7 +67,8 @@ public class MainFeedFragment extends Fragment {
         report = (ImageButton) view.findViewById(R.id.imageButtonf);
 //        share = (ImageButton) view.findViewById(R.id.imageButton1f);
 
-        network.initializeQueryString();
+        //getHowls() initializes the query string.
+//        network.initializeQueryString();
 
         /** Pull Howls from Server **/
         network.getHowls();
