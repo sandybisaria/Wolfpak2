@@ -164,14 +164,19 @@ public class CameraController1 extends CameraController {
 //        if(CameraStates.IS_SOUND == false)
 //            profile.quality = 1005; // supposedly this will prevent audio
 
-        if (CameraStates.IS_SOUND == false) { // with out audio
+        if (CameraStates.IS_SOUND == true) { // with audio
+            mMediaRecorder.setProfile(profile); // use profile directly
+        } else { // without audio
             mMediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
             mMediaRecorder.setVideoFrameRate(profile.videoFrameRate);
             mMediaRecorder.setVideoSize(profile.videoFrameWidth, profile.videoFrameHeight);
             mMediaRecorder.setVideoEncodingBitRate(profile.videoBitRate);
             mMediaRecorder.setVideoEncoder(profile.videoCodec);
-        } else { // with audio
-            mMediaRecorder.setProfile(profile); // use profile directly
+
+            mMediaRecorder.setAudioEncodingBitRate(profile.audioBitRate);
+            mMediaRecorder.setAudioChannels(profile.audioChannels);
+            mMediaRecorder.setAudioSamplingRate(profile.audioSampleRate);
+            //mMediaRecorder.setAudioEncoder(profile.audioCodec);
         }
 
         mMediaRecorder.setOutputFile(mVideoPath);
