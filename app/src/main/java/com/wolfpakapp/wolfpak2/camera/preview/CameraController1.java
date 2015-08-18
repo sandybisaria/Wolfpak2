@@ -105,15 +105,20 @@ public class CameraController1 extends CameraController {
      */
     private void stopPreviewAndFreeCamera() {
         if (mCamera != null) {
-            // stop updating the preview surface.
-            mCamera.stopPreview();
+            try {
+                // stop updating the preview surface.
+                mCamera.stopPreview();
 
-            // Important: Call release() to release the camera for use by other
-            // applications. Applications should release the camera immediately
-            // during onPause() and re-open() it during onResume()).
-            mCamera.release();
-
-            mCamera = null;
+                // Important: Call release() to release the camera for use by other
+                // applications. Applications should release the camera immediately
+                // during onPause() and re-open() it during onResume()).
+                mCamera.release();
+            } catch(RuntimeException e) {
+                Log.e(TAG, "Couldn't release camera");
+                e.printStackTrace();
+            } finally {
+                mCamera = null;
+            }
         }
     }
 
