@@ -212,7 +212,7 @@ public class CameraController1 extends CameraController {
      */
     @Override
     public void startRecording() {
-        mCamera.stopPreview();
+        //mCamera.stopPreview();
         if(setUpMediaRecorder())    {
             try {
                 mMediaRecorder.start();
