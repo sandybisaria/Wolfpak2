@@ -138,12 +138,12 @@ public class CameraController1 extends CameraController {
         if(mCamera == null) return false; // fail!
         CameraStates.FILE_TYPE = CameraStates.FILE_VIDEO;
         // unlock the camera so mediarecorder can use it
-        mCamera.stopPreview();
         mCamera.unlock();
 
         mMediaRecorder = new MediaRecorder();
         mMediaRecorder.setCamera(mCamera);
         // set audio/video sources
+
         if(CameraStates.IS_SOUND == true)
             mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.CAMCORDER);
         mMediaRecorder.setVideoSource(MediaRecorder.VideoSource.CAMERA);
@@ -161,7 +161,18 @@ public class CameraController1 extends CameraController {
         Log.d(TAG, "Camcorder profile audio codec: " + profile.audioCodec);
         Log.d(TAG, "Camcorder profile video bitrate: " + profile.videoBitRate);
         Log.d(TAG, "Camcorder profile video framerate: " + profile.videoFrameRate);
-        mMediaRecorder.setProfile(profile);
+//        if(CameraStates.IS_SOUND == false)
+//            profile.quality = 1005; // supposedly this will prevent audio
+
+        if (CameraStates.IS_SOUND == false) { // with out audio
+            mMediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
+            mMediaRecorder.setVideoFrameRate(profile.videoFrameRate);
+            mMediaRecorder.setVideoSize(profile.videoFrameWidth, profile.videoFrameHeight);
+            mMediaRecorder.setVideoEncodingBitRate(profile.videoBitRate);
+            mMediaRecorder.setVideoEncoder(profile.videoCodec);
+        } else { // with audio
+            mMediaRecorder.setProfile(profile); // use profile directly
+        }
 
         mMediaRecorder.setOutputFile(mVideoPath);
 
@@ -191,6 +202,7 @@ public class CameraController1 extends CameraController {
      */
     @Override
     public void startRecording() {
+        mCamera.stopPreview();
         if(setUpMediaRecorder())    {
             try {
                 mMediaRecorder.start();
@@ -229,6 +241,7 @@ public class CameraController1 extends CameraController {
                 mMediaRecorder.stop();// Stop recording
                 Log.d(TAG, "media Recorder reset");
                 mMediaRecorder.reset();
+                releaseMediaRecorder();
             }
         } catch(IllegalStateException e)    {
             Log.d(TAG, "Media recorder could not be stopped correctly");
