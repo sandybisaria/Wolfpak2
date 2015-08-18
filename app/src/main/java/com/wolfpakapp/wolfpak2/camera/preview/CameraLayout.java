@@ -75,10 +75,12 @@ public class CameraLayout implements CameraController.CameraActionCallback {
     public CameraLayout(CameraFragment fragment, View view) {
         mFragment = fragment;
         // TODO add code to check phone api
-        mCameraController = new CameraController2(fragment.getActivity());
+        mCameraController = new CameraController1(fragment.getActivity());
+        //mCameraController = new CameraController2(fragment.getActivity());
         mCameraController.setCameraActionCallback(this);
+
         mCameraView = (CameraView) view.findViewById(R.id.camera_view);
-        mCameraView.setStateCallback((CameraController2) mCameraController);
+        mCameraView.setStateCallback(mCameraController);
 
         // set global state defaults
         CameraStates.FLASH_STATE = CameraStates.AUTO_FLASH;

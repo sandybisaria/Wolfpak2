@@ -3,6 +3,8 @@ package com.wolfpakapp.wolfpak2.camera.preview;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.util.Size;
+import android.util.SparseIntArray;
+import android.view.Surface;
 
 import java.util.List;
 
@@ -10,7 +12,7 @@ import java.util.List;
  * An encapsulation of camera functions to allow usage of both Camera and Camera2 APIs
  * @author Roland Fong
  */
-public abstract class CameraController {
+public abstract class CameraController implements CameraView.StateCallback {
     /**
      * Callback for all camera actions
      */
@@ -26,6 +28,16 @@ public abstract class CameraController {
      * The {@link com.wolfpakapp.wolfpak2.camera.preview.CameraController.CameraActionCallback} object
      */
     protected CameraActionCallback mCameraActionCallback;
+    /**
+     * Conversions from screen rotation to JPEG Orientation
+     */
+    protected static final SparseIntArray ORIENTATIONS = new SparseIntArray();
+    static {
+        ORIENTATIONS.append(Surface.ROTATION_0, 90);
+        ORIENTATIONS.append(Surface.ROTATION_90, 0);
+        ORIENTATIONS.append(Surface.ROTATION_180, 270);
+        ORIENTATIONS.append(Surface.ROTATION_270, 180);
+    }
     /**
      * The application's context
      */
@@ -79,7 +91,7 @@ public abstract class CameraController {
     /**
      * Switches the camera, reflecting {@link CameraStates} CAMERA_FACE variable and opens new camera
      */
-    public abstract void toggleCamera();
+    public abstract void toggleCamera(); // TODO consider changing CameraState vars here
     /**
      * Toggles through flash states as specified in {@link CameraStates}
      */
@@ -92,15 +104,15 @@ public abstract class CameraController {
      * Returns sizes supported for the camera preview (the screen)
      * @return supported preview sizes
      */
-    protected abstract List<Size> getSupportedPreviewSizes();
+    protected abstract List getSupportedPreviewSizes();
     /**
      * Returns sizes supported for video
      * @return supported video sizes
      */
-    protected abstract List<Size> getSupportedVideoSizes();
+    protected abstract List getSupportedVideoSizes();
     /**
      * Returns sizes supported for saved still images
      * @return supported image sizes
      */
-    protected abstract List<Size> getSupportedImageSizes();
+    protected abstract List getSupportedImageSizes();
 }

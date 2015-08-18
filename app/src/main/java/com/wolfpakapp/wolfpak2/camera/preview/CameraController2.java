@@ -1,5 +1,6 @@
 package com.wolfpakapp.wolfpak2.camera.preview;
 
+import android.annotation.TargetApi;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -18,6 +19,7 @@ import android.hardware.camera2.params.StreamConfigurationMap;
 import android.media.Image;
 import android.media.ImageReader;
 import android.media.MediaRecorder;
+import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.util.Log;
@@ -38,7 +40,8 @@ import java.util.concurrent.TimeUnit;
  * Controls camera actions using the Camera2 API
  * @author Roland Fong
  */
-public class CameraController2 extends CameraController implements CameraView.StateCallback {
+@TargetApi(Build.VERSION_CODES.LOLLIPOP)
+public class CameraController2 extends CameraController {
 
     private static final String TAG = "TAG-CameraController2";
 
@@ -54,17 +57,6 @@ public class CameraController2 extends CameraController implements CameraView.St
     }
 
     private CaptureState mState = CaptureState.STATE_PREVIEW;
-
-    /**
-     * Conversions from screen rotation to JPEG Orientation
-     */
-    private static final SparseIntArray ORIENTATIONS = new SparseIntArray();
-    static {
-        ORIENTATIONS.append(Surface.ROTATION_0, 90);
-        ORIENTATIONS.append(Surface.ROTATION_90, 0);
-        ORIENTATIONS.append(Surface.ROTATION_180, 270);
-        ORIENTATIONS.append(Surface.ROTATION_270, 180);
-    }
 
     private String mVideoPath;
 
@@ -221,9 +213,6 @@ public class CameraController2 extends CameraController implements CameraView.St
         int lensFacing = (CameraStates.CAMERA_FACE == CameraStates.FRONT) ?
                 CameraCharacteristics.LENS_FACING_FRONT : CameraCharacteristics.LENS_FACING_BACK;
 
-        if(lensFacing == CameraCharacteristics.LENS_FACING_BACK)    {
-            Log.d(TAG, "BACK CAMERA TO SET");
-        }
         try {
             // cycle through all the cameras go obtain the correct (front or back) one
             for (String cameraId : mCameraManager.getCameraIdList()) {
@@ -286,7 +275,7 @@ public class CameraController2 extends CameraController implements CameraView.St
     private void stopBackgroundThread() {
         try {
             mBackgroundThread.quitSafely();
-            mBackgroundThread.join(); // if it hangs, just go ahead and end it
+            mBackgroundThread.join(500); // if it hangs more than 0.5s, just go ahead and end it
             mBackgroundThread = null;
             mBackgroundHandler = null;
         } catch (Exception e) {
@@ -707,7 +696,7 @@ public class CameraController2 extends CameraController implements CameraView.St
      * {@inheritDoc}
      */
     @Override
-    protected List<Size> getSupportedPreviewSizes() {
+    protected List getSupportedPreviewSizes() {
         try {
             CameraCharacteristics cc = mCameraManager.getCameraCharacteristics(mCameraId);
             StreamConfigurationMap map = cc.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
@@ -722,7 +711,7 @@ public class CameraController2 extends CameraController implements CameraView.St
      * {@inheritDoc}
      */
     @Override
-    protected List<Size> getSupportedVideoSizes() {
+    protected List getSupportedVideoSizes() {
         try {
             CameraCharacteristics cc = mCameraManager.getCameraCharacteristics(mCameraId);
             StreamConfigurationMap map = cc.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
@@ -737,7 +726,7 @@ public class CameraController2 extends CameraController implements CameraView.St
      * {@inheritDoc}
      */
     @Override
-    protected List<Size> getSupportedImageSizes() {
+    protected List getSupportedImageSizes() {
         try {
             CameraCharacteristics cc = mCameraManager.getCameraCharacteristics(mCameraId);
             StreamConfigurationMap map = cc.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
@@ -765,7 +754,8 @@ public class CameraController2 extends CameraController implements CameraView.St
      */
     @Override
     public void onDestroyed(CameraView cv) {
-
+        Log.d(TAG, "Cameraview destroyed (so camera not needed) background thread stopped");
+        stopBackgroundThread();
     }
 
     /**
