@@ -234,6 +234,7 @@ public class ThumbnailImageView extends ImageView {
                                 .setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
                                     @Override
                                     public void onCompletion(MediaPlayer mp) {
+                                        //TODO Add "Replay?" overlay.
                                         expandedView.setOnTouchListener(new ExpandedViewOnTouchListener());
                                     }
                                 });
@@ -250,11 +251,14 @@ public class ThumbnailImageView extends ImageView {
          * implementation is similar to that of the vote count.
          */
         private final class ExpandedViewOnTouchListener implements View.OnTouchListener {
+            private float initialTouchX = 0;
+            private float initialTouchY = 0;
+
             private float lastTouchX = 0;
             private float lastTouchY = 0;
 
             @Override
-            public boolean onTouch(View view, MotionEvent event) {
+            public boolean onTouch(final View view, MotionEvent event) {
                 final int action = MotionEventCompat.getActionMasked(event);
 
                 switch (action) {
@@ -263,6 +267,9 @@ public class ThumbnailImageView extends ImageView {
                         mManager.getSwipeRefreshLayout().setEnabled(false);
                         // May not be necessary...
                         mManager.requestDisallowInterceptTouchEventForParents(view, true);
+
+                        initialTouchX = event.getRawX();
+                        initialTouchY = event.getRawY();
 
                         lastTouchX = event.getRawX();
                         lastTouchY = event.getRawY();
@@ -289,17 +296,30 @@ public class ThumbnailImageView extends ImageView {
                     }
                     case MotionEvent.ACTION_CANCEL:
                     case MotionEvent.ACTION_UP: {
-                        mManager.getSwipeRefreshLayout().setEnabled(true);
-                        mManager.getRecyclerView().setEnabled(true);
+                        // Ability to replay a video.
+                        if (!mPost.isImage() &&
+                                initialTouchX == lastTouchX && initialTouchY == lastTouchY) {
+                            ((VideoView) view)
+                                    .setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                                        @Override
+                                        public void onCompletion(MediaPlayer mp) {
+                                            view.setOnTouchListener(new ExpandedViewOnTouchListener());
+                                        }
+                                    });
+                            ((VideoView) view).start();
+                        } else {
+                            mManager.getSwipeRefreshLayout().setEnabled(true);
+                            mManager.getRecyclerView().setEnabled(true);
 
-                        // May not be necessary...
-                        mManager.requestDisallowInterceptTouchEventForParents(view, false);
+                            // May not be necessary...
+                            mManager.requestDisallowInterceptTouchEventForParents(view, false);
 
-                        // Recalculate the finalBounds as the expanded View may have been dragged
-                        finalBounds = new Rect((int) view.getX(), (int) view.getY(),
-                                (int) view.getX() + view.getWidth(), (int) view.getY() + view.getHeight());
+                            // Recalculate the finalBounds as the expanded View may have been dragged
+                            finalBounds = new Rect((int) view.getX(), (int) view.getY(),
+                                    (int) view.getX() + view.getWidth(), (int) view.getY() + view.getHeight());
 
-                        animateViewShrinking(view);
+                            animateViewShrinking(view);
+                        }
 
                         return true;
                     }
