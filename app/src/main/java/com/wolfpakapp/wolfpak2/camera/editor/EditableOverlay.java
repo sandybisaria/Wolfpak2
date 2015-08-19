@@ -255,14 +255,19 @@ public class EditableOverlay extends View {
             public void run() {
                 // if image, combine overlay and textureview onto textureview surface
                 Canvas canvas = mTextureView.lockCanvas();
-                Bitmap b = Bitmap.createBitmap(mTextureView.getBitmap());
-                Canvas canvas2 = new Canvas(b); // for saving undo state
+                final Bitmap b = Bitmap.createBitmap(mTextureView.getBitmap());
+                final Canvas canvas2 = new Canvas(b); // for saving undo state
                 canvas.drawBitmap(mTextureView.getBitmap(), 0, 0, null);
                 canvas.drawBitmap(mBitmap, 0, 0, null);
-                canvas2.drawBitmap(mBitmap, 0, 0, null);
                 mTextureView.unlockCanvasAndPost(canvas);
-                UndoManager.addScreenState(b); // save state
-                clearBitmap();
+                mDrawHandler.post(new Runnable() { // save some time and do this in new thread
+                    @Override
+                    public void run() {
+                        canvas2.drawBitmap(mBitmap, 0, 0, null);
+                        UndoManager.addScreenState(b); // save state
+                        clearBitmap();
+                    }
+                });
             }
         });
         mDrawHandler.sendEmptyMessage(BLITTING_OVERLAY);
