@@ -10,10 +10,12 @@ import android.graphics.Color;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
+import android.media.Image;
 import android.media.MediaPlayer;
 import android.os.Build;
 import android.support.v4.view.MotionEventCompat;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.animation.AccelerateDecelerateInterpolator;
@@ -27,6 +29,11 @@ import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
 import com.wolfpakapp.wolfpak2.Post;
 import com.wolfpakapp.wolfpak2.R;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
 
 public class ThumbnailImageView extends ImageView {
     private LeaderboardTabManager mManager = null;
@@ -67,8 +74,8 @@ public class ThumbnailImageView extends ImageView {
             });
         } else {
             // Overlay a play icon on top of the video thumbnail
-            Drawable thumbnailDrawable;
-            Drawable overlayDrawable;
+            final Drawable thumbnailDrawable;
+            final Drawable overlayDrawable;
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 //TODO Retrieve thumbnails from the server
                 thumbnailDrawable = getContext().getDrawable(R.drawable.empty_video_icon);
@@ -79,11 +86,27 @@ public class ThumbnailImageView extends ImageView {
                 overlayDrawable = getContext().getResources().getDrawable(R.drawable.play_icon);
 
             }
-            Drawable[] layers = {thumbnailDrawable, overlayDrawable};
-            setImageDrawable(new LayerDrawable(layers));
-            setBackgroundColor(Color.BLACK);
 
-            setOnClickListener(new ThumbnailOnClickListener());
+            final ImageView dummyImageView = new ImageView(getContext());
+            Picasso.with(getContext()).load(post.getThumbnailUrl()).into(dummyImageView, new Callback() {
+                @Override
+                public void onSuccess() {
+                    Drawable newThumbnailDrawable = dummyImageView.getDrawable();
+
+                    Drawable[] layers = {newThumbnailDrawable, overlayDrawable};
+                    setImageDrawable(new LayerDrawable(layers));
+                    setBackgroundColor(Color.BLACK);
+                    setOnClickListener(new ThumbnailOnClickListener());
+                }
+
+                @Override
+                public void onError() {
+                    Drawable[] layers = {thumbnailDrawable, overlayDrawable};
+                    setImageDrawable(new LayerDrawable(layers));
+                    setBackgroundColor(Color.BLACK);
+                    setOnClickListener(new ThumbnailOnClickListener());
+                }
+            });
         }
     }
 

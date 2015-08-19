@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- From: file:/C:/Users/rfblue2/Documents/GITHUB/Wolfpak2/android-support-v4-preferencefragment/build/intermediates/bundles/debug/res/values-w720dp/values-w720dp.xml -->
+    <!-- From: file:/Users/syedmohideen/Programming/AndroidStudio/Wolfpak2/android-support-v4-preferencefragment/build/intermediates/bundles/debug/res/values-w720dp/values-w720dp.xml -->
     <eat-comment/>
     <dimen name="preference_fragment_padding_side">32dp</dimen>
 </resources>

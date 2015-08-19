@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- From: file:/C:/Users/rfblue2/Documents/GITHUB/Wolfpak2/android-support-v4-preferencefragment/res/values-sw320dp/dimens.xml -->
+    <!-- From: file:/Users/syedmohideen/Programming/AndroidStudio/Wolfpak2/android-support-v4-preferencefragment/res/values-sw320dp/dimens.xml -->
     <eat-comment/>
     <dimen name="preference_fragment_padding_bottom">0dp</dimen>
     <dimen name="preference_fragment_padding_side">16dp</dimen>

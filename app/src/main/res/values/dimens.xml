@@ -4,7 +4,7 @@
     <dimen name="activity_vertical_margin">16dp</dimen>
     <dimen name="activity_global_padding">30dp</dimen>
 
-    <dimen name="leaderboard_item_margin">7dp</dimen>
+    <dimen name="leaderboard_item_margin">4dp</dimen>
     <dimen name="leaderboard_item_thumbnail_margin">7dp</dimen>
     <dimen name="leaderboard_item_handle_margin">14dp</dimen>
     <dimen name="leaderboard_item_view_count_margin">14dp</dimen>

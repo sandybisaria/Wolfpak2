@@ -3,6 +3,7 @@ package com.wolfpakapp.wolfpak2;
 
 import android.content.Context;
 import android.content.res.Resources;
+import android.util.Log;
 
 import com.wolfpakapp.wolfpak2.R;
 import com.wolfpakapp.wolfpak2.leaderboard.LeaderboardFragment;
@@ -18,15 +19,17 @@ public class Post {
     private String handle;
     private boolean isImage;
     private String mediaUrl;
+    private String thumbnailUrl;
     private int originalVoteCount;
     private int updatedVoteCount;
     private VoteStatus voteStatus;
 
-    public Post(int id, String handle, boolean isImage, String mediaUrl,
+    public Post(int id, String handle, boolean isImage, String mediaUrl, String thumbnailUrl,
                 int updatedVoteCount, VoteStatus voteStatus) {
         this.id = id;
         this.handle = handle;
         this.isImage = isImage;
+        this.thumbnailUrl = thumbnailUrl;
         this.mediaUrl = mediaUrl;
         this.voteStatus = voteStatus;
         this.updatedVoteCount = updatedVoteCount;
@@ -58,6 +61,7 @@ public class Post {
         String handle = jsonObject.optString("handle");
         boolean isImage = jsonObject.optBoolean("is_image");
         String mediaUrl = jsonObject.optString("media_url");
+        String thumbnailUrl = jsonObject.optString("thumbnail_url");
         int originalVoteCount = jsonObject.optInt("likes");
         // "Default" like status is 0
         int likeStatus = 0;
@@ -78,7 +82,7 @@ public class Post {
                 break;
             }
         }
-        return new Post(id, handle, isImage, mediaUrl, originalVoteCount,
+        return new Post(id, handle, isImage, mediaUrl, thumbnailUrl, originalVoteCount,
                 Post.VoteStatus.getVoteStatus(likeStatus));
     }
 
@@ -96,6 +100,10 @@ public class Post {
 
     public String getMediaUrl() {
         return mediaUrl;
+    }
+
+    public String getThumbnailUrl() {
+        return thumbnailUrl;
     }
 
     public int getUpdatedVoteCount() {
