@@ -197,7 +197,7 @@ public class MediaSaver {
         // Create an image file name
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
         File imagefile = new File(Environment.getExternalStoragePublicDirectory(
-                Environment.DIRECTORY_PICTURES).getAbsolutePath(), timeStamp + ".jpeg");
+                Environment.DIRECTORY_DCIM).getAbsolutePath(), timeStamp + ".jpeg");
 
         String filePath = imagefile.getAbsolutePath();
 
@@ -318,7 +318,7 @@ public class MediaSaver {
         // create output file
         String outputPath = "MP4_" + timeStamp + ".mp4";
         File storageDir = Environment.getExternalStoragePublicDirectory(
-                Environment.DIRECTORY_MOVIES); // is there a standard video directory?
+                Environment.DIRECTORY_DCIM);
         File video = new File(storageDir, outputPath); //File.createTempFile(outputPath, ".mp4", storageDir);
         Log.d(TAG, "About to start service intent");
 
