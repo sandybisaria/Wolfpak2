@@ -1,5 +1,6 @@
 package com.wolfpakapp.wolfpak2.camera.editor;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -11,6 +12,8 @@ import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.SurfaceTexture;
 import android.media.MediaPlayer;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.renderscript.Allocation;
 import android.renderscript.Element;
 import android.renderscript.RenderScript;
@@ -20,6 +23,7 @@ import android.view.MotionEvent;
 import android.view.TextureView;
 import android.view.View;
 import android.widget.ImageButton;
+import android.widget.Toast;
 import android.widget.VideoView;
 
 import com.wolfpakapp.wolfpak2.R;
@@ -359,6 +363,18 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
                 }
                 break;
             case R.id.btn_upload:
+
+                // ensure working network connection
+                ConnectivityManager connMgr = (ConnectivityManager)
+                        mFragment.getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
+                NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
+
+                if (networkInfo == null || !networkInfo.isConnected()) { // continue if working connection
+                    Log.e(TAG, "Device has no network connection!");
+                    Toast.makeText(mFragment.getActivity(),
+                            "Error, check network connection", Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 if(isImage) {
                     MediaSaver.uploadImage(this, // listener
                             Bitmap.createBitmap(mTextureView.getBitmap()), // background image
