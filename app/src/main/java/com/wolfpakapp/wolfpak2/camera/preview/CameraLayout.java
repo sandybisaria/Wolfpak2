@@ -105,16 +105,14 @@ public class CameraLayout implements CameraController.CameraActionCallback {
         // progress bar and timer for video recording
         mProgressBar = (ProgressBar) view.findViewById(R.id.progress_bar); // progress bar for video
         count = 0;
-        mCountDownTimer = new CountDownTimer(10000, 100) {
+        mCountDownTimer = new CountDownTimer(10000, 10) {
             @Override
             public void onTick(long millisUntilFinished) {
-                count++;
-                mProgressBar.setProgress(count);
+                mProgressBar.setProgress((10000 - (int)millisUntilFinished) / 10);
             }
             @Override
             public void onFinish() {
-                count++;
-                mProgressBar.setProgress(count);
+                mProgressBar.setProgress(1000);
                 stopRecordingVideo();
             }
         };

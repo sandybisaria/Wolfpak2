@@ -4,6 +4,8 @@
     <!-- Define the background properties like color etc -->
     <item android:id="@android:id/background">
         <shape>
+            <corners
+                android:radius="3dp" />
             <solid
                 android:color="#00000000" />
         </shape>
@@ -13,8 +15,10 @@
     <item android:id="@android:id/progress">
         <clip>
             <shape>
+                <corners
+                    android:radius="3dp" />
                 <solid
-                    android:color="#FF0066" />
+                    android:color="#FF3399" />
             </shape>
         </clip>
     </item>
