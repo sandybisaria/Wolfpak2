@@ -201,8 +201,11 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
         } else  {
             if(UndoManager.getNumberOfStates() == 0) {
                 mVideoPath = mFragment.getVideoPath();
-                UndoManager.addScreenState(Bitmap.createBitmap(// initial state, empty screen
-                        CameraStates.SCREEN_SIZE.getWidth(), CameraStates.SCREEN_SIZE.getHeight(), null));
+                Bitmap placeholder = Bitmap.createBitmap(// initial state, empty screen
+                        CameraStates.SCREEN_SIZE.getWidth(), CameraStates.SCREEN_SIZE.getHeight(), null);
+                Canvas temp = new Canvas(placeholder);
+                temp.drawARGB(0, 0, 0, 0); // color the placeholder transparent.
+                UndoManager.addScreenState(placeholder);
                 // mFragment.setVideoPath(null); // so we know to skip initing upon resume
             } else  { // device likely resumed, so restore previous session
                 mOverlay.setBitmap(UndoManager.getLastScreenState());
