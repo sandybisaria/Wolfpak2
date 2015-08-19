@@ -11,6 +11,7 @@ import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.SurfaceTexture;
+import android.graphics.drawable.GradientDrawable;
 import android.media.MediaPlayer;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -28,6 +29,7 @@ import android.widget.VideoView;
 
 import com.wolfpakapp.wolfpak2.R;
 import com.wolfpakapp.wolfpak2.camera.editor.colorpicker.ColorPickerView;
+import com.wolfpakapp.wolfpak2.camera.editor.colorpicker.DrawingUtils;
 import com.wolfpakapp.wolfpak2.camera.preview.CameraFragment;
 import com.wolfpakapp.wolfpak2.camera.preview.CameraStates;
 
@@ -112,7 +114,10 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
             @Override
             public void onColorChanged(int newColor) {
                 if (mOverlay.getState() == EditableOverlay.STATE_DRAW) {
-                    mDrawButton.setBackgroundColor(newColor);
+                    GradientDrawable roundCorners = new GradientDrawable();
+                    roundCorners.setColor(newColor); // Changes this drawbale to use a single color instead of a gradient
+                    roundCorners.setCornerRadius(DrawingUtils.dpToPx(mFragment.getActivity(), 10)); // 10dp
+                    mDrawButton.setBackground(roundCorners);
                     mOverlay.setColor(newColor);
                 } else if (mOverlay.getState() == EditableOverlay.STATE_TEXT) {
                     mOverlay.getTextOverlay().setTextColor(newColor);
@@ -210,7 +215,6 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
                         CameraStates.SCREEN_SIZE.getHeight(),
                         Bitmap.Config.ARGB_8888);
 //                Canvas temp = new Canvas(placeholder);
-//                temp.drawARGB(0, 0, 0, 0); // color the placeholder transparent.
                 UndoManager.addScreenState(placeholder);
                 // mFragment.setVideoPath(null); // so we know to skip initing upon resume
             } else  { // device likely resumed, so restore previous session
@@ -306,6 +310,8 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
                 mIntrinsicScript.setInput(inAlloc);
                 mIntrinsicScript.forEach(outAlloc);
                 outAlloc.copyTo(blurredbmp);
+
+                // TODO rewrite getRoundedCornerBitmap code here to get rid of redundant bitmap drawing
 
                 // first draw what's on textureview, then draw blur
                 blurCanvas.drawBitmap(txbmp, 0, 0, null);
@@ -410,7 +416,11 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
                     mOverlay.setState(EditableOverlay.STATE_DRAW);
                     mOverlay.setColor(mColorPicker.getColor());
                     mColorPicker.setVisibility(View.VISIBLE);
-                    mDrawButton.setBackgroundColor(mOverlay.getColor());
+                    GradientDrawable roundCorners = new GradientDrawable();
+                    roundCorners.setColor(mOverlay.getColor()); // Changes this drawbale to use a single color instead of a gradient
+                    roundCorners.setCornerRadius(DrawingUtils.dpToPx(mFragment.getActivity(), 10)); // 10dp
+//                    roundCorners.setStroke(1, 0xFF000000);
+                    mDrawButton.setBackground(roundCorners);
                 } else {
                     mOverlay.setState(EditableOverlay.STATE_IDLE);
                     mColorPicker.setVisibility(View.GONE);
