@@ -13,6 +13,8 @@ import com.wolfpakapp.wolfpak2.service.SQLiteManager;
 import com.wolfpakapp.wolfpak2.service.ServerRestClient;
 import com.wolfpakapp.wolfpak2.service.UserIdManager;
 
+import java.util.ArrayList;
+
 public class MainActivity extends AppCompatActivity {
 
     private static final int NUM_PAGES = 4;
@@ -20,6 +22,8 @@ public class MainActivity extends AppCompatActivity {
 
     private WolfpakPagerAdapter mPagerAdapter;
     private ViewPager mViewPager;
+
+    private ArrayList<Runnable> backPressedRunnables = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -118,10 +122,20 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public void returnHome() {
-        Intent homeIntent = new Intent(Intent.ACTION_MAIN);
-        homeIntent.addCategory(Intent.CATEGORY_HOME);
-        startActivity(homeIntent);
+    public void addBackPressedRunnable(Runnable runnable) {
+        backPressedRunnables.add(runnable);
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (backPressedRunnables.size() > 0) {
+            for (Runnable runnable : backPressedRunnables) {
+                runnable.run();
+            }
+            backPressedRunnables.clear();
+        } else {
+            super.onBackPressed();
+        }
     }
 
     /**

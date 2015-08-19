@@ -27,6 +27,7 @@ import android.widget.VideoView;
 
 import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
+import com.wolfpakapp.wolfpak2.MainActivity;
 import com.wolfpakapp.wolfpak2.Post;
 import com.wolfpakapp.wolfpak2.R;
 
@@ -38,7 +39,7 @@ import java.net.URL;
 public class ThumbnailImageView extends ImageView {
     private LeaderboardTabManager mManager = null;
     private Post mPost = null;
-    private View parentItemView = null;
+    private View expandedView = null;
 
     public ThumbnailImageView(Context context) {
         super(context);
@@ -55,7 +56,6 @@ public class ThumbnailImageView extends ImageView {
     public void initialize(LeaderboardTabManager manager, Post post, View parentItemView) {
         mManager = manager;
         mPost = post;
-        this.parentItemView = parentItemView;
 
         final ProgressBar progressBar = (ProgressBar) parentItemView.findViewById(R.id.progress_bar);
 
@@ -73,11 +73,10 @@ public class ThumbnailImageView extends ImageView {
                 }
             });
         } else {
-            // Overlay a play icon on top of the video thumbnail
+            // Overlay a play icon on top of the video thumbnail.
             final Drawable thumbnailDrawable;
             final Drawable overlayDrawable;
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                //TODO Retrieve thumbnails from the server
                 thumbnailDrawable = getContext().getDrawable(R.drawable.empty_video_icon);
                 overlayDrawable = getContext().getDrawable(R.drawable.play_icon);
             } else {
@@ -87,6 +86,7 @@ public class ThumbnailImageView extends ImageView {
 
             }
 
+            // Hack that uses an ImageView and Picasso to get the thumbnail drawable.
             final ImageView dummyImageView = new ImageView(getContext());
             Picasso.with(getContext()).load(post.getThumbnailUrl()).into(dummyImageView, new Callback() {
                 @Override
@@ -145,14 +145,14 @@ public class ThumbnailImageView extends ImageView {
                 Picasso.with(getContext()).load(mPost.getMediaUrl()).into(expandedImageView, new Callback() {
                     @Override
                     public void onSuccess() {
+                        expandedView = expandedImageView;
                         baseFrameLayout.addView(expandedImageView);
-
-                        animateViewExpansion(expandedImageView);
+                        animateViewExpansion();
                     }
 
                     @Override
                     public void onError() {
-
+                        // Do nothing.
                     }
                 });
             } else {
@@ -162,17 +162,16 @@ public class ThumbnailImageView extends ImageView {
                 expandedVideoView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN);
                 expandedVideoView.setVideoPath(mPost.getMediaUrl());
 
+                expandedView = expandedVideoView;
                 baseFrameLayout.addView(expandedVideoView);
-
-                animateViewExpansion(expandedVideoView);
+                animateViewExpansion();
             }
         }
 
         /**
          * Animate the expansion of the thumbnail.
-         * @param expandedView The expanded View.
          */
-        private void animateViewExpansion(final View expandedView) {
+        private void animateViewExpansion() {
             // The animating view is used purely for the animation.
             animatingView = new ImageView(getContext());
             animatingView.setScaleType(ImageView.ScaleType.CENTER_CROP);
@@ -226,18 +225,24 @@ public class ThumbnailImageView extends ImageView {
                     expandedView.setVisibility(View.VISIBLE);
                     animatingView.setVisibility(View.GONE);
 
+                    ((MainActivity) mManager.getParentActivity()).addBackPressedRunnable(new Runnable() {
+                        @Override
+                        public void run() {
+                            animateViewShrinking();
+                        }
+                    });
+
                     if (mPost.isImage()) {
                         expandedView.setOnTouchListener(new ExpandedViewOnTouchListener());
                     } else {
                         // Do not set the OnTouchListener until the video is completed.
-                        ((VideoView) expandedView)
-                                .setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-                                    @Override
-                                    public void onCompletion(MediaPlayer mp) {
-                                        //TODO Add "Replay?" overlay.
-                                        expandedView.setOnTouchListener(new ExpandedViewOnTouchListener());
-                                    }
-                                });
+                        ((VideoView) expandedView).setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                            @Override
+                            public void onCompletion(MediaPlayer mp) {
+                                //TODO Add "Replay?" overlay.
+                                expandedView.setOnTouchListener(new ExpandedViewOnTouchListener());
+                            }
+                        });
                         ((VideoView) expandedView).start();
                     }
                 }
@@ -258,7 +263,7 @@ public class ThumbnailImageView extends ImageView {
             private float lastTouchY = 0;
 
             @Override
-            public boolean onTouch(final View view, MotionEvent event) {
+            public boolean onTouch(View view, MotionEvent event) {
                 final int action = MotionEventCompat.getActionMasked(event);
 
                 switch (action) {
@@ -266,7 +271,7 @@ public class ThumbnailImageView extends ImageView {
                         // Make sure that the SwipeRefreshLayout is disabled.
                         mManager.getSwipeRefreshLayout().setEnabled(false);
                         // May not be necessary...
-                        mManager.requestDisallowInterceptTouchEventForParents(view, true);
+                        mManager.requestDisallowInterceptTouchEventForParents(expandedView, true);
 
                         initialTouchX = event.getRawX();
                         initialTouchY = event.getRawY();
@@ -283,8 +288,8 @@ public class ThumbnailImageView extends ImageView {
                         final float dx = x - lastTouchX;
                         final float dy = y - lastTouchY;
 
-                        view.setX(view.getX() + dx);
-                        view.setY(view.getY() + dy);
+                        expandedView.setX(expandedView.getX() + dx);
+                        expandedView.setY(expandedView.getY() + dy);
 
                         lastTouchX = x;
                         lastTouchY = y;
@@ -299,26 +304,15 @@ public class ThumbnailImageView extends ImageView {
                         // Ability to replay a video.
                         if (!mPost.isImage() &&
                                 initialTouchX == lastTouchX && initialTouchY == lastTouchY) {
-                            ((VideoView) view)
-                                    .setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-                                        @Override
-                                        public void onCompletion(MediaPlayer mp) {
-                                            view.setOnTouchListener(new ExpandedViewOnTouchListener());
-                                        }
-                                    });
-                            ((VideoView) view).start();
+                            ((VideoView) expandedView).setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                                @Override
+                                public void onCompletion(MediaPlayer mp) {
+                                    expandedView.setOnTouchListener(new ExpandedViewOnTouchListener());
+                                }
+                            });
+                            ((VideoView) expandedView).start();
                         } else {
-                            mManager.getSwipeRefreshLayout().setEnabled(true);
-                            mManager.getRecyclerView().setEnabled(true);
-
-                            // May not be necessary...
-                            mManager.requestDisallowInterceptTouchEventForParents(view, false);
-
-                            // Recalculate the finalBounds as the expanded View may have been dragged
-                            finalBounds = new Rect((int) view.getX(), (int) view.getY(),
-                                    (int) view.getX() + view.getWidth(), (int) view.getY() + view.getHeight());
-
-                            animateViewShrinking(view);
+                            animateViewShrinking();
                         }
 
                         return true;
@@ -331,9 +325,19 @@ public class ThumbnailImageView extends ImageView {
 
         /**
          * Animate the shrinking of the expanded View.
-         * @param expandedView The expanded View.
          */
-        private void animateViewShrinking(View expandedView) {
+        private void animateViewShrinking() {
+            mManager.getSwipeRefreshLayout().setEnabled(true);
+            mManager.getRecyclerView().setEnabled(true);
+
+            // May not be necessary...
+            mManager.requestDisallowInterceptTouchEventForParents(expandedView, false);
+
+            // Recalculate the finalBounds as the expanded View may have been dragged
+            finalBounds = new Rect((int) expandedView.getX(), (int) expandedView.getY(),
+                    (int) expandedView.getX() + expandedView.getWidth(),
+                    (int) expandedView.getY() + expandedView.getHeight());
+
             mManager.safeEnableSwipeRefreshLayout();
 
             animatingView.setVisibility(View.VISIBLE);
