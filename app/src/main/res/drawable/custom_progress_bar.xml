@@ -18,7 +18,7 @@
                 <corners
                     android:radius="3dp" />
                 <solid
-                    android:color="#FF3399" />
+                    android:color="@color/wolfpak_red" />
             </shape>
         </clip>
     </item>

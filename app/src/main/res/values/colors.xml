@@ -10,5 +10,7 @@
 
     <color name="black_overlay">#66000000</color>
     <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
     <color name="light_gray">#AAEEEEEE</color>
+    <color name="dark_gray">#616161</color>
 </resources>

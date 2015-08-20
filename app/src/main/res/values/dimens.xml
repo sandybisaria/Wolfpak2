@@ -26,5 +26,8 @@
     <dimen name="camera_icon_side_margin">8dp</dimen> <!-- between icons -->
     <dimen name="camera_global_padding">23dp</dimen> <!-- activity_global_padding - camera_icon_padding-->
 
+    <dimen name="upload_dialog_padding">10dp</dimen>
+    <dimen name="upload_dialog_margin">5dp</dimen>
+
     <dimen name="leaderboard_item_elevation">2dp</dimen>
 </resources>

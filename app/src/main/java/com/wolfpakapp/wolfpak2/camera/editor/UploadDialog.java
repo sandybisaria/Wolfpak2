@@ -3,12 +3,12 @@ package com.wolfpakapp.wolfpak2.camera.editor;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.DialogFragment;
-import android.content.DialogInterface;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.CheckBox;
+import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Switch;
 
 import com.wolfpakapp.wolfpak2.R;
 
@@ -21,14 +21,16 @@ public class UploadDialog extends DialogFragment {
     private String handle;
     private boolean isNsfw;
     private EditText title;
-    private CheckBox nsfw;
+    private Switch nsfw;
+    private Button post;
+    private Button cancel;
 
     /* The activity that creates an instance of this dialog fragment must
      * implement this interface in order to receive event callbacks.
      * Each method passes the DialogFragment in case the host needs to query it. */
     public interface UploadDialogListener {
-        public void onDialogPositiveClick(UploadDialog dialog);
-        public void onDialogNegativeClick(UploadDialog dialog);
+        void onDialogPositiveClick(UploadDialog dialog);
+        void onDialogNegativeClick(UploadDialog dialog);
     }
 
     // Use this instance of the interface to deliver action events
@@ -46,23 +48,42 @@ public class UploadDialog extends DialogFragment {
         LayoutInflater inflater = getActivity().getLayoutInflater();
         View view = inflater.inflate(R.layout.dialog_upload, null);
         title = (EditText) view.findViewById(R.id.txt_title);
-        nsfw = (CheckBox) view.findViewById(R.id.cb_nsfw);
+        nsfw = (Switch) view.findViewById(R.id.sw_nsfw);
+        post = (Button) view.findViewById(R.id.btn_post);
+        cancel = (Button) view.findViewById(R.id.btn_cancel);
 
+        post.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                getDialog().dismiss();
+                mListener.onDialogPositiveClick(UploadDialog.this);
+            }
+        });
+        cancel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                getDialog().cancel();
+                mListener.onDialogNegativeClick(UploadDialog.this);
+            }
+        });
         // Inflate and set the layout for the dialog
-        builder.setView(view)
-                .setPositiveButton(R.string.upload, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int id) {
-                        mListener.onDialogPositiveClick(UploadDialog.this);
-                    }
-                })
-                .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int id) {
-                        getDialog().cancel();
-                        mListener.onDialogNegativeClick(UploadDialog.this);
-                    }
-                });
-        return builder.create();
+        builder.setView(view);
+//                .setPositiveButton(R.string.upload, new DialogInterface.OnClickListener() {
+//                    @Override
+//                    public void onClick(DialogInterface dialog, int id) {
+//                        mListener.onDialogPositiveClick(UploadDialog.this);
+//                    }
+//                })
+//                .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+//                    public void onClick(DialogInterface dialog, int id) {
+//                        getDialog().cancel();
+//                        mListener.onDialogNegativeClick(UploadDialog.this);
+//                    }
+//                });
+
+        Dialog dialog = builder.create();
+        dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        return dialog;
     }
 
     /**

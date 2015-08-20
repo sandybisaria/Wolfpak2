@@ -1,31 +1,93 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical" android:layout_width="match_parent"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:padding="@dimen/activity_global_padding">
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:textSize="20sp"
-        android:text="@string/title"/>
-    <EditText
-        android:id="@+id/txt_title"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:maxLength="20" />
+    android:background="#00000000">
+
     <LinearLayout
-        android:layout_width="wrap_content"
+        android:orientation="vertical"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal">
-        <CheckBox
-            android:id="@+id/cb_nsfw"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+        android:background="@drawable/upload_dialog_frame"
+        android:padding="@dimen/upload_dialog_padding"
+        android:layout_alignParentTop="true"
+        android:layout_marginTop="40dp">
+
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:text="@string/title"
+            android:textSize="30sp"
+            android:textColor="@color/dark_gray"
+            android:fontFamily="sans-serif-thin"
+            android:layout_margin="15dp"
+            android:paddingTop="@dimen/upload_dialog_padding"/>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_margin="@dimen/upload_dialog_margin"
+            android:padding="@dimen/upload_dialog_padding">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/nsfwstring"
+                android:textSize="24sp"
+                android:textColor="@color/black"/>
+            <Switch
+                android:id="@+id/sw_nsfw"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+
+        <EditText
+            android:id="@+id/txt_title"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:inputType="text"
+            android:hint="@string/handle_hint"
             android:textSize="20sp"
-            android:text="@string/nsfwstring"/>
+            android:fontFamily="sans-serif-thin"
+            android:background="@drawable/upload_handle_border"
+            android:layout_margin="@dimen/upload_dialog_margin"
+            android:padding="@dimen/upload_dialog_padding"
+            android:maxLength="20"/>
+
+        <Button
+            android:id="@+id/btn_cancel"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/cancel"
+            android:textAllCaps="false"
+            android:textSize="20sp"
+            android:textColor="@color/white"
+            android:fontFamily="sans-serif-thin"
+            android:background="@drawable/upload_button"
+            android:layout_margin="@dimen/upload_dialog_margin"
+            android:padding="@dimen/upload_dialog_padding"/>
+
+        <Button
+            android:id="@+id/btn_post"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/upload"
+            android:textAllCaps="false"
+            android:textSize="20sp"
+            android:textColor="@color/white"
+            android:fontFamily="sans-serif-thin"
+            android:background="@drawable/upload_button"
+            android:layout_margin="@dimen/upload_dialog_margin"
+            android:padding="@dimen/upload_dialog_padding"/>
+
     </LinearLayout>
-</LinearLayout>
+
+    <ImageView
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:layout_centerHorizontal="true"
+        android:layout_alignParentTop="true"
+        android:src="@drawable/upload_icon" />
+
+</RelativeLayout>
