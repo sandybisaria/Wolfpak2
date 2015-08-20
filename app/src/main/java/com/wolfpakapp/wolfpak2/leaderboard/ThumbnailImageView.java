@@ -232,6 +232,7 @@ public class ThumbnailImageView extends ImageView {
                         }
                     });
 
+                    expandedView.requestFocus();
                     if (mPost.isImage()) {
                         expandedView.setOnTouchListener(new ExpandedViewOnTouchListener());
                     } else {

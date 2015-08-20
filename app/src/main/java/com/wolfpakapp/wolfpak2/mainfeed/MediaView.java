@@ -11,21 +11,17 @@ import android.widget.RelativeLayout;
 import android.widget.VideoView;
 
 import com.squareup.picasso.Picasso;
+import com.wolfpakapp.wolfpak2.Post;
 import com.wolfpakapp.wolfpak2.R;
 
 import java.util.Objects;
 
 public class MediaView extends RelativeLayout {
-    public enum LikeStatus {
-        Like,
-        Neutral,
-        Dislike
-    }
 
-    // Private variables
+    private Post mPost;
+
     private ImageView mediaImageView;
-    public VideoView mediaVideoView;
-
+    private VideoView mediaVideoView;
 //    public ImageView mediaVideoViewThumbnail;
     private View likeStatusOverlayView;
 
@@ -46,63 +42,68 @@ public class MediaView extends RelativeLayout {
     }
 
     /**
-     * Handles Changing Opaque View on Top of ImageView/VideoView Based on LikeStatus
-     * - Like: Green
-     * - Dislike: Red
-     * - Neutral: Transparent
-     *
-     * @param likeStatus Status of the view
-     */
-    public void setLikeStatus(LikeStatus likeStatus) {
-        switch (likeStatus) {
-            case Like:
-                this.likeStatusOverlayView.setBackgroundColor(Color.argb(100, 0, 255, 0));
-                break;
-
-            case Dislike:
-                this.likeStatusOverlayView.setBackgroundColor(Color.argb(100, 255, 0, 0));
-                break;
-
-            case Neutral:
-                this.likeStatusOverlayView.setBackgroundColor(Color.argb(0,0,0,0));
-                break;
-
-            default:
-                this.likeStatusOverlayView.setBackgroundColor(Color.argb(0,0,0,0));
-                break;
-        }
-    }
-
-    /**
-     * Initialize media view based on url and media type
-     *
-     * @param mediaUrl AWS S3 URL for the media
-     * @param isImage boolean of whether or not the mediaUrl is an image
-     */
-    public void setMediaView(Uri mediaUrl, String handle, String isImage, String thumbnail) {
-        if (Objects.equals(isImage, "true")) {
-            this.mediaImageView.setVisibility(View.VISIBLE);
-            Picasso.with(this.mediaImageView.getContext()).load(mediaUrl).into(this.mediaImageView);
-
-        } else {
-            this.mediaVideoView.setVisibility(View.VISIBLE);
-            this.mediaVideoView.setVideoURI(mediaUrl);
-            this.mediaVideoView.requestFocus();
-//            this.mediaVideoViewThumbnail.setVisibility(View.VISIBLE);
-//            Picasso.with(this.mediaVideoViewThumbnail.getContext()).load(thumbnail).into(this.mediaVideoViewThumbnail);
-        }
-    }
-
-    /**
-     * Base Initialization for this class
+     * Base initialization for this class
      */
     private void baseInit() {
-        LayoutInflater.from(this.getContext()).inflate(R.layout.media_view, this);
+        LayoutInflater.from(getContext()).inflate(R.layout.media_view, this);
 
-        this.mediaImageView = (ImageView)findViewById(R.id.mediaImageView);
-        this.mediaVideoView = (VideoView)findViewById(R.id.mediaVideoView);
+        mediaImageView = (ImageView)findViewById(R.id.mediaImageView);
+        mediaVideoView = (VideoView)findViewById(R.id.mediaVideoView);
 //        this.mediaVideoViewThumbnail = (ImageView) findViewById(R.id.mediaVideoViewThumbnail);
 
-        this.likeStatusOverlayView = findViewById(R.id.likeStatusOverlayView);
+        likeStatusOverlayView = findViewById(R.id.likeStatusOverlayView);
+    }
+
+    /**
+     * Handles Changing Opaque View on Top of ImageView/VideoView Based on LikeStatus
+     * - Upvote: Green
+     * - Downvote: Red
+     * - Neutral: Transparent
+     *
+     * @param voteStatus Status of the view
+     */
+    public void setLikeStatus(Post.VoteStatus voteStatus) {
+        switch (voteStatus) {
+            case UPVOTED:
+                likeStatusOverlayView.setBackgroundColor(Color.argb(100, 0, 255, 0));
+                break;
+
+            case DOWNVOTED:
+                likeStatusOverlayView.setBackgroundColor(Color.argb(100, 255, 0, 0));
+                break;
+
+            case NOT_VOTED:
+            default:
+                likeStatusOverlayView.setBackgroundColor(Color.argb(0,0,0,0));
+                break;
+        }
+    }
+
+    /**
+     * Initialize media view based on the post.
+     */
+    public void setContent(Post post) {
+        mPost = post;
+
+        if (post.isImage()) {
+            mediaImageView.setVisibility(View.VISIBLE);
+            Picasso.with(mediaImageView.getContext()).load(post.getMediaUrl()).into(mediaImageView);
+
+        } else {
+            mediaVideoView.setVisibility(View.VISIBLE);
+            mediaVideoView.setVideoPath(post.getMediaUrl());
+            mediaVideoView.requestFocus();
+//            mediaVideoViewThumbnail.setVisibility(View.VISIBLE);
+//            Picasso.with(mediaVideoViewThumbnail.getContext()).load(thumbnail).into(mediaVideoViewThumbnail);
+        }
+    }
+
+    /**
+     * If this MediaView contains a video, start it.
+     */
+    public void start() {
+        if (!mPost.isImage()) {
+            mediaVideoView.start();
+        }
     }
 }

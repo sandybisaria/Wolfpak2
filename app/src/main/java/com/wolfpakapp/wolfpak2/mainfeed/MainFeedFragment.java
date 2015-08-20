@@ -11,6 +11,8 @@ import android.widget.RelativeLayout;
 
 import com.wolfpakapp.wolfpak2.R;
 
+import java.util.ArrayList;
+
 
 /**
  * Fragment for showing the main feed
@@ -18,15 +20,12 @@ import com.wolfpakapp.wolfpak2.R;
 public class MainFeedFragment extends Fragment {
 
     /** Layouts & Buttons **/
-    public ImageView refresh_howl;
-    public ImageButton report;
-//    public ImageButton share;
-    public RelativeLayout frame;
+    private ImageButton reportImageButton;
+//    private ImageButton share;
+    private RelativeLayout baseLayout;
 
-    Networking_MainFeed network = new Networking_MainFeed(this);
-    CustomView_MainFeed customView = new CustomView_MainFeed(this, network);
-
-    public int number = 0;
+    MainFeedNetworkingManager networkingManager;
+    MainFeedLayoutManager layoutManager;
 
     /** Facebook Share Features **/
 //    private ShareDialog shareDialog;
@@ -42,10 +41,7 @@ public class MainFeedFragment extends Fragment {
 
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
-
-        // getActivity().setContentView(R.layout.activity_feed);
-
-        /** Initialize SDK & Check Security Key Hash **/
+//        /** Initialize SDK & Check Security Key Hash **/
 //        FacebookSdk.sdkInitialize(getActivity().getApplicationContext());
 //        try {
 //            PackageInfo info = getActivity().getPackageManager().getPackageInfo(
@@ -59,21 +55,14 @@ public class MainFeedFragment extends Fragment {
 //        } catch (PackageManager.NameNotFoundException | NoSuchAlgorithmException ignored) {
 //        }
 
-        /** Reference Refresh and FrameLayout **/
-        refresh_howl = (ImageView) view.findViewById(R.id.imageView2f);
-        frame = (RelativeLayout) view.findViewById(R.id.framef);
+        ImageView refreshImageView = (ImageView) view.findViewById(R.id.main_feed_no_posts_image_view);
+        baseLayout = (RelativeLayout) view.findViewById(R.id.main_feed_base_layout);
+        reportImageButton = (ImageButton) view.findViewById(R.id.main_feed_report_button);
 
-        /** Dialogs **/
-        report = (ImageButton) view.findViewById(R.id.imageButtonf);
-//        share = (ImageButton) view.findViewById(R.id.imageButton1f);
+        networkingManager = new MainFeedNetworkingManager(this);
+        layoutManager = new MainFeedLayoutManager(this);
 
-        //getHowls() initializes the query string.
-//        network.initializeQueryString();
-
-        /** Pull Howls from Server **/
-        network.getHowls();
-
-        /** Facebook Share Feature **/
+//        /** Facebook Share Feature **/
 //        callbackManager = CallbackManager.Factory.create();
 //        List<String> permissionNeeds = Arrays.asList("publish_actions");
 //        manager = LoginManager.getInstance();
@@ -104,29 +93,66 @@ public class MainFeedFragment extends Fragment {
 //                System.out.println("onError");
 //            }
 //        });
-
-        /** Report_Button Listener **/
-        report.setOnClickListener(new View.OnClickListener() {
+        reportImageButton.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View arg0) {
-                network.reportHowl();
+            public void onClick(View view) {
+                networkingManager.reportHowl();
             }
         });
 
-        /** Refresh_Button Listener **/
-        refresh_howl.setOnClickListener(new View.OnClickListener() {
+        refreshImageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View arg0) {
-                number = 0;
-                customView.num = 0;
-                network.getHowls();
+                networkingManager.getHowls();
             }
         });
+
+        networkingManager.getHowls();
+
         super.onViewCreated(view, savedInstanceState);
     }
 
+    @Override
+    public void setUserVisibleHint(boolean isVisibleToUser) {
+        super.setUserVisibleHint(isVisibleToUser);
 
-    /** Share Picture to Facebook **/
+        if (isVisibleToUser) {
+            // Ensure that the fragment is fullscreen when visible.
+            getActivity().getWindow().getDecorView()
+                    .setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN |
+                            View.SYSTEM_UI_FLAG_FULLSCREEN);
+
+            for (OnVisibilityChangeCallbacks callbacks : callbacksArrayList) {
+                callbacks.onBecomesVisible();
+            }
+        } else {
+            for (OnVisibilityChangeCallbacks callbacks : callbacksArrayList) {
+                callbacks.onBecomesInvisible();
+            }
+        }
+    }
+
+    /**
+     * Bring the report button to the front.
+     */
+    public void bringButtonsToFront() {
+//        mainFeed.share.bringToFront();
+        reportImageButton.bringToFront();
+    }
+
+    public RelativeLayout getBaseLayout() {
+        return baseLayout;
+    }
+
+    public MainFeedNetworkingManager getNetworkingManager() {
+        return networkingManager;
+    }
+
+    public MainFeedLayoutManager getLayoutManager() {
+        return layoutManager;
+    }
+
+    //    /** Share Picture to Facebook **/
 //    public void sharePicFB(ImageView imageView) {
 //        imageView.buildDrawingCache();
 //        Bitmap image = imageView.getDrawingCache();
@@ -142,7 +168,7 @@ public class MainFeedFragment extends Fragment {
 //
 //    }
 
-    /** Share Video to Facebook **/
+//    /** Share Video to Facebook **/
 //    public void shareVideoFB(String url){
 //        Uri mUri = Uri.parse(url);
 //        try {
@@ -169,4 +195,21 @@ public class MainFeedFragment extends Fragment {
 //        callbackManager.onActivityResult(requestCode, resultCode, data);
 //    }
 
+    interface OnVisibilityChangeCallbacks {
+        /**
+         * Callback to be invoked when the fragment becomes visible.
+         */
+        void onBecomesVisible();
+
+        /**
+         * Callback to be invoked when the fragment loses visibility.
+         */
+        void onBecomesInvisible();
+    }
+
+    private ArrayList<OnVisibilityChangeCallbacks> callbacksArrayList = new ArrayList<>();
+
+    public void addCallbacks(OnVisibilityChangeCallbacks callbacks) {
+        callbacksArrayList.add(callbacks);
+    }
 }

@@ -65,6 +65,9 @@ public class Post {
         int originalVoteCount = jsonObject.optInt("likes");
         // "Default" like status is 0
         int likeStatus = 0;
+        if (tag == null) {
+            tag = "";
+        }
         switch (tag) {
             case LeaderboardFragment.LOCAL_TAG: {
                 likeStatus = jsonObject.optInt("like_status");
