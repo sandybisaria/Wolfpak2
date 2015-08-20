@@ -16,16 +16,16 @@ import java.util.Objects;
 /**
  * Created by Vishaal on 7/20/15.
  */
-public class CustomView_MainFeed{
+public class MainFeedLayoutManager {
     private RelativeLayout myLayout;
     private MainFeedFragment mainFeed;
-    private Networking_MainFeed network;
+    private NetworkingManager network;
 
     public MediaView[] views;
     public int num;
 
 
-    public CustomView_MainFeed(MainFeedFragment mainFeed, Networking_MainFeed network){
+    public MainFeedLayoutManager(MainFeedFragment mainFeed, NetworkingManager network){
         this.mainFeed = mainFeed;
         this.network = network;
 

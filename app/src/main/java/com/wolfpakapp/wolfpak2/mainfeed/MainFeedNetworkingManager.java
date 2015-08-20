@@ -1,13 +1,8 @@
 package com.wolfpakapp.wolfpak2.mainfeed;
 
 import android.app.AlertDialog;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.location.Location;
-import android.location.LocationListener;
-import android.location.LocationManager;
-import android.os.Bundle;
-import android.telephony.TelephonyManager;
 import android.text.InputType;
 import android.util.Log;
 import android.widget.EditText;
@@ -26,16 +21,15 @@ import org.json.JSONException;
 
 import java.util.Objects;
 import java.util.Random;
-import java.util.UUID;
 
 /**
  * Created by Vishaal on 7/20/15.
  */
-public class Networking_MainFeed{
+public class MainFeedNetworkingManager {
 
     public int length;
     private MainFeedFragment mainFeed;
-    private CustomView_MainFeed customView;
+    private MainFeedLayoutManager customView;
 
     /** Arrays for JSON Object String **/
     public String[] HowlsURL;
@@ -59,9 +53,9 @@ public class Networking_MainFeed{
 
     public int count;
 
-    public Networking_MainFeed(MainFeedFragment mainFeed){
+    public MainFeedNetworkingManager(MainFeedFragment mainFeed){
         this.mainFeed = mainFeed;
-        this.customView = new CustomView_MainFeed(mainFeed, this);
+        this.customView = new MainFeedLayoutManager(mainFeed, this);
 
         length = 10;
         count = 0;
@@ -242,7 +236,7 @@ public class Networking_MainFeed{
                 .setPositiveButton("Yes!", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int id) {
-                        Networking_MainFeed.this.randomstring();
+                        MainFeedNetworkingManager.this.randomstring();
                         AlertDialog.Builder alertDialogBuilder1 = new AlertDialog.Builder(mainFeed.getActivity());
                         // set title
                         alertDialogBuilder1.setTitle("Type Captcha in order to report!");
