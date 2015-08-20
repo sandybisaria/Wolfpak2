@@ -70,8 +70,6 @@ public class TextOverlay extends EditText {
 
     private Context context = null;
 
-    private RelativeLayout.LayoutParams params;
-
     public TextOverlay(Context context)  {
         this(context, null);
     }
@@ -90,7 +88,7 @@ public class TextOverlay extends EditText {
      */
     public void init()  {
         setState(TEXT_STATE_HIDDEN);
-        params = new RelativeLayout.LayoutParams(
+        RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(
                 RelativeLayout.LayoutParams.MATCH_PARENT,
                 RelativeLayout.LayoutParams.WRAP_CONTENT);
         // center the view
@@ -123,7 +121,7 @@ public class TextOverlay extends EditText {
     /**
      * Set whether user can edit text overlay
      * If true, user can change, transform, or recolor text
-     * @param edit
+     * @param edit whether or not the text can be edited
      */
     public void setEditable(boolean edit)   {
         canEdit = edit;
@@ -140,7 +138,7 @@ public class TextOverlay extends EditText {
 
     /**
      * Set the text overlay state
-     * @param state
+     * @param state the state of the text overlay (hidden, default, vertical, free)
      */
     public void setState(int state) {
         switch(state)   {

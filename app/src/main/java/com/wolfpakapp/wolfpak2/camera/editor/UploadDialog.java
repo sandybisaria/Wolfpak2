@@ -3,6 +3,7 @@ package com.wolfpakapp.wolfpak2.camera.editor;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.DialogFragment;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -19,7 +20,6 @@ import com.wolfpakapp.wolfpak2.R;
 public class UploadDialog extends DialogFragment {
 
     private String handle;
-    private boolean isNsfw;
     private EditText title;
     private Switch nsfw;
     private Button post;
@@ -31,6 +31,7 @@ public class UploadDialog extends DialogFragment {
     public interface UploadDialogListener {
         void onDialogPositiveClick(UploadDialog dialog);
         void onDialogNegativeClick(UploadDialog dialog);
+        void onDialogCanceled(UploadDialog dialog);
     }
 
     // Use this instance of the interface to deliver action events
@@ -82,6 +83,7 @@ public class UploadDialog extends DialogFragment {
 //                });
 
         Dialog dialog = builder.create();
+        // required for the rounding of corners to be visible (else sharp corners will be visible)
         dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
         return dialog;
     }
@@ -90,16 +92,7 @@ public class UploadDialog extends DialogFragment {
      * @return isNsfw
      */
     public boolean isNsfw() {
-        isNsfw = nsfw.isChecked();
-        return isNsfw;
-    }
-
-    /**
-     * Sets nsfw
-     * @param isNsfw
-     */
-    public void setNsfw(boolean isNsfw) {
-        this.isNsfw = isNsfw;
+        return nsfw.isChecked();
     }
 
     /**
@@ -112,9 +105,16 @@ public class UploadDialog extends DialogFragment {
 
     /**
      * Sets the title
-     * @param handle
+     * @param handle the title of the upload
      */
     public void setHandle(String handle) {
         this.handle = handle;
     }
+
+    @Override
+    public void onCancel(DialogInterface dialog) {
+        super.onCancel(dialog);
+        mListener.onDialogCanceled(UploadDialog.this);
+    }
+    
 }

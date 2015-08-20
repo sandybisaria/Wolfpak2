@@ -1,7 +1,6 @@
 package com.wolfpakapp.wolfpak2.camera.preview;
 
 import android.graphics.Bitmap;
-import android.hardware.camera2.CameraCharacteristics;
 import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -50,7 +49,6 @@ public class CameraLayout implements CameraController.CameraActionCallback {
     private ImageView mScreenFlash;
 
     private CountDownTimer mCountDownTimer; // to limit video recording to 10s
-    private int count;
 
     /*THREAD & IMAGE HANDLING*/
     private Handler mTouchHandler;
@@ -104,7 +102,6 @@ public class CameraLayout implements CameraController.CameraActionCallback {
 
         // progress bar and timer for video recording
         mProgressBar = (ProgressBar) view.findViewById(R.id.progress_bar); // progress bar for video
-        count = 0;
         mCountDownTimer = new CountDownTimer(10000, 10) {
             @Override
             public void onTick(long millisUntilFinished) {
@@ -257,7 +254,6 @@ public class CameraLayout implements CameraController.CameraActionCallback {
         mCameraController.stopRecording();
         Log.d(TAG, "Progress bar set 0");
         mProgressBar.setProgress(0);
-        count=0;
         Log.d(TAG, "Start editor");
         startEditor();
     }

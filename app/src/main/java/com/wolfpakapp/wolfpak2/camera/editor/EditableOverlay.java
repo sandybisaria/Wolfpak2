@@ -166,7 +166,7 @@ public class EditableOverlay extends View {
 
     /**
      * Sets the state of the overlay
-     * @param state
+     * @param state the overlay state (draw, blur, text)
      */
     public void setState(int state)  {
         mState = state;
@@ -181,7 +181,7 @@ public class EditableOverlay extends View {
 
     /**
      * Sets the color of drawing tool
-     * @param color
+     * @param color the draw tool color
      */
     public void setColor(int color)   {
         mColor = color;
@@ -301,9 +301,6 @@ public class EditableOverlay extends View {
         mScaleDetector.onTouchEvent(event);
         mRotationDetector.onTouchEvent(event);
 
-        float x = event.getX();
-        float y = event.getY();
-
         if(!mDrawHandler.hasMessages(BLITTING_OVERLAY)) {
             switch (event.getAction()) {
                 case MotionEvent.ACTION_DOWN:
@@ -400,8 +397,8 @@ public class EditableOverlay extends View {
             return angle;
         }
 
-        public static interface OnRotationGestureListener {
-            public void OnRotation(RotationGestureDetector rotationDetector);
+        public interface OnRotationGestureListener {
+            void OnRotation(RotationGestureDetector rotationDetector);
         }
     }
 }

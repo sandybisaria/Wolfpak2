@@ -3,7 +3,6 @@ package com.wolfpakapp.wolfpak2.camera.editor;
 import android.app.Service;
 import android.content.ContentValues;
 import android.content.Intent;
-import android.hardware.camera2.CameraCharacteristics;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.IBinder;
@@ -11,23 +10,19 @@ import android.os.Looper;
 import android.os.Message;
 import android.os.Process;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.github.hiteshsondhi88.libffmpeg.ExecuteBinaryResponseHandler;
 import com.github.hiteshsondhi88.libffmpeg.exceptions.FFmpegCommandAlreadyRunningException;
 import com.loopj.android.http.RequestParams;
-import com.wolfpakapp.wolfpak2.camera.preview.CameraLayout;
 import com.wolfpakapp.wolfpak2.camera.preview.CameraStates;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.HashMap;
 
 public class VideoSavingService extends Service {
 
     private static final String TAG = "TAG-VideoSavingService";
 
-    private Looper mServiceLooper;
     private ServiceHandler mServiceHandler;
 
     /**
@@ -139,7 +134,7 @@ public class VideoSavingService extends Service {
 
     @Override
     public void onCreate() {
-        requests = new HashMap<Message, Intent>();
+        requests = new HashMap<>();
         // Start up the thread running the service.  Note that we create a
         // separate thread because the service normally runs in the process's
         // main thread, which we don't want to block.  We also make it
@@ -149,8 +144,7 @@ public class VideoSavingService extends Service {
         thread.start();
 
         // Get the HandlerThread's Looper and use it for our Handler
-        mServiceLooper = thread.getLooper();
-        mServiceHandler = new ServiceHandler(mServiceLooper);
+        mServiceHandler = new ServiceHandler(thread.getLooper());
     }
 
     @Override

@@ -24,7 +24,6 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.util.Log;
 import android.util.Size;
-import android.util.SparseIntArray;
 import android.view.Surface;
 
 import java.io.File;
@@ -356,7 +355,7 @@ public class CameraController2 extends CameraController {
             // We configure the size of default buffer to be the size of camera preview we want.
             texture.setDefaultBufferSize(mPreviewSize.getWidth(), mPreviewSize.getHeight());
 
-            List<Surface> surfaces = new ArrayList<Surface>(); // the surfaces to pass to capturesession
+            List<Surface> surfaces = new ArrayList<>(); // the surfaces to pass to capturesession
 
             // This is the output Surface we need to start preview.
             Surface previewSurface = new Surface(texture);

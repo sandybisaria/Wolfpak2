@@ -5,34 +5,25 @@ import android.app.ProgressDialog;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
-import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Matrix;
-import android.hardware.camera2.CameraCharacteristics;
 import android.location.Location;
 import android.media.ThumbnailUtils;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Log;
-import android.view.TextureView;
 import android.widget.Toast;
 
-import com.github.hiteshsondhi88.libffmpeg.ExecuteBinaryResponseHandler;
 import com.github.hiteshsondhi88.libffmpeg.FFmpeg;
-import com.github.hiteshsondhi88.libffmpeg.LoadBinaryResponseHandler;
-import com.github.hiteshsondhi88.libffmpeg.exceptions.FFmpegCommandAlreadyRunningException;
-import com.github.hiteshsondhi88.libffmpeg.exceptions.FFmpegNotSupportedException;
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
 import com.wolfpakapp.wolfpak2.WolfpakSQLiteHelper;
 import com.wolfpakapp.wolfpak2.WolfpakServiceProvider;
-import com.wolfpakapp.wolfpak2.camera.preview.CameraLayout;
 import com.wolfpakapp.wolfpak2.service.LocationProvider;
 import com.wolfpakapp.wolfpak2.service.NoLocationException;
 import com.wolfpakapp.wolfpak2.service.SQLiteManager;
@@ -50,7 +41,7 @@ import java.io.OutputStream;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.HashMap;
+import java.util.Locale;
 
 /**
  * Handles the saving of media to the phone and to the server
@@ -97,9 +88,10 @@ public class MediaSaver {
     private static ProgressDialog mProgressDialog;
 
     public interface MediaSaverListener {
-        public void onDownloadCompleted();
-        public void onUploadCompleted();
-    };
+        void onDownloadCompleted();
+        void onUploadCompleted();
+        void onUploadCanceled();
+    }
 
     /**
      * Notifies when upload or download completes.  Since this is used once during each upload
@@ -117,8 +109,8 @@ public class MediaSaver {
 
         /**
          * Image constructor
-         * @param image
-         * @param overlay
+         * @param image the image background
+         * @param overlay the foreground overlay
          */
         public MediaObject(Bitmap image, Bitmap overlay)    {
             this.overlay = overlay;
@@ -127,8 +119,8 @@ public class MediaSaver {
 
         /**
          * Video Constructor
-         * @param videoPath
-         * @param overlay
+         * @param videoPath the path of background video
+         * @param overlay the foreground overlay
          */
         public MediaObject(String videoPath, Bitmap overlay)    {
             this.videoPath = videoPath;
@@ -170,7 +162,7 @@ public class MediaSaver {
                 try {
                     saveImagetoFile(imageObject);
                 } catch(IOException e)  {
-                    Toast.makeText(mActivity, "Save encountered an error", Toast.LENGTH_SHORT);
+                    Toast.makeText(mActivity, "Save encountered an error", Toast.LENGTH_SHORT).show();
                     e.printStackTrace();
                 }
                 return null;
@@ -195,7 +187,7 @@ public class MediaSaver {
      */
     private static String saveImagetoFile(MediaObject imageObject) throws IOException   {
         // Create an image file name
-        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(new Date());
         File storageDir = new File(Environment.getExternalStoragePublicDirectory(
                 Environment.DIRECTORY_DCIM), "/Wolfpak");
         if(!storageDir.exists()) {
@@ -223,7 +215,7 @@ public class MediaSaver {
                 MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
 
         // close streams
-        if (null != output) {
+        if (output != null) {
             try {
                 output.close();
             } catch (IOException e) {
@@ -369,6 +361,7 @@ public class MediaSaver {
      * @param params the request parameters
      * @param isImage whether the upload is for an image or not
      */
+    @SuppressWarnings("deprecation")
     public static void upload(final RequestParams params, final boolean isImage)   {
         // ensure working network connection
         ConnectivityManager connMgr = (ConnectivityManager)
@@ -402,7 +395,7 @@ public class MediaSaver {
             });
         } else { // alert user if connection fails
             Log.e(TAG, "Couldn't connect to network");
-            Toast.makeText(mActivity, "Upload failed: Couldn't connect to network", Toast.LENGTH_SHORT);
+            Toast.makeText(mActivity, "Upload failed: Couldn't connect to network", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -414,7 +407,7 @@ public class MediaSaver {
     public static RequestParams contentValuesToRequestParams(ContentValues values)    {
         RequestParams requestParams = new RequestParams();
         for(String key : values.keySet()) {
-            if(key != MEDIA && key != THUMBNAIL)
+            if(!key.equals(MEDIA) && !key.equals(THUMBNAIL))
                 requestParams.put(key, values.get(key));
         }
         // media and thumbnail must be handled separately since they are stored as strings in
@@ -454,30 +447,30 @@ public class MediaSaver {
         sqLiteManager.close();
     }
 
-    /**
-     * Waits 5 seconds.  For stalling progress dialog to buy some time
-     */
-    private static void stall(final boolean isUpload) {
-        (new Thread(new Runnable()  {
-            @Override
-            public void run() {
-                // just wait to buy some time
-                try {
-                    Thread.sleep(3000);
-                } catch(InterruptedException e) {
-                    e.printStackTrace();
-                }
-                mProgressDialog.dismiss();
-                if(isUpload) {
-                    mMediaSaverListener.onUploadCompleted();
-                }
-            }
-        })).start();
-    }
+//    /**
+//     * Waits 5 seconds.  For stalling progress dialog to buy some time
+//     */
+//    private static void stall(final boolean isUpload) {
+//        (new Thread(new Runnable()  {
+//            @Override
+//            public void run() {
+//                // just wait to buy some time
+//                try {
+//                    Thread.sleep(3000);
+//                } catch(InterruptedException e) {
+//                    e.printStackTrace();
+//                }
+//                mProgressDialog.dismiss();
+//                if(isUpload) {
+//                    mMediaSaverListener.onUploadCompleted();
+//                }
+//            }
+//        })).start();
+//    }
 
     /**
      * Inputs user and location into {@link ContentValues} object
-     * @param values
+     * @param values the contentvalues
      * @return updated ContentValues
      */
     private static void generateUploadParams(final ContentValues values)    {
@@ -500,9 +493,9 @@ public class MediaSaver {
 
     /**
      * Displays upload dialog prompting user for handle and is_nsfw
-     * @param values
-     * @param mediaObject
-     * @param isImage
+     * @param values the contentvalues
+     * @param mediaObject the media to be uploaded
+     * @param isImage whether media is image
      */
     private static void showUploadDialog(final ContentValues values,
                                          final MediaObject mediaObject, final boolean isImage)  {
@@ -530,7 +523,7 @@ public class MediaSaver {
                     }
                     // cache and upload
                     cacheMedia(values);
-                    upload(contentValuesToRequestParams(values), isImage);
+                    upload(contentValuesToRequestParams(values), true);
                 } else {
                     // save video; service will worry about caching and uploading
                     try {
@@ -545,6 +538,12 @@ public class MediaSaver {
 
             @Override
             public void onDialogNegativeClick(UploadDialog dialog) {
+                mMediaSaverListener.onUploadCanceled();
+            }
+
+            @Override
+            public void onDialogCanceled(UploadDialog dialog) {
+                mMediaSaverListener.onUploadCanceled();
             }
         });
         Log.d(TAG, "showing upload dialog");
@@ -598,7 +597,7 @@ public class MediaSaver {
     }
 
     /**
-     * @param ffmpeg
+     * @param ffmpeg the FFmpeg object
      */
     public static void setFfmpeg(FFmpeg ffmpeg) {
         mFfmpeg = ffmpeg;
@@ -612,7 +611,7 @@ public class MediaSaver {
     }
 
     /**
-     * @param mActivity
+     * @param mActivity the activity
      */
     public static void setActivity(Activity mActivity) {
         MediaSaver.mActivity = mActivity;
