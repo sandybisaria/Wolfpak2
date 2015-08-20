@@ -108,7 +108,9 @@ public class MainFeedNetworkingManager {
                             }
                         }
 
-                        layoutManager.loadViews(postArrayDeque);
+                        if (postArrayDeque.size() > 0) {
+                            layoutManager.loadViews(postArrayDeque);
+                        }
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
