@@ -33,8 +33,6 @@ import com.wolfpakapp.wolfpak2.camera.editor.colorpicker.DrawingUtils;
 import com.wolfpakapp.wolfpak2.camera.preview.CameraFragment;
 import com.wolfpakapp.wolfpak2.camera.preview.CameraStates;
 
-import java.nio.ByteBuffer;
-
 /**
  * A fragment that displays a captured image or loops video for the user to edit
  * @author Roland Fong
@@ -48,8 +46,6 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
      */
     private CameraFragment mFragment;
     private static boolean isImage;
-
-    private boolean mIsTextureReady = false;
 
     private static String mVideoPath;
 
@@ -84,7 +80,6 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
                 @Override
                 public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
                     //Log.d(TAG, "Edit Texture Avail");
-                    mIsTextureReady = true;
                     mTextureView.setTransform(new Matrix());
                     displayMedia();
                 }
@@ -172,7 +167,7 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
      * Displays media onto textureview
      */
     private void displayMedia() {
-        isImage = (CameraStates.FILE_TYPE == CameraStates.FILE_IMAGE) ? true : false;
+        isImage = (CameraStates.FILE_TYPE == CameraStates.FILE_IMAGE);
 
         if(isImage) {
             if(UndoManager.getNumberOfStates() == 0) {
@@ -333,11 +328,6 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
             default: break;
         }
 
-    }
-
-    public void onSurfaceTextureAvailable() {
-        mTextureView.setTransform(new Matrix());
-        displayMedia();
     }
 
     public void onPause() {
@@ -542,11 +532,13 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
                 if(CameraStates.FILE_TYPE == CameraStates.FILE_IMAGE) {
                     //Log.d(TAG, "Showing TextureView");
                     mTextureView.setVisibility(View.VISIBLE);
-                    if (mIsTextureReady) {
-                        onSurfaceTextureAvailable();
+                    if (mTextureView.isAvailable()) {
+                        Log.d(TAG, "Surface texture ready, calling onsurfaceavail");
+                        displayMedia();
                     }
                 }
-                else {
+                else { // video
+                    mBlurButton.setVisibility(View.INVISIBLE); // no blur on video
                     //Log.d(TAG, "Showing VidView");
                     mVideoView.setVisibility(View.VISIBLE);
                     displayMedia();

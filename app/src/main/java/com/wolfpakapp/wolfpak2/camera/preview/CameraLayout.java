@@ -237,7 +237,7 @@ public class CameraLayout implements CameraController.CameraActionCallback {
 
                     mCameraController.startRecording();
 
-                    Thread.sleep(1000); // make sure the video lasts at least 1s
+                    Thread.sleep(750); // make sure the video lasts at least 0.75s
                     Log.d(TAG, "1s wait");
                     mVideoStarterThread.quitSafely();
                 } catch (InterruptedException e1) {

@@ -23,7 +23,7 @@
     <dimen name="camera_icon_padding">7dp</dimen>
     <dimen name="camera_icon_width">50dp</dimen>
     <dimen name="camera_icon_height">50dp</dimen>
-    <dimen name="camera_icon_side_margin">3dp</dimen> <!-- between icons -->
+    <dimen name="camera_icon_side_margin">8dp</dimen> <!-- between icons -->
     <dimen name="camera_global_padding">23dp</dimen> <!-- activity_global_padding - camera_icon_padding-->
 
     <dimen name="leaderboard_item_elevation">2dp</dimen>
