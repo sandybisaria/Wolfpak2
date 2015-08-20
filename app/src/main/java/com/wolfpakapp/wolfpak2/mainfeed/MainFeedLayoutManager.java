@@ -1,10 +1,11 @@
 package com.wolfpakapp.wolfpak2.mainfeed;
 
-import android.graphics.Point;
+import android.animation.AnimatorSet;
+import android.animation.ObjectAnimator;
 import android.support.v4.view.MotionEventCompat;
-import android.view.Display;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.animation.AccelerateDecelerateInterpolator;
 import android.view.animation.Animation;
 import android.view.animation.TranslateAnimation;
 import android.widget.RelativeLayout;
@@ -27,60 +28,101 @@ public class MainFeedLayoutManager {
 
     public MainFeedLayoutManager(MainFeedFragment mainFeed){
         this.mainFeed = mainFeed;
-        baseLayout = mainFeed.getBaseLayout();
     }
 
-    /** PreLoad Views **/
+    /**
+     * Load the views using the posts from the server.
+     * @param postArrayDeque The ArrayDeque of posts (from the NetworkingManager).
+     */
     public void loadViews(ArrayDeque<Post> postArrayDeque) {
         networkingManager = mainFeed.getNetworkingManager();
+        baseLayout = mainFeed.getBaseLayout();
 
+        // Instantiate a MediaView object for each post.
         ArrayList<MediaView> mediaViewList = new ArrayList<>();
         for (Post post : postArrayDeque) {
             MediaView mediaView = new MediaView(mainFeed.getActivity());
             mediaView.setContent(post);
-            mediaView.setOnTouchListener(new ImageOnTouchListener());
+            mediaView.setOnTouchListener(new HowlOnTouchListener());
             mediaViewList.add(mediaView);
             mediaViewArrayDeque.addLast(mediaView);
         }
 
-        // Add posts to the layout in reverse order (so that the first, top, post is added
+        // Add posts to the layout in reverse order (so that the topmost post is added first).
         for (int idx = mediaViewList.size() - 1; idx >= 0; idx--) {
             baseLayout.addView(mediaViewList.get(idx));
         }
 
         mainFeed.bringButtonsToFront();
+
+        mediaViewArrayDeque.peekFirst().start();
+
+        mainFeed.addCallbacks(new MainFeedFragment.OnVisibilityChangeCallbacks() {
+            @Override
+            public void onBecomesVisible() {
+
+            }
+
+            @Override
+            public void onBecomesInvisible() {
+                returnToPosition();
+            }
+        });
     }
 
-    /** Slide Up Animation **/
-    public void SlideToAbove(View v) {
+    /**
+     * Animate the topmost view so that it slides up and disappears.
+     */
+    private void slideToTop() {
+        View view = mediaViewArrayDeque.peekFirst();
         Animation slide;
         slide = new TranslateAnimation(Animation.RELATIVE_TO_PARENT, 0.0f,
                 Animation.RELATIVE_TO_PARENT, 0.0f, Animation.RELATIVE_TO_PARENT,
                 0.0f, Animation.RELATIVE_TO_PARENT, -5.0f);
         slide.setDuration(750);
 
-        v.startAnimation(slide);
-        v.animate().rotation(-30).start();
+        view.startAnimation(slide);
+        view.animate().rotation(-30).start();
 
-        baseLayout.removeView(v);
+        baseLayout.removeView(view);
     }
 
-    /** Slide Down Animation **/
-    public void SlideToDown(View v) {
+    /**
+     * Animate the topmost view so that it slides down and disappears.
+     */
+    private void slideToBottom() {
+        View view = mediaViewArrayDeque.peekFirst();
         Animation slide;
         slide = new TranslateAnimation(Animation.RELATIVE_TO_PARENT, 0.0f,
                 Animation.RELATIVE_TO_PARENT, 0.0f, Animation.RELATIVE_TO_PARENT,
-                0.0f, Animation.RELATIVE_TO_PARENT, 5.2f);
-        slide.setDuration(751);
+                0.0f, Animation.RELATIVE_TO_PARENT, 5.0f);
+        slide.setDuration(750);
 
-        v.startAnimation(slide);
-        v.animate().rotation(30).start();
+        view.startAnimation(slide);
+        view.animate().rotation(30).start();
 
-        baseLayout.removeView(v);
+        baseLayout.removeView(view);
     }
 
-    /** DragView Function **/
-    public final class ImageOnTouchListener implements View.OnTouchListener {
+    /**
+     * Return the topmost view to its original position.
+     */
+    public void returnToPosition() {
+        View view = mediaViewArrayDeque.peekFirst();
+        AnimatorSet set = new AnimatorSet();
+        set.playTogether(ObjectAnimator
+                        .ofFloat(view, View.X, view.getX(), 0f),
+                ObjectAnimator
+                        .ofFloat(view, View.Y, view.getY(), 0f));
+        set.setDuration(750);
+        set.setInterpolator(new AccelerateDecelerateInterpolator());
+        set.start();
+    }
+
+    public final class HowlOnTouchListener implements View.OnTouchListener {
+
+        private float initialTouchY = 0;
+
         private float lastTouchX = 0;
         private float lastTouchY = 0;
 
@@ -90,6 +132,8 @@ public class MainFeedLayoutManager {
 
             switch (action) {
                 case MotionEvent.ACTION_DOWN: {
+                    initialTouchY = event.getRawY();
+
                     lastTouchX = event.getRawX();
                     lastTouchY = event.getRawY();
 
@@ -107,22 +151,20 @@ public class MainFeedLayoutManager {
 
                     lastTouchX = x;
                     lastTouchY = y;
+
+//                    Display display = mainFeed.getActivity().getWindowManager().getDefaultDisplay();
+//                    Point size = new Point();
+//                    display.getSize(size);
+//                    double maxY = size.y;
+//                    double green = maxY * 0.35;
+//                    double red = maxY * 0.65;
+
                     MediaView mediaView = (MediaView) v;
-
-                    Display display = mainFeed.getActivity().getWindowManager().getDefaultDisplay();
-                    Point size = new Point();
-                    display.getSize(size);
-                    double maxY = size.y;
-                    double green = maxY * 0.35;
-                    double red = maxY * 0.65;
-
-                    if(event.getRawY()<green){
+                    if (isUpvoting()) {
                         mediaView.setLikeStatus(Post.VoteStatus.UPVOTED);
-                    }
-                    else if(event.getRawY()>red){
+                    } else if (isDownvoting()) {
                         mediaView.setLikeStatus(Post.VoteStatus.DOWNVOTED);
-                    }
-                    else{
+                    } else {
                         mediaView.setLikeStatus(Post.VoteStatus.NOT_VOTED);
                     }
                     break;
@@ -131,53 +173,55 @@ public class MainFeedLayoutManager {
                 case MotionEvent.ACTION_CANCEL:
                     break;
                 case MotionEvent.ACTION_UP: {
-                    MediaView mediaView = (MediaView) v;
-                    Display display = mainFeed.getActivity().getWindowManager().getDefaultDisplay();
-                    Point size = new Point();
-                    display.getSize(size);
-                    double maxY = size.y;
-                    double green = maxY * 0.35;
-                    double red = maxY * 0.66;
+//                    Display display = mainFeed.getActivity().getWindowManager().getDefaultDisplay();
+//                    Point size = new Point();
+//                    display.getSize(size);
+//                    double maxY = size.y;
+//                    double green = maxY * 0.35;
+//                    double red = maxY * 0.66;
 
-                    if(event.getRawY() < green){
+                    MediaView mediaView = (MediaView) v;
+                    if (isUpvoting()) {
                         networkingManager.updateLikeStatus(Post.VoteStatus.UPVOTED);
                         mediaView.setLikeStatus(Post.VoteStatus.UPVOTED);
-                        SlideToAbove(mediaViewArrayDeque.pollFirst());
-                    }
-                    else if(event.getRawY()>red){
+                        slideToTop();
+                        mediaViewArrayDeque.pollFirst();
+
+                        mediaViewArrayDeque.peekFirst().start();
+                    } else if (isDownvoting()) {
                         networkingManager.updateLikeStatus(Post.VoteStatus.DOWNVOTED);
                         mediaView.setLikeStatus(Post.VoteStatus.DOWNVOTED);
-                        SlideToDown(mediaViewArrayDeque.pollFirst());
+                        slideToBottom();
+                        mediaViewArrayDeque.pollFirst();
+
+                        mediaViewArrayDeque.peekFirst().start();
                     } else {
                         //TODO Animate to original position.
-                        v.setX(0);
-                        v.setY(0);
+                        returnToPosition();
                         mediaView.setLikeStatus(Post.VoteStatus.NOT_VOTED);
                     }
 
-                    try {
-//                        mediaViewArrayDeque[mainFeed.number].mediaVideoViewThumbnail.setVisibility(View.GONE);
-                        mediaViewArrayDeque.peekFirst().mediaVideoView.start();
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-
-
-                    /** AUTO REFRESH **/
-                    try {
-                        Thread.sleep(100);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
+//                    mediaViewArrayDeque.peekFirst().mediaVideoViewThumbnail.setVisibility(View.GONE);
 
                     if(mediaViewArrayDeque.size() == 0){
-                        networkingManager.getHowls();
+                        //TODO Do we want auto-refresh?
+//                        networkingManager.getHowls();
                     }
 
                     break;
                 }
             }
             return true;
+        }
+
+        private final float THRESHOLD = 300;
+
+        private boolean isUpvoting() {
+            return lastTouchY - initialTouchY < -THRESHOLD;
+        }
+
+        private boolean isDownvoting() {
+            return lastTouchY - initialTouchY > THRESHOLD;
         }
     }
 }

@@ -6,7 +6,6 @@ import android.content.SharedPreferences;
 import android.location.Location;
 import android.preference.PreferenceManager;
 import android.text.InputType;
-import android.util.Log;
 import android.widget.EditText;
 
 import com.loopj.android.http.AsyncHttpClient;
@@ -44,23 +43,30 @@ public class MainFeedNetworkingManager {
     /**
      * Random Number
      **/
-    private String random_string;
-    private String random_input;
+    private String randomString;
+    private String randomInput;
 
     public MainFeedNetworkingManager(MainFeedFragment mainFeed) {
+        // Retrieve a server REST client object to be used for calls to the server.
         mClient = (ServerRestClient) WolfpakServiceProvider
                 .getServiceManager(WolfpakServiceProvider.SERVERRESTCLIENT);
 
         this.mainFeed = mainFeed;
 
-        random_input = "";
+        randomInput = "";
     }
 
+    /**
+     * Initialize the request parameters for the get request.
+     * @throws NoLocationException
+     */
     public void initializeRequestParams() throws NoLocationException {
+        // Retrieve the stored user ID.
         String userId = ((UserIdManager) WolfpakServiceProvider
                 .getServiceManager(WolfpakServiceProvider.USERIDMANAGER)).getDeviceId();
         mParams.add("user_id", userId);
 
+        // Retrieve the isNSFW setting.
         SharedPreferences sharedPreferences = PreferenceManager
                 .getDefaultSharedPreferences(mainFeed.getActivity());
         boolean isNSFW = sharedPreferences.getBoolean(mainFeed.getString(R.string.nsfw_switch_key), false);
@@ -68,6 +74,7 @@ public class MainFeedNetworkingManager {
         isNSFWString = isNSFWString.substring(0, 1).toUpperCase() + isNSFWString.substring(1);
         mParams.add("is_nsfw", isNSFWString);
 
+        // Retrieve the current location.
         Location location = ((LocationProvider) WolfpakServiceProvider
                 .getServiceManager(WolfpakServiceProvider.LOCATIONPROVIDER)).getLastLocation();
         mParams.add("latitude", Double.toString(location.getLatitude()));
@@ -81,7 +88,7 @@ public class MainFeedNetworkingManager {
         layoutManager = mainFeed.getLayoutManager();
 
         try {
-            // Refresh the query string with the latest location.
+            // Refresh the query parameters.
             initializeRequestParams();
             mClient.get("posts/", mParams, new AsyncHttpResponseHandler() {
 
@@ -94,13 +101,12 @@ public class MainFeedNetworkingManager {
                         for (int x = 0; x < arr.length(); x++) {
                             try {
                                 Post post = Post.parsePostJSONObject(null, arr.getJSONObject(x));
+                                // Add each new post to the end of the deque.
                                 postArrayDeque.addLast(post);
                             } catch (JSONException e) {
                                 e.printStackTrace();
                             }
                         }
-
-                        Log.d("HELP", postArrayDeque.toString());
 
                         layoutManager.loadViews(postArrayDeque);
                     } catch (JSONException e) {
@@ -120,7 +126,7 @@ public class MainFeedNetworkingManager {
     }
 
     /**
-     * Update the like status of the post.
+     * Update the like status of the topmost post.
      **/
     public void updateLikeStatus(Post.VoteStatus voteStatus) {
         Post post = postArrayDeque.pollFirst();
@@ -138,7 +144,7 @@ public class MainFeedNetworkingManager {
     }
 
     /**
-     * Asynchronous HTTP Client - Reports Image/Video in Server
+     * Report the topmost post.
      **/
     public void reportHowl() {
         AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(mainFeed.getActivity());
@@ -156,7 +162,7 @@ public class MainFeedNetworkingManager {
                 .setPositiveButton("Yes!", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int id) {
-                        MainFeedNetworkingManager.this.randomstring();
+                        MainFeedNetworkingManager.this.generateRandomString();
                         AlertDialog.Builder alertDialogBuilder1 = new AlertDialog.Builder(mainFeed.getActivity());
                         // set title
                         alertDialogBuilder1.setTitle("Type Captcha in order to report!");
@@ -169,13 +175,13 @@ public class MainFeedNetworkingManager {
                         final AsyncHttpClient reportput = new AsyncHttpClient(true, 80, 443);
 
                         alertDialogBuilder1
-                                .setMessage("CAPTCHA = " + random_string)
+                                .setMessage("CAPTCHA = " + randomString)
                                 .setCancelable(false)
                                 .setPositiveButton("Yes!", new DialogInterface.OnClickListener() {
                                     @Override
                                     public void onClick(DialogInterface dialog1, int id1) {
-                                        random_input = input.getText().toString();
-                                        if (random_string.equals(random_input)) {
+                                        randomInput = input.getText().toString();
+                                        if (randomString.equals(randomInput)) {
                                             reportput.put("https://ec2-52-4-176-1.compute-1.amazonaws.com/posts/flag/" + postArrayDeque.peekFirst().getId() + "/", new AsyncHttpResponseHandler() {
                                                 @Override
                                                 public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
@@ -226,7 +232,7 @@ public class MainFeedNetworkingManager {
     /**
      * Random Number Generator for reportHowl()
      **/
-    public void randomstring() {
+    public void generateRandomString() {
         char[] chars1 = "ABCDEF012GHIJKL345MNOPQR678STUVWXYZ9".toCharArray();
         StringBuilder sb1 = new StringBuilder();
         Random random1 = new Random();
@@ -234,6 +240,6 @@ public class MainFeedNetworkingManager {
             char c1 = chars1[random1.nextInt(chars1.length)];
             sb1.append(c1);
         }
-        random_string = sb1.toString();
+        randomString = sb1.toString();
     }
 }

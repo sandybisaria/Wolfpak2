@@ -11,6 +11,8 @@ import android.widget.RelativeLayout;
 
 import com.wolfpakapp.wolfpak2.R;
 
+import java.util.ArrayList;
+
 
 /**
  * Fragment for showing the main feed
@@ -39,9 +41,6 @@ public class MainFeedFragment extends Fragment {
 
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
-
-        // getActivity().setContentView(R.layout.activity_feed);
-
 //        /** Initialize SDK & Check Security Key Hash **/
 //        FacebookSdk.sdkInitialize(getActivity().getApplicationContext());
 //        try {
@@ -56,13 +55,9 @@ public class MainFeedFragment extends Fragment {
 //        } catch (PackageManager.NameNotFoundException | NoSuchAlgorithmException ignored) {
 //        }
 
-        /** Reference Refresh and FrameLayout **/
         ImageView refreshImageView = (ImageView) view.findViewById(R.id.main_feed_no_posts_image_view);
         baseLayout = (RelativeLayout) view.findViewById(R.id.main_feed_base_layout);
-
-        /** Dialogs **/
         reportImageButton = (ImageButton) view.findViewById(R.id.main_feed_report_button);
-//        share = (ImageButton) view.findViewById(R.id.im
 
         networkingManager = new MainFeedNetworkingManager(this);
         layoutManager = new MainFeedLayoutManager(this);
@@ -115,6 +110,26 @@ public class MainFeedFragment extends Fragment {
         networkingManager.getHowls();
 
         super.onViewCreated(view, savedInstanceState);
+    }
+
+    @Override
+    public void setUserVisibleHint(boolean isVisibleToUser) {
+        super.setUserVisibleHint(isVisibleToUser);
+
+        if (isVisibleToUser) {
+            // Ensure that the fragment is fullscreen when visible.
+            getActivity().getWindow().getDecorView()
+                    .setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN |
+                            View.SYSTEM_UI_FLAG_FULLSCREEN);
+
+            for (OnVisibilityChangeCallbacks callbacks : callbacksArrayList) {
+                callbacks.onBecomesVisible();
+            }
+        } else {
+            for (OnVisibilityChangeCallbacks callbacks : callbacksArrayList) {
+                callbacks.onBecomesInvisible();
+            }
+        }
     }
 
     /**
@@ -180,4 +195,21 @@ public class MainFeedFragment extends Fragment {
 //        callbackManager.onActivityResult(requestCode, resultCode, data);
 //    }
 
+    interface OnVisibilityChangeCallbacks {
+        /**
+         * Callback to be invoked when the fragment becomes visible.
+         */
+        void onBecomesVisible();
+
+        /**
+         * Callback to be invoked when the fragment loses visibility.
+         */
+        void onBecomesInvisible();
+    }
+
+    private ArrayList<OnVisibilityChangeCallbacks> callbacksArrayList = new ArrayList<>();
+
+    public void addCallbacks(OnVisibilityChangeCallbacks callbacks) {
+        callbacksArrayList.add(callbacks);
+    }
 }

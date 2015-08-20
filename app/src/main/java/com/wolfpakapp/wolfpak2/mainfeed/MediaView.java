@@ -17,10 +17,11 @@ import com.wolfpakapp.wolfpak2.R;
 import java.util.Objects;
 
 public class MediaView extends RelativeLayout {
-    // Private variables
-    private ImageView mediaImageView;
-    public VideoView mediaVideoView;
 
+    private Post mPost;
+
+    private ImageView mediaImageView;
+    private VideoView mediaVideoView;
 //    public ImageView mediaVideoViewThumbnail;
     private View likeStatusOverlayView;
 
@@ -38,6 +39,19 @@ public class MediaView extends RelativeLayout {
     public MediaView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
         baseInit();
+    }
+
+    /**
+     * Base initialization for this class
+     */
+    private void baseInit() {
+        LayoutInflater.from(getContext()).inflate(R.layout.media_view, this);
+
+        mediaImageView = (ImageView)findViewById(R.id.mediaImageView);
+        mediaVideoView = (VideoView)findViewById(R.id.mediaVideoView);
+//        this.mediaVideoViewThumbnail = (ImageView) findViewById(R.id.mediaVideoViewThumbnail);
+
+        likeStatusOverlayView = findViewById(R.id.likeStatusOverlayView);
     }
 
     /**
@@ -69,6 +83,8 @@ public class MediaView extends RelativeLayout {
      * Initialize media view based on the post.
      */
     public void setContent(Post post) {
+        mPost = post;
+
         if (post.isImage()) {
             mediaImageView.setVisibility(View.VISIBLE);
             Picasso.with(mediaImageView.getContext()).load(post.getMediaUrl()).into(mediaImageView);
@@ -83,15 +99,11 @@ public class MediaView extends RelativeLayout {
     }
 
     /**
-     * Base Initialization for this class
+     * If this MediaView contains a video, start it.
      */
-    private void baseInit() {
-        LayoutInflater.from(getContext()).inflate(R.layout.media_view, this);
-
-        mediaImageView = (ImageView)findViewById(R.id.mediaImageView);
-        mediaVideoView = (VideoView)findViewById(R.id.mediaVideoView);
-//        this.mediaVideoViewThumbnail = (ImageView) findViewById(R.id.mediaVideoViewThumbnail);
-
-        likeStatusOverlayView = findViewById(R.id.likeStatusOverlayView);
+    public void start() {
+        if (!mPost.isImage()) {
+            mediaVideoView.start();
+        }
     }
 }
