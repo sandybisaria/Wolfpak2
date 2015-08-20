@@ -53,6 +53,8 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Paint.Style;
 import android.graphics.Point;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.os.Bundle;
@@ -80,7 +82,6 @@ public class ColorPickerView extends View{
 	private final static int	DEFAULT_SLIDER_COLOR = 0xFFBDBDBD;
 	
 	private final static int 	HUE_PANEL_WDITH_DP = 30;
-	private final static int	PANEL_SPACING_DP = 10;
 	private final static int 	SLIDER_TRACKER_SIZE_DP = 4;
 	private final static int	SLIDER_TRACKER_OFFSET_DP = 2;
 	
@@ -124,8 +125,7 @@ public class ColorPickerView extends View{
 	 * get clipped when it's drawn outside of the view.
 	 */
 	private int 		mRequiredPadding;
-	
-	
+
 	/**
 	 * The Rect in which we are allowed to draw.
 	 * Trackers can extend outside slightly, 
@@ -182,8 +182,8 @@ public class ColorPickerView extends View{
 	private void init(Context context, AttributeSet attrs) {
 		//Load those if set in xml resource file.
 		TypedArray a = getContext().obtainStyledAttributes(attrs, R.styleable.ColorPickerView);
-		mSliderTrackerColor = a.getColor(R.styleable.ColorPickerView_sliderColor, 0xFFBDBDBD);
-		mBorderColor = a.getColor(R.styleable.ColorPickerView_borderColor, 0xFF6E6E6E);		
+		mSliderTrackerColor = a.getColor(R.styleable.ColorPickerView_sliderColor, 0xFFEDEDED);
+		mBorderColor = a.getColor(R.styleable.ColorPickerView_borderColor, 0xFFEEEEEE);
 		a.recycle();
 		
 		applyThemeColors(context);
@@ -250,11 +250,18 @@ public class ColorPickerView extends View{
 		if(BORDER_WIDTH_PX > 0) {
 			mBorderPaint.setColor(mBorderColor);
 
-			canvas.drawRect(rect.left - BORDER_WIDTH_PX, 
-					rect.top - BORDER_WIDTH_PX, 
-					rect.right + BORDER_WIDTH_PX, 
-					rect.bottom + BORDER_WIDTH_PX, 
-					mBorderPaint);		
+			canvas.drawRoundRect(rect.left - BORDER_WIDTH_PX,
+					rect.top - BORDER_WIDTH_PX,
+					rect.right + BORDER_WIDTH_PX,
+					rect.bottom + BORDER_WIDTH_PX,
+					DrawingUtils.dpToPx(getContext(), HUE_PANEL_WDITH_DP / 2),
+					DrawingUtils.dpToPx(getContext(), HUE_PANEL_WDITH_DP / 2),
+					mBorderPaint);
+//			canvas.drawRect(rect.left - BORDER_WIDTH_PX,
+//					rect.top - BORDER_WIDTH_PX,
+//					rect.right + BORDER_WIDTH_PX,
+//					rect.bottom + BORDER_WIDTH_PX,
+//					mBorderPaint);
 		}
 
 			
@@ -287,17 +294,42 @@ public class ColorPickerView extends View{
 		}
 		
 		
-		canvas.drawBitmap(mHueBackgroundCache.bitmap, null, rect, null);
-				
-		Point p = hueToPoint(mHue);
-				
-		RectF r = new RectF();
-		r.left = rect.left - mSliderTrackerOffsetPx;
-		r.right = rect.right + mSliderTrackerOffsetPx;
-		r.top = p.y - (mSliderTrackerSizePx / 2);
-		r.bottom = p.y + (mSliderTrackerSizePx / 2);
-				
-		canvas.drawRoundRect(r, 2, 2, mHueAlphaTrackerPaint);
+		canvas.drawBitmap(getRoundedCornerBitmap(mHueBackgroundCache.bitmap,
+				DrawingUtils.dpToPx(getContext(), HUE_PANEL_WDITH_DP / 2)), null, rect, null);
+
+		// we don't need the slider tracker if we are to copy the iOS version of the app
+//		Point p = hueToPoint(mHue);
+//
+//		RectF r = new RectF();
+//		r.left = rect.left - mSliderTrackerOffsetPx;
+//		r.right = rect.right + mSliderTrackerOffsetPx;
+//		r.top = p.y - (mSliderTrackerSizePx / 2);
+//		r.bottom = p.y + (mSliderTrackerSizePx / 2);
+//
+//		canvas.drawRoundRect(r, 2, 2, mHueAlphaTrackerPaint);
+	}
+
+	//TODO this is a repeat from in PictureEditorLayout, maybe put in DrawingUtils?
+	public static Bitmap getRoundedCornerBitmap(Bitmap bitmap, int pixels) {
+		Bitmap output = Bitmap.createBitmap(bitmap.getWidth(), bitmap
+				.getHeight(), Config.ARGB_8888);
+		Canvas canvas = new Canvas(output);
+
+		final int color = 0xff424242;
+		final Paint paint = new Paint();
+		final Rect rect = new Rect(0, 0, bitmap.getWidth(), bitmap.getHeight());
+		final RectF rectF = new RectF(rect);
+		final float roundPx = pixels;
+
+		paint.setAntiAlias(true);
+		canvas.drawARGB(0, 0, 0, 0);
+		paint.setColor(color);
+		canvas.drawRoundRect(rectF, roundPx, roundPx, paint);
+
+		paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_IN));
+		canvas.drawBitmap(bitmap, rect, rect, paint);
+
+		return output;
 	}
 	
 	private Point hueToPoint(float hue){

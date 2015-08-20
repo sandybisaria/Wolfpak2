@@ -47,7 +47,7 @@ public class CameraController1 extends CameraController {
             stopPreviewAndFreeCamera();
 
         // find the correct facing camera
-        for(int id = 0; id < Camera.getNumberOfCameras(); id++) {
+        for(int id = 0; id <= Camera.getNumberOfCameras(); id++) {
             Camera.getCameraInfo(id, info);
             int lensFacing = (CameraStates.CAMERA_FACE == CameraStates.FRONT) ?
                     Camera.CameraInfo.CAMERA_FACING_FRONT : Camera.CameraInfo.CAMERA_FACING_BACK;
@@ -55,11 +55,11 @@ public class CameraController1 extends CameraController {
                 try {
                     mCameraId = id;
                     mCamera = Camera.open(id); // open the camera
-                    setupCamera();
                 } catch(RuntimeException e) {
                     Log.e(TAG, "Could not open camera with id: " + id);
                     e.printStackTrace();
                 }
+                setupCamera();
                 return;
             }
         }
@@ -84,8 +84,13 @@ public class CameraController1 extends CameraController {
         });
         // get video size
         Size largest = CameraUtils.getLargestSize(cameraSizeToUtilSize(getSupportedImageSizes()));
-        mVideoSize = CameraUtils.chooseOptimalSize(cameraSizeToUtilSize(getSupportedVideoSizes()),
-                mScreenSize.getWidth(), mScreenSize.getHeight(), largest);
+        if(getSupportedVideoSizes() != null) {
+            mVideoSize = CameraUtils.chooseOptimalSize(cameraSizeToUtilSize(getSupportedVideoSizes()),
+                    mScreenSize.getWidth(), mScreenSize.getHeight(), largest);
+        } else  {
+            mVideoSize = CameraUtils.chooseOptimalSize(cameraSizeToUtilSize(getSupportedPreviewSizes()),
+                    mScreenSize.getWidth(), mScreenSize.getHeight(), largest);
+        }
         mCameraActionCallback.onCameraOpened();
         startPreview();
     }

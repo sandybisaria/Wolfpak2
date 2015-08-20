@@ -1,5 +1,6 @@
 package com.wolfpakapp.wolfpak2.camera.editor;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -10,7 +11,10 @@ import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.SurfaceTexture;
+import android.graphics.drawable.GradientDrawable;
 import android.media.MediaPlayer;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.renderscript.Allocation;
 import android.renderscript.Element;
 import android.renderscript.RenderScript;
@@ -20,10 +24,12 @@ import android.view.MotionEvent;
 import android.view.TextureView;
 import android.view.View;
 import android.widget.ImageButton;
+import android.widget.Toast;
 import android.widget.VideoView;
 
 import com.wolfpakapp.wolfpak2.R;
 import com.wolfpakapp.wolfpak2.camera.editor.colorpicker.ColorPickerView;
+import com.wolfpakapp.wolfpak2.camera.editor.colorpicker.DrawingUtils;
 import com.wolfpakapp.wolfpak2.camera.preview.CameraFragment;
 import com.wolfpakapp.wolfpak2.camera.preview.CameraStates;
 
@@ -48,10 +54,11 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
     private static String mVideoPath;
 
     // for blurring
-    private static final int BLUR_RADIUS = 20;
+    private static final int BLUR_RADIUS = 25;
     private static final int BLUR_SIDE = 100;
     private RenderScript mBlurScript = null;
     private ScriptIntrinsicBlur mIntrinsicScript = null;
+    private Bitmap mBlurredBitmap = null; // the bitmap in transit that is being blurred
 
     // buttons
     private ImageButton mBackButton;
@@ -108,7 +115,10 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
             @Override
             public void onColorChanged(int newColor) {
                 if (mOverlay.getState() == EditableOverlay.STATE_DRAW) {
-                    mDrawButton.setBackgroundColor(newColor);
+                    GradientDrawable roundCorners = new GradientDrawable();
+                    roundCorners.setColor(newColor); // Changes this drawbale to use a single color instead of a gradient
+                    roundCorners.setCornerRadius(DrawingUtils.dpToPx(mFragment.getActivity(), 10)); // 10dp
+                    mDrawButton.setBackground(roundCorners);
                     mOverlay.setColor(newColor);
                 } else if (mOverlay.getState() == EditableOverlay.STATE_TEXT) {
                     mOverlay.getTextOverlay().setTextColor(newColor);
@@ -201,8 +211,12 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
         } else  {
             if(UndoManager.getNumberOfStates() == 0) {
                 mVideoPath = mFragment.getVideoPath();
-                UndoManager.addScreenState(Bitmap.createBitmap(// initial state, empty screen
-                        CameraStates.SCREEN_SIZE.getWidth(), CameraStates.SCREEN_SIZE.getHeight(), null));
+                Bitmap placeholder = Bitmap.createBitmap(// initial state, empty screen
+                        CameraStates.SCREEN_SIZE.getWidth(),
+                        CameraStates.SCREEN_SIZE.getHeight(),
+                        Bitmap.Config.ARGB_8888);
+//                Canvas temp = new Canvas(placeholder);
+                UndoManager.addScreenState(placeholder);
                 // mFragment.setVideoPath(null); // so we know to skip initing upon resume
             } else  { // device likely resumed, so restore previous session
                 mOverlay.setBitmap(UndoManager.getLastScreenState());
@@ -238,13 +252,13 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
      * @return the circle bitmap
      */
     public static Bitmap getRoundedCornerBitmap(Bitmap bitmap) {
-        Bitmap output = Bitmap.createBitmap(bitmap.getWidth(),
-                bitmap.getHeight(), Bitmap.Config.ARGB_8888);
+        Bitmap output = Bitmap.createBitmap(BLUR_SIDE,
+                BLUR_SIDE, Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(output);
 
         final int color = 0xff424242;
         final Paint paint = new Paint();
-        final Rect rect = new Rect(0, 0, bitmap.getWidth(), bitmap.getHeight());
+        final Rect rect = new Rect(10, 10, BLUR_SIDE - 10, BLUR_SIDE - 10); // center the rectangle in 10px
         final RectF rectF = new RectF(rect);
         final float roundPx = BLUR_SIDE / 2;
 
@@ -269,9 +283,12 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
     private void blurImage(int action, float x, float y)    {
         switch(action)  {
             case MotionEvent.ACTION_DOWN:
+                // get the previous state of the screen, which is supposed to be equivalent to textureview
+                // mTextureView.getBitmap is relatively slow, 50ms or so to do
+                mBlurredBitmap = Bitmap.createBitmap(UndoManager.getLastScreenState());
             case MotionEvent.ACTION_MOVE:
                 Canvas blurCanvas = mTextureView.lockCanvas();
-                Bitmap txbmp = mTextureView.getBitmap();
+                Bitmap txbmp = mBlurredBitmap;// mTextureView.getBitmap();
                 // Blur bitmap
                 Bitmap blurredbmp = Bitmap.createBitmap(BLUR_SIDE, BLUR_SIDE, txbmp.getConfig());
 
@@ -286,11 +303,11 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
                 if((int) y + BLUR_SIDE > txbmp.getHeight())
                     y = txbmp.getHeight() - BLUR_SIDE / 2;
 
-                final Bitmap blurSource = Bitmap.createBitmap(txbmp,
-                        (int) x - BLUR_SIDE / 2, (int) y - BLUR_SIDE / 2, BLUR_SIDE, BLUR_SIDE);
+                final Bitmap blursrc = getRoundedCornerBitmap(Bitmap.createBitmap(txbmp,
+                        (int) x - BLUR_SIDE / 2, (int) y - BLUR_SIDE / 2, BLUR_SIDE, BLUR_SIDE));
 
                 final Allocation inAlloc = Allocation.createFromBitmap(mBlurScript,
-                        blurSource, Allocation.MipmapControl.MIPMAP_NONE, Allocation.USAGE_GRAPHICS_TEXTURE);
+                        blursrc, Allocation.MipmapControl.MIPMAP_NONE, Allocation.USAGE_GRAPHICS_TEXTURE);
                 final Allocation outAlloc = Allocation.createFromBitmap(mBlurScript, blurredbmp);
 
                 mIntrinsicScript.setRadius(BLUR_RADIUS);
@@ -298,9 +315,12 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
                 mIntrinsicScript.forEach(outAlloc);
                 outAlloc.copyTo(blurredbmp);
 
+                Canvas updateCanvas = new Canvas(mBlurredBitmap);// update mBlurredBitmap
+                updateCanvas.drawBitmap(blurredbmp, (int) x - BLUR_SIDE / 2, (int) y - BLUR_SIDE / 2, null);
+
                 // first draw what's on textureview, then draw blur
                 blurCanvas.drawBitmap(txbmp, 0, 0, null);
-                blurCanvas.drawBitmap(getRoundedCornerBitmap(blurredbmp), (int) x - BLUR_SIDE / 2, (int) y - BLUR_SIDE / 2, null);
+                blurCanvas.drawBitmap(blurredbmp, (int) x - BLUR_SIDE / 2, (int) y - BLUR_SIDE / 2, null);
                 mTextureView.unlockCanvasAndPost(blurCanvas);
                 break;
             case MotionEvent.ACTION_UP:
@@ -356,6 +376,18 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
                 }
                 break;
             case R.id.btn_upload:
+
+                // ensure working network connection
+                ConnectivityManager connMgr = (ConnectivityManager)
+                        mFragment.getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
+                NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
+
+                if (networkInfo == null || !networkInfo.isConnected()) { // continue if working connection
+                    Log.e(TAG, "Device has no network connection!");
+                    Toast.makeText(mFragment.getActivity(),
+                            "Error, check network connection", Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 if(isImage) {
                     MediaSaver.uploadImage(this, // listener
                             Bitmap.createBitmap(mTextureView.getBitmap()), // background image
@@ -389,7 +421,11 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
                     mOverlay.setState(EditableOverlay.STATE_DRAW);
                     mOverlay.setColor(mColorPicker.getColor());
                     mColorPicker.setVisibility(View.VISIBLE);
-                    mDrawButton.setBackgroundColor(mOverlay.getColor());
+                    GradientDrawable roundCorners = new GradientDrawable();
+                    roundCorners.setColor(mOverlay.getColor()); // Changes this drawbale to use a single color instead of a gradient
+                    roundCorners.setCornerRadius(DrawingUtils.dpToPx(mFragment.getActivity(), 10)); // 10dp
+//                    roundCorners.setStroke(1, 0xFF000000);
+                    mDrawButton.setBackground(roundCorners);
                 } else {
                     mOverlay.setState(EditableOverlay.STATE_IDLE);
                     mColorPicker.setVisibility(View.GONE);
