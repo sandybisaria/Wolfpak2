@@ -31,16 +31,12 @@ import java.util.Random;
  */
 public class MainFeedNetworkingManager {
 
+    private ServerRestClient mClient;
+
     public int length;
     private MainFeedFragment mainFeed;
     private MainFeedLayoutManager layoutManager;
 
-//    public String[] HowlsURL;
-//    public String[] HowlsIsImage;
-//    private String[] HowlsUserID;
-//    private String[] HowlsPostID;
-//    private String[] HowlsHandle;
-//    public String[] HowlsThumbnail;
     public Post[] mPosts;
 
     RequestParams mParams = new RequestParams();
@@ -54,18 +50,14 @@ public class MainFeedNetworkingManager {
     public int count;
 
     public MainFeedNetworkingManager(MainFeedFragment mainFeed) {
+        mClient = (ServerRestClient) WolfpakServiceProvider
+                .getServiceManager(WolfpakServiceProvider.SERVERRESTCLIENT);
+
         this.mainFeed = mainFeed;
         this.layoutManager = new MainFeedLayoutManager(mainFeed, this);
 
         length = 10;
         count = 0;
-
-//        HowlsURL = new String[length];
-//        HowlsIsImage = new String[length];
-//        HowlsUserID = new String[length];
-//        HowlsPostID = new String[length];
-//        HowlsHandle = new String[length];
-//        HowlsThumbnail = new String[length];
 
         mPosts = new Post[length];
 
@@ -88,33 +80,6 @@ public class MainFeedNetworkingManager {
                 .getServiceManager(WolfpakServiceProvider.LOCATIONPROVIDER)).getLastLocation();
         mParams.add("latitude", Double.toString(location.getLatitude()));
         mParams.add("longitude", Double.toString(location.getLongitude()));
-//        if (location == null) {
-//            locationCheck();
-//        } else {
-//            longitude = location.getLongitude();
-//            latitude = location.getLatitude();
-//        }
-
-//        /** Location Update Detector **/
-//        final LocationListener locationListener = new LocationListener() {
-//            @Override
-//            public void onStatusChanged(String provider, int status, Bundle extras) {
-//            }
-//
-//            @Override
-//            public void onProviderEnabled(String provider) {
-//            }
-//
-//            @Override
-//            public void onProviderDisabled(String provider) {
-//            }
-//
-//            public void onLocationChanged(Location location) {
-//                longitude = location.getLongitude();
-//                latitude = location.getLatitude();
-//            }
-//        };
-//        lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 2000, 10, locationListener);
     }
 
     /**
@@ -124,9 +89,7 @@ public class MainFeedNetworkingManager {
         try {
             // Refresh the query string with the latest location.
             initializeRequestParams();
-            ServerRestClient client = (ServerRestClient) WolfpakServiceProvider
-                    .getServiceManager(WolfpakServiceProvider.SERVERRESTCLIENT);
-            client.get("posts/", mParams, new AsyncHttpResponseHandler() {
+            mClient.get("posts/", mParams, new AsyncHttpResponseHandler() {
 
                 @Override
                 public void onSuccess(int statusCode, Header[] headers, byte[] response) {
@@ -147,8 +110,7 @@ public class MainFeedNetworkingManager {
                         count = arr.length();
 
                         for (int x = size; x > -1; x--) {
-                            layoutManager.loadViews(Boolean.toString(mPosts[x].isImage()), mPosts[x].getHandle(),
-                                    mPosts[x].getMediaUrl(), mPosts[x].getThumbnailUrl());
+                            layoutManager.loadView(mPosts[x]);
                         }
 
                         if (!mPosts[0].isImage()) {
@@ -161,6 +123,7 @@ public class MainFeedNetworkingManager {
 
                 @Override
                 public void onFailure(int statusCode, Header[] headers, byte[] errorResponse, Throwable e) {
+                    // Display nothing.
                 }
             });
         } catch (NoLocationException e) {
@@ -170,21 +133,18 @@ public class MainFeedNetworkingManager {
     }
 
     /**
-     * Asynchronous HTTP Client - Incr/Decr Image/Video in Server
+     * Update the like status of the post.
      **/
-    public void incrHowls(int status) {
-        AsyncHttpClient client1 = new AsyncHttpClient(true, 80, 443);
-        RequestParams params = new RequestParams();
-        params.put("post", mPosts[mainFeed.number].getId());
-        params.put("user_liked", "temp_test_id");
-        params.put("status", status);
-        client1.post("https://ec2-52-4-176-1.compute-1.amazonaws.com/like_status/", params, new AsyncHttpResponseHandler() {
+    public void updateLikeStatus(Post.VoteStatus voteStatus) {
+        mClient.updateLikeStatus(mPosts[mainFeed.number].getId(), voteStatus, new AsyncHttpResponseHandler() {
             @Override
             public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
+
             }
 
             @Override
             public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
+
             }
         });
     }
@@ -227,7 +187,7 @@ public class MainFeedNetworkingManager {
                                     @Override
                                     public void onClick(DialogInterface dialog1, int id1) {
                                         random_input = input.getText().toString();
-                                        if (Objects.equals(random_string, random_input)) {
+                                        if (random_string.equals(random_input)) {
                                             reportput.put("https://ec2-52-4-176-1.compute-1.amazonaws.com/posts/flag/" + mPosts[mainFeed.number].getId() + "/", new AsyncHttpResponseHandler() {
                                                 @Override
                                                 public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {

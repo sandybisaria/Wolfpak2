@@ -1,7 +1,6 @@
 package com.wolfpakapp.wolfpak2.mainfeed;
 
 import android.graphics.Point;
-import android.net.Uri;
 import android.support.v4.view.MotionEventCompat;
 import android.util.Log;
 import android.view.Display;
@@ -11,7 +10,7 @@ import android.view.animation.Animation;
 import android.view.animation.TranslateAnimation;
 import android.widget.RelativeLayout;
 
-import java.util.Objects;
+import com.wolfpakapp.wolfpak2.Post;
 
 /**
  * Created by Vishaal on 7/20/15.
@@ -34,12 +33,11 @@ public class MainFeedLayoutManager {
     }
 
     /** PreLoad Views **/
-    public void loadViews(String isImage, String handle, String url, String thumbnail){
+    public void loadView(Post post){
         myLayout = mainFeed.baseLayout;
         MediaView mediaView = new MediaView(mainFeed.getActivity());
 
-        Uri uri = Uri.parse(url);
-        mediaView.setMediaView(uri, handle, isImage, thumbnail);
+        mediaView.setMediaView(post);
 
         mediaView.setOnTouchListener(new ImageOnTouchListener());
         myLayout.addView(mediaView);
@@ -48,13 +46,7 @@ public class MainFeedLayoutManager {
         Log.v("DEBUG", String.valueOf(num));
         num--;
 
-//        mainFeed.share.bringToFront();
-        mainFeed.reportImageButton.bringToFront();
-    }
-
-    public void startNew(){
-        Log.v("DEBUG", String.valueOf(views[0]));
-        views[0].setOnTouchListener(new ImageOnTouchListener());
+        mainFeed.bringButtonsToFront();
     }
 
     /** Slide Up Animation **/
@@ -122,8 +114,6 @@ public class MainFeedLayoutManager {
 
     /** DragView Function **/
     public final class ImageOnTouchListener implements View.OnTouchListener {
-        private int activePointerId = MotionEvent.INVALID_POINTER_ID;
-
         private float lastTouchX = 0;
         private float lastTouchY = 0;
 
@@ -133,8 +123,6 @@ public class MainFeedLayoutManager {
 
             switch (action) {
                 case MotionEvent.ACTION_DOWN: {
-                    activePointerId = MotionEventCompat.getPointerId(event, 0);
-
                     lastTouchX = event.getRawX();
                     lastTouchY = event.getRawY();
 
@@ -162,27 +150,17 @@ public class MainFeedLayoutManager {
                     double red = maxY * 0.65;
 
                     if(event.getRawY()<green){
-                        mediaView.setLikeStatus(MediaView.LikeStatus.Like);
+                        mediaView.setLikeStatus(Post.VoteStatus.UPVOTED);
                     }
                     else if(event.getRawY()>red){
-                        mediaView.setLikeStatus(MediaView.LikeStatus.Dislike);
+                        mediaView.setLikeStatus(Post.VoteStatus.DOWNVOTED);
                     }
                     else{
-                        mediaView.setLikeStatus(MediaView.LikeStatus.Neutral);
+                        mediaView.setLikeStatus(Post.VoteStatus.NOT_VOTED);
                     }
                     break;
                 }
-                case MotionEvent.ACTION_POINTER_UP: {
-                    final int pointerIndex = MotionEventCompat.getActionIndex(event);
-                    final int pointerId = MotionEventCompat.findPointerIndex(event, pointerIndex);
-                    if (pointerId == activePointerId) {
-                        final int newPointerIndex = pointerIndex == 0 ? 1 : 0;
-                        lastTouchX = event.getRawX();
-                        lastTouchY = event.getRawY();
-                        activePointerId = MotionEventCompat.getPointerId(event, newPointerIndex);
-                    }
-                    break;
-                }
+                case MotionEvent.ACTION_POINTER_UP:
                 case MotionEvent.ACTION_CANCEL:
                     break;
                 case MotionEvent.ACTION_UP: {
@@ -195,20 +173,21 @@ public class MainFeedLayoutManager {
                     double red = maxY * 0.66;
 
                     if(event.getRawY()<green){
-                        network.incrHowls(1);
+                        network.updateLikeStatus(Post.VoteStatus.UPVOTED);
                         mainFeed.number++;
-                        mediaView.setLikeStatus(MediaView.LikeStatus.Like);
+                        mediaView.setLikeStatus(Post.VoteStatus.UPVOTED);
                         SlideToAbove(v);
                     }
                     else if(event.getRawY()>red){
-                        network.incrHowls(-1);
+                        network.updateLikeStatus(Post.VoteStatus.DOWNVOTED);
                         mainFeed.number++;
-                        mediaView.setLikeStatus(MediaView.LikeStatus.Dislike);
+                        mediaView.setLikeStatus(Post.VoteStatus.DOWNVOTED);
                         SlideToDown(v);
                     } else {
+                        //TODO Animate to original position.
                         v.setX(0);
                         v.setY(0);
-                        mediaView.setLikeStatus(MediaView.LikeStatus.Neutral);
+                        mediaView.setLikeStatus(Post.VoteStatus.NOT_VOTED);
                     }
 
                     if (network.mPosts[mainFeed.number] != null && !network.mPosts[mainFeed.number].isImage()) {
@@ -229,7 +208,6 @@ public class MainFeedLayoutManager {
                         network.getHowls();
                     }
 
-                    activePointerId = MotionEvent.INVALID_POINTER_ID;
                     break;
                 }
             }

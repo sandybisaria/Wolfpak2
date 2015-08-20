@@ -19,8 +19,8 @@ public class MainFeedFragment extends Fragment {
 
     /** Layouts & Buttons **/
     public ImageView refreshImageView;
-    public ImageButton reportImageButton;
-//    public ImageButton share;
+    private ImageButton reportImageButton;
+//    private ImageButton share;
     public RelativeLayout baseLayout;
 
     MainFeedNetworkingManager networkingManager = new MainFeedNetworkingManager(this);
@@ -125,6 +125,13 @@ public class MainFeedFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
     }
 
+    /**
+     * Bring the report button to the front.
+     */
+    public void bringButtonsToFront() {
+//        mainFeed.share.bringToFront();
+        reportImageButton.bringToFront();
+    }
 
 //    /** Share Picture to Facebook **/
 //    public void sharePicFB(ImageView imageView) {
