@@ -19,13 +19,13 @@ import java.util.Objects;
 public class MainFeedLayoutManager {
     private RelativeLayout myLayout;
     private MainFeedFragment mainFeed;
-    private NetworkingManager network;
+    private MainFeedNetworkingManager network;
 
     public MediaView[] views;
     public int num;
 
 
-    public MainFeedLayoutManager(MainFeedFragment mainFeed, NetworkingManager network){
+    public MainFeedLayoutManager(MainFeedFragment mainFeed, MainFeedNetworkingManager network){
         this.mainFeed = mainFeed;
         this.network = network;
 
@@ -35,7 +35,7 @@ public class MainFeedLayoutManager {
 
     /** PreLoad Views **/
     public void loadViews(String isImage, String handle, String url, String thumbnail){
-        myLayout = mainFeed.frame;
+        myLayout = mainFeed.baseLayout;
         MediaView mediaView = new MediaView(mainFeed.getActivity());
 
         Uri uri = Uri.parse(url);
@@ -49,7 +49,7 @@ public class MainFeedLayoutManager {
         num--;
 
 //        mainFeed.share.bringToFront();
-        mainFeed.report.bringToFront();
+        mainFeed.reportImageButton.bringToFront();
     }
 
     public void startNew(){
@@ -211,7 +211,7 @@ public class MainFeedLayoutManager {
                         mediaView.setLikeStatus(MediaView.LikeStatus.Neutral);
                     }
 
-                    if (network.HowlsIsImage[mainFeed.number] != null && Objects.equals(network.HowlsIsImage[mainFeed.number], "false")) {
+                    if (network.mPosts[mainFeed.number] != null && !network.mPosts[mainFeed.number].isImage()) {
 //                        views[mainFeed.number].mediaVideoViewThumbnail.setVisibility(View.GONE);
                         views[mainFeed.number].mediaVideoView.start();
                     }

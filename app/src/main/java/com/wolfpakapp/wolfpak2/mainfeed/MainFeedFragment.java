@@ -18,13 +18,13 @@ import com.wolfpakapp.wolfpak2.R;
 public class MainFeedFragment extends Fragment {
 
     /** Layouts & Buttons **/
-    public ImageView refresh_howl;
-    public ImageButton report;
+    public ImageView refreshImageView;
+    public ImageButton reportImageButton;
 //    public ImageButton share;
-    public RelativeLayout frame;
+    public RelativeLayout baseLayout;
 
-    Networking_MainFeed network = new Networking_MainFeed(this);
-    CustomView_MainFeed customView = new CustomView_MainFeed(this, network);
+    MainFeedNetworkingManager networkingManager = new MainFeedNetworkingManager(this);
+    MainFeedLayoutManager layoutManager = new MainFeedLayoutManager(this, networkingManager);
 
     public int number = 0;
 
@@ -45,7 +45,7 @@ public class MainFeedFragment extends Fragment {
 
         // getActivity().setContentView(R.layout.activity_feed);
 
-        /** Initialize SDK & Check Security Key Hash **/
+//        /** Initialize SDK & Check Security Key Hash **/
 //        FacebookSdk.sdkInitialize(getActivity().getApplicationContext());
 //        try {
 //            PackageInfo info = getActivity().getPackageManager().getPackageInfo(
@@ -60,20 +60,20 @@ public class MainFeedFragment extends Fragment {
 //        }
 
         /** Reference Refresh and FrameLayout **/
-        refresh_howl = (ImageView) view.findViewById(R.id.imageView2f);
-        frame = (RelativeLayout) view.findViewById(R.id.framef);
+        refreshImageView = (ImageView) view.findViewById(R.id.main_feed_no_posts_image_view);
+        baseLayout = (RelativeLayout) view.findViewById(R.id.main_feed_base_layout);
 
         /** Dialogs **/
-        report = (ImageButton) view.findViewById(R.id.imageButtonf);
+        reportImageButton = (ImageButton) view.findViewById(R.id.main_feed_report_button);
 //        share = (ImageButton) view.findViewById(R.id.imageButton1f);
 
         //getHowls() initializes the query string.
-//        network.initializeQueryString();
+//        networkingManager.initializeRequestParams();
 
         /** Pull Howls from Server **/
-        network.getHowls();
+        networkingManager.getHowls();
 
-        /** Facebook Share Feature **/
+//        /** Facebook Share Feature **/
 //        callbackManager = CallbackManager.Factory.create();
 //        List<String> permissionNeeds = Arrays.asList("publish_actions");
 //        manager = LoginManager.getInstance();
@@ -106,27 +106,27 @@ public class MainFeedFragment extends Fragment {
 //        });
 
         /** Report_Button Listener **/
-        report.setOnClickListener(new View.OnClickListener() {
+        reportImageButton.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View arg0) {
-                network.reportHowl();
+            public void onClick(View view) {
+                networkingManager.reportHowl();
             }
         });
 
         /** Refresh_Button Listener **/
-        refresh_howl.setOnClickListener(new View.OnClickListener() {
+        refreshImageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View arg0) {
                 number = 0;
-                customView.num = 0;
-                network.getHowls();
+                layoutManager.num = 0;
+                networkingManager.getHowls();
             }
         });
         super.onViewCreated(view, savedInstanceState);
     }
 
 
-    /** Share Picture to Facebook **/
+//    /** Share Picture to Facebook **/
 //    public void sharePicFB(ImageView imageView) {
 //        imageView.buildDrawingCache();
 //        Bitmap image = imageView.getDrawingCache();
@@ -142,7 +142,7 @@ public class MainFeedFragment extends Fragment {
 //
 //    }
 
-    /** Share Video to Facebook **/
+//    /** Share Video to Facebook **/
 //    public void shareVideoFB(String url){
 //        Uri mUri = Uri.parse(url);
 //        try {

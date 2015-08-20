@@ -44,7 +44,7 @@ public class UserIdManager extends ServiceManager {
         UUID deviceUUID = new UUID(androidId.hashCode(),
                 ((long) deviceId.hashCode() << 32) | serialNumber.hashCode());
         //TODO Remove when done testing!
-        return "temp_test_id"; //deviceUUID.toString();
+        return "temp_test_id2"; //deviceUUID.toString();
     }
 
     /**
