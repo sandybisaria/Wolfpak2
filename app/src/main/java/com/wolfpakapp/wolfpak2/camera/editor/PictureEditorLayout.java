@@ -54,10 +54,11 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
     private static String mVideoPath;
 
     // for blurring
-    private static final int BLUR_RADIUS = 20;
+    private static final int BLUR_RADIUS = 25;
     private static final int BLUR_SIDE = 100;
     private RenderScript mBlurScript = null;
     private ScriptIntrinsicBlur mIntrinsicScript = null;
+    private Bitmap mBlurredBitmap = null; // the bitmap in transit that is being blurred
 
     // buttons
     private ImageButton mBackButton;
@@ -251,13 +252,13 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
      * @return the circle bitmap
      */
     public static Bitmap getRoundedCornerBitmap(Bitmap bitmap) {
-        Bitmap output = Bitmap.createBitmap(bitmap.getWidth(),
-                bitmap.getHeight(), Bitmap.Config.ARGB_8888);
+        Bitmap output = Bitmap.createBitmap(BLUR_SIDE,
+                BLUR_SIDE, Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(output);
 
         final int color = 0xff424242;
         final Paint paint = new Paint();
-        final Rect rect = new Rect(0, 0, bitmap.getWidth(), bitmap.getHeight());
+        final Rect rect = new Rect(10, 10, BLUR_SIDE - 10, BLUR_SIDE - 10); // center the rectangle in 10px
         final RectF rectF = new RectF(rect);
         final float roundPx = BLUR_SIDE / 2;
 
@@ -282,9 +283,12 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
     private void blurImage(int action, float x, float y)    {
         switch(action)  {
             case MotionEvent.ACTION_DOWN:
+                // get the previous state of the screen, which is supposed to be equivalent to textureview
+                // mTextureView.getBitmap is relatively slow, 50ms or so to do
+                mBlurredBitmap = Bitmap.createBitmap(UndoManager.getLastScreenState());
             case MotionEvent.ACTION_MOVE:
                 Canvas blurCanvas = mTextureView.lockCanvas();
-                Bitmap txbmp = mTextureView.getBitmap();
+                Bitmap txbmp = mBlurredBitmap;// mTextureView.getBitmap();
                 // Blur bitmap
                 Bitmap blurredbmp = Bitmap.createBitmap(BLUR_SIDE, BLUR_SIDE, txbmp.getConfig());
 
@@ -299,11 +303,11 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
                 if((int) y + BLUR_SIDE > txbmp.getHeight())
                     y = txbmp.getHeight() - BLUR_SIDE / 2;
 
-                final Bitmap blurSource = Bitmap.createBitmap(txbmp,
-                        (int) x - BLUR_SIDE / 2, (int) y - BLUR_SIDE / 2, BLUR_SIDE, BLUR_SIDE);
+                final Bitmap blursrc = getRoundedCornerBitmap(Bitmap.createBitmap(txbmp,
+                        (int) x - BLUR_SIDE / 2, (int) y - BLUR_SIDE / 2, BLUR_SIDE, BLUR_SIDE));
 
                 final Allocation inAlloc = Allocation.createFromBitmap(mBlurScript,
-                        blurSource, Allocation.MipmapControl.MIPMAP_NONE, Allocation.USAGE_GRAPHICS_TEXTURE);
+                        blursrc, Allocation.MipmapControl.MIPMAP_NONE, Allocation.USAGE_GRAPHICS_TEXTURE);
                 final Allocation outAlloc = Allocation.createFromBitmap(mBlurScript, blurredbmp);
 
                 mIntrinsicScript.setRadius(BLUR_RADIUS);
@@ -311,11 +315,12 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
                 mIntrinsicScript.forEach(outAlloc);
                 outAlloc.copyTo(blurredbmp);
 
-                // TODO rewrite getRoundedCornerBitmap code here to get rid of redundant bitmap drawing
+                Canvas updateCanvas = new Canvas(mBlurredBitmap);// update mBlurredBitmap
+                updateCanvas.drawBitmap(blurredbmp, (int) x - BLUR_SIDE / 2, (int) y - BLUR_SIDE / 2, null);
 
                 // first draw what's on textureview, then draw blur
                 blurCanvas.drawBitmap(txbmp, 0, 0, null);
-                blurCanvas.drawBitmap(getRoundedCornerBitmap(blurredbmp), (int) x - BLUR_SIDE / 2, (int) y - BLUR_SIDE / 2, null);
+                blurCanvas.drawBitmap(blurredbmp, (int) x - BLUR_SIDE / 2, (int) y - BLUR_SIDE / 2, null);
                 mTextureView.unlockCanvasAndPost(blurCanvas);
                 break;
             case MotionEvent.ACTION_UP:
