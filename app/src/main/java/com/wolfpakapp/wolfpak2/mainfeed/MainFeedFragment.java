@@ -18,15 +18,12 @@ import com.wolfpakapp.wolfpak2.R;
 public class MainFeedFragment extends Fragment {
 
     /** Layouts & Buttons **/
-    public ImageView refreshImageView;
     private ImageButton reportImageButton;
 //    private ImageButton share;
-    public RelativeLayout baseLayout;
+    private RelativeLayout baseLayout;
 
-    MainFeedNetworkingManager networkingManager = new MainFeedNetworkingManager(this);
-    MainFeedLayoutManager layoutManager = new MainFeedLayoutManager(this, networkingManager);
-
-    public int number = 0;
+    MainFeedNetworkingManager networkingManager;
+    MainFeedLayoutManager layoutManager;
 
     /** Facebook Share Features **/
 //    private ShareDialog shareDialog;
@@ -60,18 +57,15 @@ public class MainFeedFragment extends Fragment {
 //        }
 
         /** Reference Refresh and FrameLayout **/
-        refreshImageView = (ImageView) view.findViewById(R.id.main_feed_no_posts_image_view);
+        ImageView refreshImageView = (ImageView) view.findViewById(R.id.main_feed_no_posts_image_view);
         baseLayout = (RelativeLayout) view.findViewById(R.id.main_feed_base_layout);
 
         /** Dialogs **/
         reportImageButton = (ImageButton) view.findViewById(R.id.main_feed_report_button);
-//        share = (ImageButton) view.findViewById(R.id.imageButton1f);
+//        share = (ImageButton) view.findViewById(R.id.im
 
-        //getHowls() initializes the query string.
-//        networkingManager.initializeRequestParams();
-
-        /** Pull Howls from Server **/
-        networkingManager.getHowls();
+        networkingManager = new MainFeedNetworkingManager(this);
+        layoutManager = new MainFeedLayoutManager(this);
 
 //        /** Facebook Share Feature **/
 //        callbackManager = CallbackManager.Factory.create();
@@ -104,8 +98,6 @@ public class MainFeedFragment extends Fragment {
 //                System.out.println("onError");
 //            }
 //        });
-
-        /** Report_Button Listener **/
         reportImageButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -113,15 +105,15 @@ public class MainFeedFragment extends Fragment {
             }
         });
 
-        /** Refresh_Button Listener **/
         refreshImageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View arg0) {
-                number = 0;
-                layoutManager.num = 0;
                 networkingManager.getHowls();
             }
         });
+
+        networkingManager.getHowls();
+
         super.onViewCreated(view, savedInstanceState);
     }
 
@@ -133,7 +125,19 @@ public class MainFeedFragment extends Fragment {
         reportImageButton.bringToFront();
     }
 
-//    /** Share Picture to Facebook **/
+    public RelativeLayout getBaseLayout() {
+        return baseLayout;
+    }
+
+    public MainFeedNetworkingManager getNetworkingManager() {
+        return networkingManager;
+    }
+
+    public MainFeedLayoutManager getLayoutManager() {
+        return layoutManager;
+    }
+
+    //    /** Share Picture to Facebook **/
 //    public void sharePicFB(ImageView imageView) {
 //        imageView.buildDrawingCache();
 //        Bitmap image = imageView.getDrawingCache();

@@ -2,7 +2,6 @@ package com.wolfpakapp.wolfpak2.mainfeed;
 
 import android.graphics.Point;
 import android.support.v4.view.MotionEventCompat;
-import android.util.Log;
 import android.view.Display;
 import android.view.MotionEvent;
 import android.view.View;
@@ -12,39 +11,42 @@ import android.widget.RelativeLayout;
 
 import com.wolfpakapp.wolfpak2.Post;
 
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+
 /**
  * Created by Vishaal on 7/20/15.
  */
 public class MainFeedLayoutManager {
-    private RelativeLayout myLayout;
+    private RelativeLayout baseLayout;
     private MainFeedFragment mainFeed;
-    private MainFeedNetworkingManager network;
 
-    public MediaView[] views;
-    public int num;
+    private MainFeedNetworkingManager networkingManager;
 
+    private ArrayDeque<MediaView> mediaViewArrayDeque = new ArrayDeque<>();
 
-    public MainFeedLayoutManager(MainFeedFragment mainFeed, MainFeedNetworkingManager network){
+    public MainFeedLayoutManager(MainFeedFragment mainFeed){
         this.mainFeed = mainFeed;
-        this.network = network;
-
-        views = new MediaView[6];
-        num = network.count-1;
+        baseLayout = mainFeed.getBaseLayout();
     }
 
     /** PreLoad Views **/
-    public void loadView(Post post){
-        myLayout = mainFeed.baseLayout;
-        MediaView mediaView = new MediaView(mainFeed.getActivity());
+    public void loadViews(ArrayDeque<Post> postArrayDeque) {
+        networkingManager = mainFeed.getNetworkingManager();
 
-        mediaView.setMediaView(post);
+        ArrayList<MediaView> mediaViewList = new ArrayList<>();
+        for (Post post : postArrayDeque) {
+            MediaView mediaView = new MediaView(mainFeed.getActivity());
+            mediaView.setContent(post);
+            mediaView.setOnTouchListener(new ImageOnTouchListener());
+            mediaViewList.add(mediaView);
+            mediaViewArrayDeque.addLast(mediaView);
+        }
 
-        mediaView.setOnTouchListener(new ImageOnTouchListener());
-        myLayout.addView(mediaView);
-
-        views[num] = mediaView;
-        Log.v("DEBUG", String.valueOf(num));
-        num--;
+        // Add posts to the layout in reverse order (so that the first, top, post is added
+        for (int idx = mediaViewList.size() - 1; idx >= 0; idx--) {
+            baseLayout.addView(mediaViewList.get(idx));
+        }
 
         mainFeed.bringButtonsToFront();
     }
@@ -60,24 +62,7 @@ public class MainFeedLayoutManager {
         v.startAnimation(slide);
         v.animate().rotation(-30).start();
 
-        slide.setAnimationListener(new Animation.AnimationListener() {
-
-            @Override
-            public void onAnimationStart(Animation animation) {
-            }
-
-            @Override
-            public void onAnimationRepeat(Animation animation) {
-            }
-
-            @Override
-            public void onAnimationEnd(Animation animation) {
-            }
-
-        });
-
-        myLayout.removeView(v);
-
+        baseLayout.removeView(v);
     }
 
     /** Slide Down Animation **/
@@ -91,25 +76,7 @@ public class MainFeedLayoutManager {
         v.startAnimation(slide);
         v.animate().rotation(30).start();
 
-        slide.setAnimationListener(new Animation.AnimationListener() {
-
-            @Override
-            public void onAnimationStart(Animation animation) {
-            }
-
-            @Override
-            public void onAnimationRepeat(Animation animation) {
-            }
-
-            @Override
-            public void onAnimationEnd(Animation animation) {
-            }
-
-        });
-
-        myLayout.removeView(v);
-
-
+        baseLayout.removeView(v);
     }
 
     /** DragView Function **/
@@ -172,17 +139,15 @@ public class MainFeedLayoutManager {
                     double green = maxY * 0.35;
                     double red = maxY * 0.66;
 
-                    if(event.getRawY()<green){
-                        network.updateLikeStatus(Post.VoteStatus.UPVOTED);
-                        mainFeed.number++;
+                    if(event.getRawY() < green){
+                        networkingManager.updateLikeStatus(Post.VoteStatus.UPVOTED);
                         mediaView.setLikeStatus(Post.VoteStatus.UPVOTED);
-                        SlideToAbove(v);
+                        SlideToAbove(mediaViewArrayDeque.pollFirst());
                     }
                     else if(event.getRawY()>red){
-                        network.updateLikeStatus(Post.VoteStatus.DOWNVOTED);
-                        mainFeed.number++;
+                        networkingManager.updateLikeStatus(Post.VoteStatus.DOWNVOTED);
                         mediaView.setLikeStatus(Post.VoteStatus.DOWNVOTED);
-                        SlideToDown(v);
+                        SlideToDown(mediaViewArrayDeque.pollFirst());
                     } else {
                         //TODO Animate to original position.
                         v.setX(0);
@@ -190,9 +155,11 @@ public class MainFeedLayoutManager {
                         mediaView.setLikeStatus(Post.VoteStatus.NOT_VOTED);
                     }
 
-                    if (network.mPosts[mainFeed.number] != null && !network.mPosts[mainFeed.number].isImage()) {
-//                        views[mainFeed.number].mediaVideoViewThumbnail.setVisibility(View.GONE);
-                        views[mainFeed.number].mediaVideoView.start();
+                    try {
+//                        mediaViewArrayDeque[mainFeed.number].mediaVideoViewThumbnail.setVisibility(View.GONE);
+                        mediaViewArrayDeque.peekFirst().mediaVideoView.start();
+                    } catch (Exception e) {
+                        e.printStackTrace();
                     }
 
 
@@ -202,10 +169,9 @@ public class MainFeedLayoutManager {
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
-                    if(mainFeed.number == network.count){
-                        mainFeed.number = 0;
-                        num = 0;
-                        network.getHowls();
+
+                    if(mediaViewArrayDeque.size() == 0){
+                        networkingManager.getHowls();
                     }
 
                     break;

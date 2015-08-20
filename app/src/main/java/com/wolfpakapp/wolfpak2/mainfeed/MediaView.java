@@ -66,10 +66,9 @@ public class MediaView extends RelativeLayout {
     }
 
     /**
-     * Initialize media view based on url and media type
-     *
+     * Initialize media view based on the post.
      */
-    public void setMediaView(Post post) {
+    public void setContent(Post post) {
         if (post.isImage()) {
             mediaImageView.setVisibility(View.VISIBLE);
             Picasso.with(mediaImageView.getContext()).load(post.getMediaUrl()).into(mediaImageView);

@@ -6,6 +6,7 @@ import android.content.SharedPreferences;
 import android.location.Location;
 import android.preference.PreferenceManager;
 import android.text.InputType;
+import android.util.Log;
 import android.widget.EditText;
 
 import com.loopj.android.http.AsyncHttpClient;
@@ -23,7 +24,7 @@ import org.apache.http.Header;
 import org.json.JSONArray;
 import org.json.JSONException;
 
-import java.util.Objects;
+import java.util.ArrayDeque;
 import java.util.Random;
 
 /**
@@ -33,11 +34,10 @@ public class MainFeedNetworkingManager {
 
     private ServerRestClient mClient;
 
-    public int length;
     private MainFeedFragment mainFeed;
     private MainFeedLayoutManager layoutManager;
 
-    public Post[] mPosts;
+    private ArrayDeque<Post> postArrayDeque = new ArrayDeque<>();
 
     RequestParams mParams = new RequestParams();
 
@@ -47,19 +47,11 @@ public class MainFeedNetworkingManager {
     private String random_string;
     private String random_input;
 
-    public int count;
-
     public MainFeedNetworkingManager(MainFeedFragment mainFeed) {
         mClient = (ServerRestClient) WolfpakServiceProvider
                 .getServiceManager(WolfpakServiceProvider.SERVERRESTCLIENT);
 
         this.mainFeed = mainFeed;
-        this.layoutManager = new MainFeedLayoutManager(mainFeed, this);
-
-        length = 10;
-        count = 0;
-
-        mPosts = new Post[length];
 
         random_input = "";
     }
@@ -86,6 +78,8 @@ public class MainFeedNetworkingManager {
      * Get the latest howls from the server.
      **/
     public void getHowls() {
+        layoutManager = mainFeed.getLayoutManager();
+
         try {
             // Refresh the query string with the latest location.
             initializeRequestParams();
@@ -97,25 +91,18 @@ public class MainFeedNetworkingManager {
                     try {
                         arr = new JSONArray(new String(response));
 
-                        for (int x = 0; x < 5 || x < arr.length(); x++) {
+                        for (int x = 0; x < arr.length(); x++) {
                             try {
-                                mPosts[x] = Post.parsePostJSONObject(null, arr.getJSONObject(x));
+                                Post post = Post.parsePostJSONObject(null, arr.getJSONObject(x));
+                                postArrayDeque.addLast(post);
                             } catch (JSONException e) {
                                 e.printStackTrace();
                             }
                         }
 
-                        layoutManager.num = arr.length() - 1;
-                        int size = arr.length() - 1;
-                        count = arr.length();
+                        Log.d("HELP", postArrayDeque.toString());
 
-                        for (int x = size; x > -1; x--) {
-                            layoutManager.loadView(mPosts[x]);
-                        }
-
-                        if (!mPosts[0].isImage()) {
-                            layoutManager.views[0].mediaVideoView.start();
-                        }
+                        layoutManager.loadViews(postArrayDeque);
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
@@ -136,7 +123,8 @@ public class MainFeedNetworkingManager {
      * Update the like status of the post.
      **/
     public void updateLikeStatus(Post.VoteStatus voteStatus) {
-        mClient.updateLikeStatus(mPosts[mainFeed.number].getId(), voteStatus, new AsyncHttpResponseHandler() {
+        Post post = postArrayDeque.pollFirst();
+        mClient.updateLikeStatus(post.getId(), voteStatus, new AsyncHttpResponseHandler() {
             @Override
             public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
 
@@ -188,7 +176,7 @@ public class MainFeedNetworkingManager {
                                     public void onClick(DialogInterface dialog1, int id1) {
                                         random_input = input.getText().toString();
                                         if (random_string.equals(random_input)) {
-                                            reportput.put("https://ec2-52-4-176-1.compute-1.amazonaws.com/posts/flag/" + mPosts[mainFeed.number].getId() + "/", new AsyncHttpResponseHandler() {
+                                            reportput.put("https://ec2-52-4-176-1.compute-1.amazonaws.com/posts/flag/" + postArrayDeque.peekFirst().getId() + "/", new AsyncHttpResponseHandler() {
                                                 @Override
                                                 public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
                                                 }
