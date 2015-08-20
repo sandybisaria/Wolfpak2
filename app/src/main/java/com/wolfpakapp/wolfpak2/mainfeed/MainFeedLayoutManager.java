@@ -75,16 +75,18 @@ public class MainFeedLayoutManager {
      */
     private void slideToTop() {
         View view = mediaViewArrayDeque.peekFirst();
-        Animation slide;
-        slide = new TranslateAnimation(Animation.RELATIVE_TO_PARENT, 0.0f,
-                Animation.RELATIVE_TO_PARENT, 0.0f, Animation.RELATIVE_TO_PARENT,
-                0.0f, Animation.RELATIVE_TO_PARENT, -5.0f);
-        slide.setDuration(750);
+        if (view != null) {
+            Animation slide;
+            slide = new TranslateAnimation(Animation.RELATIVE_TO_PARENT, 0.0f,
+                    Animation.RELATIVE_TO_PARENT, 0.0f, Animation.RELATIVE_TO_PARENT,
+                    0.0f, Animation.RELATIVE_TO_PARENT, -5.0f);
+            slide.setDuration(750);
 
-        view.startAnimation(slide);
-        view.animate().rotation(-30).start();
+            view.startAnimation(slide);
+            view.animate().rotation(-30).start();
 
-        baseLayout.removeView(view);
+            baseLayout.removeView(view);
+        }
     }
 
     /**
@@ -92,16 +94,18 @@ public class MainFeedLayoutManager {
      */
     private void slideToBottom() {
         View view = mediaViewArrayDeque.peekFirst();
-        Animation slide;
-        slide = new TranslateAnimation(Animation.RELATIVE_TO_PARENT, 0.0f,
-                Animation.RELATIVE_TO_PARENT, 0.0f, Animation.RELATIVE_TO_PARENT,
-                0.0f, Animation.RELATIVE_TO_PARENT, 5.0f);
-        slide.setDuration(750);
+        if (view != null) {
+            Animation slide;
+            slide = new TranslateAnimation(Animation.RELATIVE_TO_PARENT, 0.0f,
+                    Animation.RELATIVE_TO_PARENT, 0.0f, Animation.RELATIVE_TO_PARENT,
+                    0.0f, Animation.RELATIVE_TO_PARENT, 5.0f);
+            slide.setDuration(750);
 
-        view.startAnimation(slide);
-        view.animate().rotation(30).start();
+            view.startAnimation(slide);
+            view.animate().rotation(30).start();
 
-        baseLayout.removeView(view);
+            baseLayout.removeView(view);
+        }
     }
 
     /**
@@ -109,14 +113,16 @@ public class MainFeedLayoutManager {
      */
     public void returnToPosition() {
         View view = mediaViewArrayDeque.peekFirst();
-        AnimatorSet set = new AnimatorSet();
-        set.playTogether(ObjectAnimator
-                        .ofFloat(view, View.X, view.getX(), 0f),
-                ObjectAnimator
-                        .ofFloat(view, View.Y, view.getY(), 0f));
-        set.setDuration(750);
-        set.setInterpolator(new AccelerateDecelerateInterpolator());
-        set.start();
+        if (view != null) {
+            AnimatorSet set = new AnimatorSet();
+            set.playTogether(ObjectAnimator
+                            .ofFloat(view, View.X, view.getX(), 0f),
+                    ObjectAnimator
+                            .ofFloat(view, View.Y, view.getY(), 0f));
+            set.setDuration(750);
+            set.setInterpolator(new AccelerateDecelerateInterpolator());
+            set.start();
+        }
     }
 
     public final class HowlOnTouchListener implements View.OnTouchListener {
@@ -173,13 +179,6 @@ public class MainFeedLayoutManager {
                 case MotionEvent.ACTION_CANCEL:
                     break;
                 case MotionEvent.ACTION_UP: {
-//                    Display display = mainFeed.getActivity().getWindowManager().getDefaultDisplay();
-//                    Point size = new Point();
-//                    display.getSize(size);
-//                    double maxY = size.y;
-//                    double green = maxY * 0.35;
-//                    double red = maxY * 0.66;
-
                     MediaView mediaView = (MediaView) v;
                     if (isUpvoting()) {
                         networkingManager.updateLikeStatus(Post.VoteStatus.UPVOTED);
@@ -187,14 +186,18 @@ public class MainFeedLayoutManager {
                         slideToTop();
                         mediaViewArrayDeque.pollFirst();
 
-                        mediaViewArrayDeque.peekFirst().start();
+                        if (mediaViewArrayDeque.size() > 0) {
+                            mediaViewArrayDeque.peekFirst().start();
+                        }
                     } else if (isDownvoting()) {
                         networkingManager.updateLikeStatus(Post.VoteStatus.DOWNVOTED);
                         mediaView.setLikeStatus(Post.VoteStatus.DOWNVOTED);
                         slideToBottom();
                         mediaViewArrayDeque.pollFirst();
 
-                        mediaViewArrayDeque.peekFirst().start();
+                        if (mediaViewArrayDeque.size() > 0) {
+                            mediaViewArrayDeque.peekFirst().start();
+                        }
                     } else {
                         //TODO Animate to original position.
                         returnToPosition();
