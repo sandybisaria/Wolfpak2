@@ -1,6 +1,5 @@
 package com.wolfpakapp.wolfpak2.camera.preview;
 
-import android.hardware.camera2.CameraCharacteristics;
 import android.util.Size;
 
 /**

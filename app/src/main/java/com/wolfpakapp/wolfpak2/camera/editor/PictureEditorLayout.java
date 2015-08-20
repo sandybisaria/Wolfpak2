@@ -560,4 +560,11 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
         // go back to camera
         startCamera();
     }
+
+    @Override
+    public void onUploadCanceled() {
+        Log.d(TAG, "Upload Canceled");
+        if(CameraStates.FILE_TYPE == CameraStates.FILE_VIDEO)
+            mVideoView.start();
+    }
 }

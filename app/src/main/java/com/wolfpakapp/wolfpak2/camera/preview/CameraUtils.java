@@ -1,7 +1,6 @@
 package com.wolfpakapp.wolfpak2.camera.preview;
 
 import android.content.Context;
-import android.content.res.Configuration;
 import android.hardware.Camera;
 import android.util.Log;
 import android.util.Size;
@@ -23,8 +22,8 @@ public class CameraUtils {
 
     /**
      * Returns the device rotation; Surface.ROTATION_0, ROTATION_90, etc.
-     * @param context
-     * @return
+     * @param context the application context
+     * @return the rotation
      */
     public static int getRotation(Context context) {
         WindowManager windowManager =  (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
@@ -35,9 +34,9 @@ public class CameraUtils {
 
     /**
      * Sets the camera's display orientation based on device orientation
-     * @param context
-     * @param cameraId
-     * @param camera
+     * @param context the application context
+     * @param cameraId the ID of the camera
+     * @param camera the camera itself
      */
     @SuppressWarnings("deprecation")
     public static void setCameraDisplayOrientation(Context context,
@@ -66,8 +65,8 @@ public class CameraUtils {
 
     /**
      * Returns the largest size given a list of choices
-     * @param choices
-     * @return
+     * @param choices the choices of sizes
+     * @return the largest size
      */
     public static Size getLargestSize(List<Size> choices)   {
         return Collections.max(choices, new CameraUtils.CompareSizesByArea());
@@ -79,12 +78,12 @@ public class CameraUtils {
      * @param choices   list of choices supported by camera
      * @param width     minimum width
      * @param height    minimum height
-     * @param aspectRatio
+     * @param aspectRatio the ratio of height to width
      * @return  Optimal size or otherwise arbitrary
      */
     public static Size chooseOptimalSize(List<Size> choices, int width, int height, Size aspectRatio)  {
         // Collect supported resolutions at least as big as preview surface
-        List<Size> bigEnough = new ArrayList<Size>();
+        List<Size> bigEnough = new ArrayList<>();
         int w = aspectRatio.getWidth();
         int h = aspectRatio.getHeight();
         for(Size option : choices)  {

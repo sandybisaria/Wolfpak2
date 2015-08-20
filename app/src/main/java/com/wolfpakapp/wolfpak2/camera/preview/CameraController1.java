@@ -8,7 +8,6 @@ import android.media.CamcorderProfile;
 import android.media.MediaRecorder;
 import android.util.Log;
 import android.util.Size;
-import android.view.Surface;
 
 import java.io.File;
 import java.io.IOException;
@@ -154,7 +153,7 @@ public class CameraController1 extends CameraController {
         mMediaRecorder.setCamera(mCamera);
         // set audio/video sources
 
-        if(CameraStates.IS_SOUND == true)
+        if(CameraStates.IS_SOUND)
             mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.CAMCORDER);
         mMediaRecorder.setVideoSource(MediaRecorder.VideoSource.CAMERA);
 
@@ -174,7 +173,7 @@ public class CameraController1 extends CameraController {
 //        if(CameraStates.IS_SOUND == false)
 //            profile.quality = 1005; // supposedly this will prevent audio
 
-        if (CameraStates.IS_SOUND == true) { // with audio
+        if (CameraStates.IS_SOUND) { // with audio
             mMediaRecorder.setProfile(profile); // use profile directly
         } else { // without audio
             mMediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
@@ -386,8 +385,8 @@ public class CameraController1 extends CameraController {
 
     /**
      * Converts horrid {@link android.hardware.Camera.Size} to the usual {@link Size} objects
-     * @param camSizes
-     * @return
+     * @param camSizes the list of {@link android.hardware.Camera.Size} objects
+     * @return the list of {@link Size} objects
      */
     private List<Size> cameraSizeToUtilSize(List<Camera.Size> camSizes)    {
         List<Size> utilSizes = new ArrayList<>();

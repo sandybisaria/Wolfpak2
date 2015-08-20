@@ -5,26 +5,27 @@ import android.graphics.Bitmap;
 import java.util.ArrayList;
 
 /**
- * Created by Roland on 7/18/2015.
+ * Class to hold undo states during editing
+ * @author Roland Fong
  */
 public class UndoManager {
 
     private static ArrayList<Bitmap> screenStates;
 
     static  {
-        screenStates = new ArrayList<Bitmap>();
+        screenStates = new ArrayList<>();
     }
     /**
      * Initializes Undo Manager
      * @deprecated
      */
     public UndoManager ()   {
-        screenStates = new ArrayList<Bitmap>();
+        screenStates = new ArrayList<>();
     }
 
     /**
      * Adds screen state to state list
-     * @param b
+     * @param b the bitmap to add to the undo states
      */
     public static void addScreenState(Bitmap b) {
         if(screenStates.size() >= 50)   {

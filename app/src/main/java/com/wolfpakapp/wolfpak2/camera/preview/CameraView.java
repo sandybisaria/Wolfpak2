@@ -2,14 +2,12 @@ package com.wolfpakapp.wolfpak2.camera.preview;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.res.Configuration;
 import android.graphics.Matrix;
 import android.graphics.SurfaceTexture;
 import android.util.AttributeSet;
 import android.util.Size;
 import android.view.Surface;
 import android.view.TextureView;
-import android.view.WindowManager;
 
 /**
  * A custom TextureView that handles its own transformation and has its own callback interface
