@@ -233,6 +233,8 @@ public class TextOverlay extends EditText {
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         if(canEdit) {
+            if(EditableOverlay.isRotating() || EditableOverlay.isScaling())
+                return false; // don't move text during rotation or scale
             float mx = event.getRawX();
             float my = event.getRawY();
             clearFocus();

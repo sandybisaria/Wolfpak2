@@ -19,6 +19,7 @@ import java.util.List;
 public class CameraUtils {
 
     private static final String TAG = "TAG-CameraUtils";
+    private static final int SIZE_TOLERANCE = 10; // size is accepted if within 10px
 
     /**
      * Returns the device rotation; Surface.ROTATION_0, ROTATION_90, etc.
@@ -78,8 +79,8 @@ public class CameraUtils {
         for(Size choice : choices)  {
             Log.d(TAG, "SIZE: " +
                     choice.getWidth() + ", " + choice.getHeight());
-            if(choice.getWidth() == CameraStates.SCREEN_SIZE.getHeight()
-                    && choice.getHeight() == CameraStates.SCREEN_SIZE.getWidth())
+            if(Math.abs(choice.getWidth() - CameraStates.SCREEN_SIZE.getHeight()) <= SIZE_TOLERANCE
+                    && Math.abs(choice.getHeight() - CameraStates.SCREEN_SIZE.getWidth()) <= SIZE_TOLERANCE)
                 return choice;
         }
         return getLargestSize(choices);

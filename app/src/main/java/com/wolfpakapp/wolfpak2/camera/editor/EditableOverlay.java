@@ -44,6 +44,8 @@ public class EditableOverlay extends View {
     private Handler mDrawHandler; // performs the actual blitting path onto textureview
     private static final int BLITTING_OVERLAY = 1;
     private boolean mTouched;
+    private static boolean mIsRotating;
+    private static boolean mIsScaling;
 
     private TextOverlay mTextOverlay;
     private ScaleGestureDetector mScaleDetector;
@@ -54,12 +56,12 @@ public class EditableOverlay extends View {
                 public boolean onScaleBegin(ScaleGestureDetector detector) {
                     Log.d(TAG, "Scale Begin");
                     currentFontSize = mTextOverlay.getTextSize();
+                    mIsScaling = true;
                     return true;
                 }
 
                 @Override
                 public boolean onScale(ScaleGestureDetector detector) {
-                    Log.d(TAG, "Scale Detected");
                     if(mTextOverlay.getState() == TextOverlay.TEXT_STATE_FREE ||
                             mTextOverlay.getState() == TextOverlay.TEXT_STATE_VERTICAL) {
                         Log.d(TAG, "Scaling by " + detector.getScaleFactor());
@@ -72,16 +74,21 @@ public class EditableOverlay extends View {
 
                 @Override
                 public void onScaleEnd(ScaleGestureDetector detector) {
-
+                    mIsScaling = false;
                 }
             };
 
     private RotationGestureDetector mRotationDetector;
     private RotationGestureDetector.OnRotationGestureListener mOnRotationListener = new RotationGestureDetector.OnRotationGestureListener() {
         @Override
+        public float onRotationBegin(RotationGestureDetector rotationDetector) {
+            mIsRotating = true;
+            return mTextOverlay.getRotation();
+        }
+
+        @Override
         public void OnRotation(RotationGestureDetector rotationDetector) {
             Log.d(TAG, "Rotation by angle " + rotationDetector.getAngle());
-
             if(mTextOverlay.getState() == TextOverlay.TEXT_STATE_FREE ||
                     mTextOverlay.getState() == TextOverlay.TEXT_STATE_VERTICAL) {
                 mTextOverlay.setPivotX(mTextOverlay.getWidth() / 2);
@@ -89,6 +96,11 @@ public class EditableOverlay extends View {
                 mTextOverlay.setRotation(-1 * rotationDetector.getAngle());
                 mTextOverlay.setmRotation(mTextOverlay.getRotation());
             }
+        }
+
+        @Override
+        public void onRotationEnd(RotationGestureDetector rotationDetector) {
+            mIsRotating = false;
         }
     };
 
@@ -133,6 +145,8 @@ public class EditableOverlay extends View {
 
         mDrawHandler = new Handler();
         mTouched = false;
+        mIsRotating = false;
+        mIsScaling = false;
 
         mScaleDetector = new ScaleGestureDetector(getContext(), mOnScaleListener);
         mRotationDetector = new RotationGestureDetector(mOnRotationListener);
@@ -199,6 +213,13 @@ public class EditableOverlay extends View {
         return mTextOverlay;
     }
 
+    public static boolean isRotating() {
+        return mIsRotating;
+    }
+
+    public static boolean isScaling() {
+        return mIsScaling;
+    }
 
     public void clearBitmap()   {
         mBitmap.eraseColor(Color.argb(0, 0, 0, 0));
@@ -332,11 +353,12 @@ public class EditableOverlay extends View {
         private float fX, fY, sX, sY;
         private int ptrID1, ptrID2;
         private float mAngle;
+        private float mStartAngle;
 
         private OnRotationGestureListener mListener;
 
         public float getAngle() {
-            return mAngle;
+            return (mAngle + mStartAngle) % 360;
         }
 
         public RotationGestureDetector(OnRotationGestureListener listener){
@@ -348,6 +370,10 @@ public class EditableOverlay extends View {
         public boolean onTouchEvent(MotionEvent event){
             switch (event.getActionMasked()) {
                 case MotionEvent.ACTION_DOWN:
+                    if(mListener != null)
+                        mStartAngle = mListener.onRotationBegin(this);
+                    else
+                        mStartAngle = 0;
                     ptrID1 = event.getPointerId(event.getActionIndex());
                     break;
                 case MotionEvent.ACTION_POINTER_DOWN:
@@ -374,11 +400,15 @@ public class EditableOverlay extends View {
                     break;
                 case MotionEvent.ACTION_UP:
                     ptrID1 = INVALID_POINTER_ID;
+                    if(mListener != null)
+                        mListener.onRotationEnd(this);
                     break;
                 case MotionEvent.ACTION_POINTER_UP:
                     ptrID2 = INVALID_POINTER_ID;
                     break;
                 case MotionEvent.ACTION_CANCEL:
+                    if(mListener != null)
+                        mListener.onRotationEnd(this);
                     ptrID1 = INVALID_POINTER_ID;
                     ptrID2 = INVALID_POINTER_ID;
                     break;
@@ -398,7 +428,9 @@ public class EditableOverlay extends View {
         }
 
         public interface OnRotationGestureListener {
+            float onRotationBegin(RotationGestureDetector rotationDetector);
             void OnRotation(RotationGestureDetector rotationDetector);
+            void onRotationEnd(RotationGestureDetector rotationDetector);
         }
     }
 }
