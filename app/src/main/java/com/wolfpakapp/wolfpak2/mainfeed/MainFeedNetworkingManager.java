@@ -8,6 +8,7 @@ import android.preference.PreferenceManager;
 import android.text.InputType;
 import android.util.Log;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.AsyncHttpResponseHandler;
@@ -142,35 +143,47 @@ public class MainFeedNetworkingManager {
      * Display the flag dialog.
      **/
     public void showFlagDialog() {
-        FlagDialog flagDialog = new FlagDialog();
-        flagDialog.setFlagDialogListener(new FlagDialog.FlagDialogListener() {
-            @Override
-            public void onDialogPositiveClick() {
-                reportPost();
-            }
+        if (postArrayDeque.size() > 0) {
+            FlagDialog flagDialog = new FlagDialog();
+            flagDialog.setFlagDialogListener(new FlagDialog.FlagDialogListener() {
+                @Override
+                public void onDialogPositiveClick() {
+                    reportPost();
+                }
 
-            @Override
-            public void onDialogNegativeClick() {
+                @Override
+                public void onDialogNegativeClick() {
 
-            }
+                }
 
-            @Override
-            public void onDialogCanceled() {
+                @Override
+                public void onDialogCanceled() {
 
-            }
-        });
+                }
+            });
 
-        flagDialog.show(mainFeed.getActivity().getFragmentManager(), "FlagDialog");
+            flagDialog.show(mainFeed.getActivity().getFragmentManager(), "FlagDialog");
+        } else {
+            // Do nothing?
+        }
     }
 
     /**
      * Report the topmost post.
      */
     private void reportPost() {
-//        Post post = postArrayDeque.peekFirst();
-//        RequestParams params = new RequestParams();
-//        params.put();
-//        mClient.post();
+        Post post = postArrayDeque.peekFirst();
+        mClient.put("posts/flag/" + Integer.toString(post.getId()) + "/", null, new AsyncHttpResponseHandler() {
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
+                Toast.makeText(mainFeed.getActivity(), "Successfully reported", Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
+                Toast.makeText(mainFeed.getActivity(), "Failed to report...", Toast.LENGTH_SHORT).show();
+            }
+        });
 //        AlertDialog.Builder questionBuilder = new AlertDialog.Builder(mainFeed.getActivity());
 //        final EditText random = new EditText(mainFeed.getActivity());
 //        random.setInputType(InputType.TYPE_CLASS_TEXT);
