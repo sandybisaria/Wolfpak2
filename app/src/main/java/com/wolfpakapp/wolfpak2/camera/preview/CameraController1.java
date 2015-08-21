@@ -28,6 +28,7 @@ public class CameraController1 extends CameraController {
 
     private String mVideoPath;
     private Size mVideoSize;
+    private Size mImageSize;
 
     private MediaRecorder mMediaRecorder;
 
@@ -90,6 +91,7 @@ public class CameraController1 extends CameraController {
             mVideoSize = CameraUtils.chooseOptimalSize(cameraSizeToUtilSize(getSupportedPreviewSizes()),
                     mScreenSize.getWidth(), mScreenSize.getHeight(), largest);
         }
+        mImageSize = largest;
         mCameraActionCallback.onCameraOpened();
         startPreview();
     }
@@ -298,7 +300,7 @@ public class CameraController1 extends CameraController {
                 params.setFlashMode(Camera.Parameters.FLASH_MODE_ON);
                 break;
         }
-        params.setPictureSize(CameraStates.SCREEN_SIZE.getWidth(), CameraStates.SCREEN_SIZE.getHeight());
+        params.setPictureSize(mImageSize.getWidth(), mImageSize.getHeight());
         mCamera.setParameters(params);
         mCamera.takePicture(shutterCallback, null, pictureCallback);
     }
