@@ -8,6 +8,7 @@ import android.view.MotionEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 
 import com.github.hiteshsondhi88.libffmpeg.FFmpeg;
 import com.github.hiteshsondhi88.libffmpeg.LoadBinaryResponseHandler;
@@ -192,9 +193,6 @@ public class CameraFragment extends Fragment
     @Override
     public void onResume() {
         super.onResume();
-        View decorView = getActivity().getWindow().getDecorView();
-        // Hide the status bar.
-        decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_FULLSCREEN);
         mCameraLayout.onResume();
         if(CameraStates.CAMERA_GLOBAL_STATE == CameraStates.GLOBAL_STATE_EDITOR)
             mPictureEditorLayout.onResume();
@@ -240,4 +238,14 @@ public class CameraFragment extends Fragment
         return true;
     }
 
+    @Override
+    public void setUserVisibleHint(boolean isVisibleToUser) {
+        super.setUserVisibleHint(isVisibleToUser);
+
+        if (isVisibleToUser) {
+            getActivity().getWindow().getDecorView()
+                    .setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_FULLSCREEN);
+            getActivity().getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        }
+    }
 }
