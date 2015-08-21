@@ -7,6 +7,7 @@ import android.content.DialogInterface;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.Window;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -40,6 +41,7 @@ public class FlagDialog extends DialogFragment {
         // Get the layout inflater
         LayoutInflater inflater = getActivity().getLayoutInflater();
         final View view = inflater.inflate(R.layout.dialog_flag, null);
+
         Button reportButton = (Button) view.findViewById(R.id.dialog_flag_report_button);
         Button cancelButton = (Button) view.findViewById(R.id.dialog_flag_cancel_button);
 
@@ -70,6 +72,7 @@ public class FlagDialog extends DialogFragment {
 
         // Required for the rounding of corners to be visible (else sharp corners will be visible).
         dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+
         return dialog;
     }
 
@@ -91,5 +94,17 @@ public class FlagDialog extends DialogFragment {
     public void onCancel(DialogInterface dialog) {
         mListener.onDialogCanceled();
         super.onCancel(dialog);
+    }
+
+    @Override
+    public void setUserVisibleHint(boolean isVisibleToUser) {
+        super.setUserVisibleHint(isVisibleToUser);
+
+        if (isVisibleToUser) {
+            // Ensure that the fragment is fullscreen when visible.
+            getActivity().getWindow().getDecorView()
+                    .setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN |
+                            View.SYSTEM_UI_FLAG_FULLSCREEN);
+        }
     }
 }
