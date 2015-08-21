@@ -298,6 +298,7 @@ public class CameraController1 extends CameraController {
                 params.setFlashMode(Camera.Parameters.FLASH_MODE_ON);
                 break;
         }
+        params.setPictureSize(CameraStates.SCREEN_SIZE.getWidth(), CameraStates.SCREEN_SIZE.getHeight());
         mCamera.setParameters(params);
         mCamera.takePicture(shutterCallback, null, pictureCallback);
     }
