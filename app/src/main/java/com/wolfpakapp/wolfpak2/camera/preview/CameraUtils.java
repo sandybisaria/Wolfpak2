@@ -64,6 +64,28 @@ public class CameraUtils {
     }
 
     /**
+     * Returns the size that is the same aspect as the screen.  Otherwise returns largest.
+     * This is a substitute for the getLargestSize function which was supposed to return
+     * a size equal to that of the screen but sometimes does not.  It substitutes the aspect ratio
+     * parameter in chooseOptimalSize()  This will return the largest size if no ideal size is
+     * found.
+     * @param choices the choices of size
+     * @return the best size
+     */
+    public static Size getBestSize(List<Size> choices)   {
+        Log.d(TAG, "Choosing best size to match: " +
+                CameraStates.SCREEN_SIZE.getWidth() + ", " + CameraStates.SCREEN_SIZE.getHeight());
+        for(Size choice : choices)  {
+            Log.d(TAG, "SIZE: " +
+                    choice.getWidth() + ", " + choice.getHeight());
+            if(choice.getWidth() == CameraStates.SCREEN_SIZE.getHeight()
+                    && choice.getHeight() == CameraStates.SCREEN_SIZE.getWidth())
+                return choice;
+        }
+        return getLargestSize(choices);
+    }
+
+    /**
      * Returns the largest size given a list of choices
      * @param choices the choices of sizes
      * @return the largest size

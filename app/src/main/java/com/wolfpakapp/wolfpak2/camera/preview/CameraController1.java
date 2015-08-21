@@ -82,7 +82,7 @@ public class CameraController1 extends CameraController {
             }
         });
         // get video size
-        Size largest = CameraUtils.getLargestSize(cameraSizeToUtilSize(getSupportedImageSizes()));
+        Size largest = CameraUtils.getBestSize(cameraSizeToUtilSize(getSupportedImageSizes()));
         if(getSupportedVideoSizes() != null) {
             mVideoSize = CameraUtils.chooseOptimalSize(cameraSizeToUtilSize(getSupportedVideoSizes()),
                     mScreenSize.getWidth(), mScreenSize.getHeight(), largest);
