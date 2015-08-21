@@ -160,7 +160,7 @@ public class VideoSavingService extends Service {
         mServiceHandler.sendMessage(msg);
 
         // If we get killed, after returning from here, restart
-        return START_REDELIVER_INTENT;
+        return START_STICKY;
     }
 
     @Override
