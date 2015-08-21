@@ -74,6 +74,21 @@ public class ServerRestClient extends ServiceManager {
     }
 
     /**
+     * Make a PUT request to the server.
+     * @param url The relative URL.
+     * @param params The query parameters.
+     * @param handler The response handler.
+     */
+    public void put(String url, RequestParams params, AsyncHttpResponseHandler handler) {
+        if (!checkInternetConnection()) {
+            toastNoConnection();
+            handler.onFailure(0, null, null, null);
+            return;
+        }
+        mClient.put(mContext, getAbsoluteUrl(url), params, handler);
+    }
+
+    /**
      * Update the like status of the given post.
      * @param postId The ID of the post.
      * @param voteStatus The VoteStatus to send to the server.

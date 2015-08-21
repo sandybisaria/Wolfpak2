@@ -6,6 +6,7 @@ import android.content.SharedPreferences;
 import android.location.Location;
 import android.preference.PreferenceManager;
 import android.text.InputType;
+import android.util.Log;
 import android.widget.EditText;
 
 import com.loopj.android.http.AsyncHttpClient;
@@ -40,20 +41,12 @@ public class MainFeedNetworkingManager {
 
     RequestParams mParams = new RequestParams();
 
-    /**
-     * Random Number
-     **/
-    private String randomString;
-    private String randomInput;
-
     public MainFeedNetworkingManager(MainFeedFragment mainFeed) {
         // Retrieve a server REST client object to be used for calls to the server.
         mClient = (ServerRestClient) WolfpakServiceProvider
                 .getServiceManager(WolfpakServiceProvider.SERVERRESTCLIENT);
 
         this.mainFeed = mainFeed;
-
-        randomInput = "";
     }
 
     /**
@@ -146,102 +139,118 @@ public class MainFeedNetworkingManager {
     }
 
     /**
-     * Report the topmost post.
+     * Display the flag dialog.
      **/
-    public void reportHowl() {
-        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(mainFeed.getActivity());
-        final EditText random = new EditText(mainFeed.getActivity());
-        random.setInputType(InputType.TYPE_CLASS_TEXT);
+    public void showFlagDialog() {
+        FlagDialog flagDialog = new FlagDialog();
+        flagDialog.setFlagDialogListener(new FlagDialog.FlagDialogListener() {
+            @Override
+            public void onDialogPositiveClick() {
+                reportPost();
+            }
 
-        // set title
-        alertDialogBuilder.setTitle("FLAG!!");
-        final EditText input = new EditText(mainFeed.getActivity());
+            @Override
+            public void onDialogNegativeClick() {
 
-        // set dialog message
-        alertDialogBuilder
-                .setMessage("Do you really want to report this howl?")
-                .setCancelable(false)
-                .setPositiveButton("Yes!", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int id) {
-                        MainFeedNetworkingManager.this.generateRandomString();
-                        AlertDialog.Builder alertDialogBuilder1 = new AlertDialog.Builder(mainFeed.getActivity());
-                        // set title
-                        alertDialogBuilder1.setTitle("Type Captcha in order to report!");
-                        // set dialog message
+            }
 
-                        // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
-                        input.setInputType(InputType.TYPE_CLASS_TEXT);
-                        alertDialogBuilder1.setView(input);
+            @Override
+            public void onDialogCanceled() {
 
-                        final AsyncHttpClient reportput = new AsyncHttpClient(true, 80, 443);
+            }
+        });
 
-                        alertDialogBuilder1
-                                .setMessage("CAPTCHA = " + randomString)
-                                .setCancelable(false)
-                                .setPositiveButton("Yes!", new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog1, int id1) {
-                                        randomInput = input.getText().toString();
-                                        if (randomString.equals(randomInput)) {
-                                            reportput.put("https://ec2-52-4-176-1.compute-1.amazonaws.com/posts/flag/" + postArrayDeque.peekFirst().getId() + "/", new AsyncHttpResponseHandler() {
-                                                @Override
-                                                public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
-                                                }
-
-                                                @Override
-                                                public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
-                                                }
-                                            });
-                                        } else {
-                                            dialog1.cancel();
-                                        }
-
-                                    }
-                                })
-                                .setNegativeButton("No", new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog1, int id1) {
-                                        // if this button is clicked, just close
-                                        // the dialog box and do nothing
-                                        dialog1.cancel();
-                                    }
-                                });
-
-                        // create alert dialog
-                        AlertDialog alertDialog = alertDialogBuilder1.create();
-
-                        // show it
-                        alertDialog.show();
-                    }
-                })
-                .setNegativeButton("No", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int id) {
-                        // if this button is clicked, just close
-                        // the dialog box and do nothing
-                        dialog.cancel();
-                    }
-                });
-
-        // create alert dialog
-        AlertDialog alertDialog = alertDialogBuilder.create();
-
-        // show it
-        alertDialog.show();
+        flagDialog.show(mainFeed.getActivity().getFragmentManager(), "FlagDialog");
     }
 
     /**
-     * Random Number Generator for reportHowl()
-     **/
-    public void generateRandomString() {
-        char[] chars1 = "ABCDEF012GHIJKL345MNOPQR678STUVWXYZ9".toCharArray();
-        StringBuilder sb1 = new StringBuilder();
-        Random random1 = new Random();
-        for (int i = 0; i < 8; i++) {
-            char c1 = chars1[random1.nextInt(chars1.length)];
-            sb1.append(c1);
-        }
-        randomString = sb1.toString();
+     * Report the topmost post.
+     */
+    private void reportPost() {
+//        Post post = postArrayDeque.peekFirst();
+//        RequestParams params = new RequestParams();
+//        params.put();
+//        mClient.post();
+//        AlertDialog.Builder questionBuilder = new AlertDialog.Builder(mainFeed.getActivity());
+//        final EditText random = new EditText(mainFeed.getActivity());
+//        random.setInputType(InputType.TYPE_CLASS_TEXT);
+//
+//        // Set the title.
+//        questionBuilder.setTitle("FLAG!");
+//        final EditText input = new EditText(mainFeed.getActivity());
+//
+//        // Set the dialog message.
+//        questionBuilder
+//                .setMessage("Do you really want to report this howl?")
+//                .setCancelable(false)
+//                .setPositiveButton("Yes!", new DialogInterface.OnClickListener() {
+//                    @Override
+//                    public void onClick(DialogInterface dialog, int id) {
+//                        MainFeedNetworkingManager.this.generateRandomString();
+//                        AlertDialog.Builder captchaBuilder = new AlertDialog.Builder(mainFeed.getActivity());
+//                        // set title
+//                        captchaBuilder.setTitle("Type Captcha in order to report!");
+//                        // set dialog message
+//
+//                        // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
+//                        input.setInputType(InputType.TYPE_CLASS_TEXT);
+//                        captchaBuilder.setView(input);
+//
+//                        final AsyncHttpClient reportput = new AsyncHttpClient(true, 80, 443);
+//                        final String randomString = generateRandomString();
+//
+//                        captchaBuilder
+//                                .setMessage("CAPTCHA = " + randomString)
+//                                .setCancelable(false)
+//                                .setPositiveButton("Yes!", new DialogInterface.OnClickListener() {
+//                                    @Override
+//                                    public void onClick(DialogInterface dialog1, int id1) {
+//                                        String randomInput = input.getText().toString();
+//                                        if (randomString.equals(randomInput)) {
+//                                            reportput.put("https://ec2-52-4-176-1.compute-1.amazonaws.com/posts/flag/" + postArrayDeque.peekFirst().getId() + "/", new AsyncHttpResponseHandler() {
+//                                                @Override
+//                                                public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
+//                                                }
+//
+//                                                @Override
+//                                                public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
+//                                                }
+//                                            });
+//                                        } else {
+//                                            dialog1.cancel();
+//                                        }
+//
+//                                    }
+//                                })
+//                                .setNegativeButton("No", new DialogInterface.OnClickListener() {
+//                                    @Override
+//                                    public void onClick(DialogInterface dialog1, int id1) {
+//                                        // if this button is clicked, just close
+//                                        // the dialog box and do nothing
+//                                        dialog1.cancel();
+//                                    }
+//                                });
+//
+//                        // create alert dialog
+//                        AlertDialog alertDialog = captchaBuilder.create();
+//
+//                        // show it
+//                        alertDialog.show();
+//                    }
+//                })
+//                .setNegativeButton("No", new DialogInterface.OnClickListener() {
+//                    @Override
+//                    public void onClick(DialogInterface dialog, int id) {
+//                        // if this button is clicked, just close
+//                        // the dialog box and do nothing
+//                        dialog.cancel();
+//                    }
+//                });
+//
+//        // create alert dialog
+//        AlertDialog alertDialog = questionBuilder.create();
+//
+//        // show it
+//        alertDialog.show();
     }
 }

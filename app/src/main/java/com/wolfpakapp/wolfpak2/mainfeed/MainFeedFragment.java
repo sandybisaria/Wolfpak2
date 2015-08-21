@@ -96,7 +96,7 @@ public class MainFeedFragment extends Fragment {
         reportImageButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                networkingManager.reportHowl();
+                networkingManager.showFlagDialog();
             }
         });
 
