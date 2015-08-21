@@ -39,6 +39,7 @@ public class CameraLayout implements CameraController.CameraActionCallback {
     private CameraController mCameraController;
 
     private static boolean mLockingForEditor; // true if about to switch to picture editor
+    private static boolean mLockingSwitchCamera; // true if switching camera
     private static boolean mIsRecordingVideo;
 
     private Button mCaptureButton;
@@ -125,6 +126,7 @@ public class CameraLayout implements CameraController.CameraActionCallback {
         decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_FULLSCREEN);
 
         mLockingForEditor = false;
+        mLockingSwitchCamera = false;
 
         if(mCameraView.isAvailable())   {
             try {
@@ -138,7 +140,22 @@ public class CameraLayout implements CameraController.CameraActionCallback {
     public void onClick(int id) {
         switch(id)    {
             case R.id.btn_switch:
-                mCameraController.toggleCamera();
+                if(!mLockingSwitchCamera) { // prevent freezing if user presses multiple times in quick succession
+                    mLockingSwitchCamera = true;
+                    mCameraController.toggleCamera();
+                    (new Thread(new Runnable()  {
+                        @Override
+                        public void run() {
+                            try {
+                                Thread.sleep(500); // wait 0.5s for camera to finish switching before unlocking button
+                            } catch(InterruptedException e) {
+                                e.printStackTrace();
+                            } finally   {
+                                mLockingSwitchCamera = false;
+                            }
+                        }
+                    })).start();
+                }
                 break;
             case R.id.btn_flash:
                 if(CameraStates.FLASH_STATE == CameraStates.AUTO_FLASH)  {
@@ -194,6 +211,7 @@ public class CameraLayout implements CameraController.CameraActionCallback {
                         if(CameraStates.FLASH_STATE != CameraStates.ALWAYS_FLASH)   {
                             startFlashAnimation();
                         }
+                        mLockingForEditor = true;
                         mCameraController.takePicture();
                     }
                 }
@@ -268,14 +286,14 @@ public class CameraLayout implements CameraController.CameraActionCallback {
             public void run() {
                 Handler flashHandler = new Handler();
                 // fade in
-                flashHandler.post(new Runnable()    {
+                flashHandler.post(new Runnable() {
                     @Override
                     public void run() {
                         fade(0, 255, 300, true);
                     }
                 });
                 // fade out
-                flashHandler.post(new Runnable()    {
+                flashHandler.post(new Runnable() {
                     @Override
                     public void run() {
                         fade(255, 0, 600, false);

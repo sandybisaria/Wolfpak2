@@ -161,19 +161,17 @@ public class CameraController1 extends CameraController {
 
         // supposedly more reliable? CamcorderProfile, used in conjunction with setCamera()
         CamcorderProfile profile = CamcorderProfile.get(mCameraId, CamcorderProfile.QUALITY_HIGH);
-        Log.d(TAG, "Camcorder profile defaults:**************************************");
-        Log.d(TAG, "Camcorder profile file format: " + profile.fileFormat);
-        Log.d(TAG, "Camcorder profile video height: " + profile.videoFrameHeight);
-        Log.d(TAG, "Required video height: " + mVideoSize.getHeight());
-        Log.d(TAG, "Camcorder profile video width: " + profile.videoFrameWidth);
-        Log.d(TAG, "Required video width: " + mVideoSize.getWidth());
-        Log.d(TAG, "Camcorder profile quality: " + profile.quality);
-        Log.d(TAG, "Camcorder profile vid codec:" + profile.videoCodec);
-        Log.d(TAG, "Camcorder profile audio codec: " + profile.audioCodec);
-        Log.d(TAG, "Camcorder profile video bitrate: " + profile.videoBitRate);
-        Log.d(TAG, "Camcorder profile video framerate: " + profile.videoFrameRate);
-//        if(CameraStates.IS_SOUND == false)
-//            profile.quality = 1005; // supposedly this will prevent audio
+//        Log.d(TAG, "Camcorder profile defaults:**************************************");
+//        Log.d(TAG, "Camcorder profile file format: " + profile.fileFormat);
+//        Log.d(TAG, "Camcorder profile video height: " + profile.videoFrameHeight);
+//        Log.d(TAG, "Required video height: " + mVideoSize.getHeight());
+//        Log.d(TAG, "Camcorder profile video width: " + profile.videoFrameWidth);
+//        Log.d(TAG, "Required video width: " + mVideoSize.getWidth());
+//        Log.d(TAG, "Camcorder profile quality: " + profile.quality);
+//        Log.d(TAG, "Camcorder profile vid codec:" + profile.videoCodec);
+//        Log.d(TAG, "Camcorder profile audio codec: " + profile.audioCodec);
+//        Log.d(TAG, "Camcorder profile video bitrate: " + profile.videoBitRate);
+//        Log.d(TAG, "Camcorder profile video framerate: " + profile.videoFrameRate);
 
         if (CameraStates.IS_SOUND) { // with audio
             mMediaRecorder.setProfile(profile); // use profile directly

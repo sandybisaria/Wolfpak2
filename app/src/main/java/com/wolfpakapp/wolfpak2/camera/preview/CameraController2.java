@@ -241,14 +241,14 @@ public class CameraController2 extends CameraController {
         List<Size> imageSizes = getSupportedImageSizes();
         List<Size> previewSizes = getSupportedPreviewSizes();
         List<Size> videoSizes = getSupportedVideoSizes();
-        Size largest = CameraUtils.getLargestSize(imageSizes);
+        Size largest = CameraUtils.getBestSize(imageSizes);
 
         mPreviewSize = CameraUtils.chooseOptimalSize(previewSizes,
                 mScreenSize.getWidth(), mScreenSize.getHeight(), largest);
         mVideoSize = CameraUtils.chooseOptimalSize(videoSizes,
                 mScreenSize.getWidth(), mScreenSize.getHeight(), largest);
         mImageReader = ImageReader.newInstance(largest.getWidth(), largest.getHeight(),
-                ImageFormat.JPEG, /*maxImages*/2); // TODO try using a smaller size, not necessarily largest
+                ImageFormat.JPEG, /*maxImages*/2);
         mImageReader.setOnImageAvailableListener(
                 mOnImageAvailableListener, mBackgroundHandler);
 
