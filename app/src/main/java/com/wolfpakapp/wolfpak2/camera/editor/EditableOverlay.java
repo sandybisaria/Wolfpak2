@@ -44,8 +44,6 @@ public class EditableOverlay extends View {
     private Handler mDrawHandler; // performs the actual blitting path onto textureview
     private static final int BLITTING_OVERLAY = 1;
     private boolean mTouched;
-    private static boolean mIsRotating;
-    private static boolean mIsScaling;
 
     private TextOverlay mTextOverlay;
     private ScaleGestureDetector mScaleDetector;
@@ -56,7 +54,7 @@ public class EditableOverlay extends View {
                 public boolean onScaleBegin(ScaleGestureDetector detector) {
                     Log.d(TAG, "Scale Begin");
                     currentFontSize = mTextOverlay.getTextSize();
-                    mIsScaling = true;
+                    mTextOverlay.setScaling(true);
                     return true;
                 }
 
@@ -74,7 +72,7 @@ public class EditableOverlay extends View {
 
                 @Override
                 public void onScaleEnd(ScaleGestureDetector detector) {
-                    mIsScaling = false;
+                    mTextOverlay.setScaling(false);
                 }
             };
 
@@ -82,8 +80,8 @@ public class EditableOverlay extends View {
     private RotationGestureDetector.OnRotationGestureListener mOnRotationListener = new RotationGestureDetector.OnRotationGestureListener() {
         @Override
         public float onRotationBegin(RotationGestureDetector rotationDetector) {
-            mIsRotating = true;
-            return mTextOverlay.getRotation();
+            mTextOverlay.setRotating(true);
+            return -1 *  mTextOverlay.getRotation();
         }
 
         @Override
@@ -100,7 +98,7 @@ public class EditableOverlay extends View {
 
         @Override
         public void onRotationEnd(RotationGestureDetector rotationDetector) {
-            mIsRotating = false;
+            mTextOverlay.setRotating(false);
         }
     };
 
@@ -145,8 +143,6 @@ public class EditableOverlay extends View {
 
         mDrawHandler = new Handler();
         mTouched = false;
-        mIsRotating = false;
-        mIsScaling = false;
 
         mScaleDetector = new ScaleGestureDetector(getContext(), mOnScaleListener);
         mRotationDetector = new RotationGestureDetector(mOnRotationListener);
@@ -211,14 +207,6 @@ public class EditableOverlay extends View {
 
     public TextOverlay getTextOverlay() {
         return mTextOverlay;
-    }
-
-    public static boolean isRotating() {
-        return mIsRotating;
-    }
-
-    public static boolean isScaling() {
-        return mIsScaling;
     }
 
     public void clearBitmap()   {

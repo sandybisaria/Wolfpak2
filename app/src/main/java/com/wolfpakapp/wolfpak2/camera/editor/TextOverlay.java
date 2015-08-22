@@ -9,10 +9,14 @@ import android.graphics.Rect;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.util.TypedValue;
+import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.RelativeLayout;
+import android.widget.TextView;
 
 import com.wolfpakapp.wolfpak2.R;
 
@@ -62,6 +66,10 @@ public class TextOverlay extends EditText {
     private int mTextColor;
     private float mX;
     private float mY;
+
+    private boolean mIsRotating;
+    private boolean mIsScaling;
+
     /**
      * Original Center Position
      */
@@ -105,6 +113,23 @@ public class TextOverlay extends EditText {
         mRotation = 0f;
         mScale = 1f;
         mTextColor = Color.WHITE;
+
+        mIsRotating = false;
+        mIsScaling = false;
+
+        this.setOnEditorActionListener(new OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                    if(actionId == EditorInfo.IME_ACTION_DONE) {
+                        v.clearFocus(); // clear focus when keyboard is down
+                        // force close keyboard
+                        InputMethodManager imm = (InputMethodManager)context.getSystemService(Context.INPUT_METHOD_SERVICE);
+                        imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
+                    }
+                return false;
+            }
+        });
+
         setDrawingCacheEnabled(true);
     }
 
@@ -134,6 +159,23 @@ public class TextOverlay extends EditText {
      */
     public boolean isEditable() {
         return canEdit;
+    }
+
+
+    public boolean isRotating() {
+        return mIsRotating;
+    }
+
+    public void setRotating(boolean mIsRotating) {
+        this.mIsRotating = mIsRotating;
+    }
+
+    public boolean isScaling() {
+        return mIsScaling;
+    }
+
+    public void setScaling(boolean mIsScaling) {
+        this.mIsScaling = mIsScaling;
     }
 
     /**
@@ -233,16 +275,14 @@ public class TextOverlay extends EditText {
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         if(canEdit) {
-            if(EditableOverlay.isRotating() || EditableOverlay.isScaling())
-                return false; // don't move text during rotation or scale
             float mx = event.getRawX();
             float my = event.getRawY();
             clearFocus();
             switch (event.getAction()) {
                 case MotionEvent.ACTION_DOWN:
-
                     break;
                 case MotionEvent.ACTION_MOVE:
+                    if(mIsRotating || mIsScaling) return false; // don't move text
                     if (mState == TEXT_STATE_DEFAULT || mState == TEXT_STATE_VERTICAL) {
                         mY = my - getHeight() / 2;
                         setY(mY); // only move in Y
