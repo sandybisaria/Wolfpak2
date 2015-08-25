@@ -10,7 +10,6 @@
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:layout_margin="0dp"
-        android:contentDescription="@string/howl"
         android:padding="0dp"
         android:scaleType="fitXY"
         android:src="@drawable/wolfpaktest" />
@@ -22,14 +21,12 @@
         android:layout_alignParentEnd="true"
         android:layout_alignParentTop="true"
         android:layout_gravity="end|top"
-        android:contentDescription="@string/report_howl"
         android:src="@drawable/alert" />
 
     <!--<ImageButton-->
     <!--android:layout_width="40dp"-->
     <!--android:layout_height="40dp"-->
     <!--android:id="@+id/imageButton1f"-->
-    <!--android:contentDescription="@string/share"-->
     <!--android:src="@drawable/facebook"-->
     <!--android:layout_gravity="start|top"-->
     <!--android:layout_alignParentTop="true"-->
