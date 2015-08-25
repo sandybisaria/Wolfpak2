@@ -55,61 +55,27 @@ public class MediaView extends RelativeLayout {
         mediaVideoView = (VideoView)findViewById(R.id.mediaVideoView);
 
         likeStatusOverlayView = findViewById(R.id.likeStatusOverlayView);
-        setTint(Post.VoteStatus.NOT_VOTED);
     }
-
-    boolean hasStartedAnimating = false;
     /**
      * Set the tint of the view based on the vote status.
      *
      * @param voteStatus Status of the view
      */
     public void setTint(Post.VoteStatus voteStatus) {
-        int colorTo;
         switch (voteStatus) {
-            case UPVOTED:
-                colorTo = Color.GREEN;
+            case UPVOTED: {
+                likeStatusOverlayView.setBackgroundColor(Color.argb(100, 0, 255, 0));
                 break;
-            case DOWNVOTED:
-                colorTo = Color.RED;
-                break;
-            case NOT_VOTED:
-            default:
-                colorTo = Color.TRANSPARENT;
-        }
-        Drawable background = likeStatusOverlayView.getBackground();
-        if (background instanceof ColorDrawable) {
-            if (!hasStartedAnimating) {
-                hasStartedAnimating = true;
-                int colorFrom = ((ColorDrawable) background).getColor();
-                ObjectAnimator animator = ObjectAnimator.ofObject(likeStatusOverlayView,
-                        "backgroundColor", new ArgbEvaluator(),colorFrom, colorTo)
-                        .setDuration(350);
-                animator.addListener(new Animator.AnimatorListener() {
-                    @Override
-                    public void onAnimationStart(Animator animation) {
-
-                    }
-
-                    @Override
-                    public void onAnimationEnd(Animator animation) {
-                        hasStartedAnimating = false;
-                    }
-
-                    @Override
-                    public void onAnimationCancel(Animator animation) {
-                        onAnimationEnd(animation);
-                    }
-
-                    @Override
-                    public void onAnimationRepeat(Animator animation) {
-
-                    }
-                });
-                animator.start();
             }
-        } else {
-            likeStatusOverlayView.setBackgroundColor(colorTo);
+            case DOWNVOTED: {
+                likeStatusOverlayView.setBackgroundColor(Color.argb(100, 255, 0, 0));
+                break;
+            }
+            case NOT_VOTED:
+            default: {
+                likeStatusOverlayView.setBackgroundColor(Color.TRANSPARENT);
+                break;
+            }
         }
     }
 
