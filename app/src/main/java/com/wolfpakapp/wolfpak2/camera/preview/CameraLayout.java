@@ -95,7 +95,7 @@ public class CameraLayout implements CameraController.CameraActionCallback {
 
         mFlashButton = (ImageButton) view.findViewById(R.id.btn_flash); // flash button
         mFlashButton.setOnClickListener(fragment);
-        mFlashButton.setImageResource(R.drawable.auto_flash);
+        mFlashButton.setImageResource(R.drawable.flash_auto_1);
 
         mSoundButton = (ImageButton) view.findViewById(R.id.btn_sound); // sound button
         mSoundButton.setOnClickListener(fragment);
@@ -159,11 +159,11 @@ public class CameraLayout implements CameraController.CameraActionCallback {
                 break;
             case R.id.btn_flash:
                 if(CameraStates.FLASH_STATE == CameraStates.AUTO_FLASH)  {
-                    mFlashButton.setImageResource(R.drawable.no_flash);
+                    mFlashButton.setImageResource(R.drawable.flash_off_1);
                 } else if (CameraStates.FLASH_STATE == CameraStates.NO_FLASH)  {
-                    mFlashButton.setImageResource(R.drawable.flash);
+                    mFlashButton.setImageResource(R.drawable.flash_on_1);
                 } else  {
-                    mFlashButton.setImageResource(R.drawable.auto_flash);
+                    mFlashButton.setImageResource(R.drawable.flash_auto_1);
                 }
                 mCameraController.toggleFlash();
                 break;
@@ -171,7 +171,7 @@ public class CameraLayout implements CameraController.CameraActionCallback {
                 if(CameraStates.IS_SOUND)  {
                     mSoundButton.setImageResource(R.drawable.no_sound);
                 } else  {
-                    mSoundButton.setImageResource(R.drawable.sound);
+                    mSoundButton.setImageResource(R.drawable.sound_on_1);
                 }
                 mCameraController.toggleSound();
                 break;
