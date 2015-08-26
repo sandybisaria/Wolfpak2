@@ -137,6 +137,7 @@ public class TextOverlay extends EditText {
      * @return a bitmap of the text's current appearance
      */
     public Bitmap getBitmap()   {
+        clearFocus(); // in the event the cursor for some reason is still on there
         Bitmap b = getDrawingCache();
         Matrix rotator = new Matrix();
         rotator.postRotate(getRotation());
