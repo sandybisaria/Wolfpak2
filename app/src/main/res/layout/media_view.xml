@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout
+<FrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/relativeLayout"
     android:layout_width="match_parent"
@@ -8,10 +8,9 @@
     <ImageView
         android:id="@+id/mediaImageView"
         android:visibility="gone"
-        android:scaleType="fitXY"
+        android:scaleType="centerCrop"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:contentDescription="@string/img"/>
+        android:layout_height="match_parent"/>
 
     <VideoView
         android:id="@+id/mediaVideoView"
@@ -19,24 +18,10 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
-    <!--<ImageView-->
-        <!--android:id="@+id/mediaVideoViewThumbnail"-->
-        <!--android:visibility="gone"-->
-        <!--android:scaleType="fitXY"-->
-        <!--android:layout_alignBottom="@id/mediaVideoView"-->
-        <!--android:layout_alignStart="@id/mediaVideoView"-->
-        <!--android:layout_width="wrap_content"-->
-        <!--android:layout_height="wrap_content"-->
-        <!--android:contentDescription="@string/img"/>-->
-
     <View
         android:id="@+id/likeStatusOverlayView"
         android:alpha="0.5"
-        android:layout_alignBottom="@id/mediaImageView"
-        android:layout_alignStart="@id/mediaImageView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:background="#0b000000"
-        android:layout_alignParentStart="false" />
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
 
-</RelativeLayout>
+</FrameLayout>

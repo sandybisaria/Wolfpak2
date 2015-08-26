@@ -119,7 +119,7 @@ public class MainFeedLayoutManager {
                             .ofFloat(view, View.X, view.getX(), 0f),
                     ObjectAnimator
                             .ofFloat(view, View.Y, view.getY(), 0f));
-            set.setDuration(750);
+            set.setDuration(500);
             set.setInterpolator(new AccelerateDecelerateInterpolator());
             set.start();
         }
@@ -167,11 +167,11 @@ public class MainFeedLayoutManager {
 
                     MediaView mediaView = (MediaView) v;
                     if (isUpvoting()) {
-                        mediaView.setLikeStatus(Post.VoteStatus.UPVOTED);
+                        mediaView.setTint(Post.VoteStatus.UPVOTED);
                     } else if (isDownvoting()) {
-                        mediaView.setLikeStatus(Post.VoteStatus.DOWNVOTED);
+                        mediaView.setTint(Post.VoteStatus.DOWNVOTED);
                     } else {
-                        mediaView.setLikeStatus(Post.VoteStatus.NOT_VOTED);
+                        mediaView.setTint(Post.VoteStatus.NOT_VOTED);
                     }
                     break;
                 }
@@ -182,7 +182,7 @@ public class MainFeedLayoutManager {
                     MediaView mediaView = (MediaView) v;
                     if (isUpvoting()) {
                         networkingManager.updateLikeStatus(Post.VoteStatus.UPVOTED);
-                        mediaView.setLikeStatus(Post.VoteStatus.UPVOTED);
+                        mediaView.setTint(Post.VoteStatus.UPVOTED);
                         slideToTop();
                         mediaViewArrayDeque.pollFirst();
 
@@ -191,7 +191,7 @@ public class MainFeedLayoutManager {
                         }
                     } else if (isDownvoting()) {
                         networkingManager.updateLikeStatus(Post.VoteStatus.DOWNVOTED);
-                        mediaView.setLikeStatus(Post.VoteStatus.DOWNVOTED);
+                        mediaView.setTint(Post.VoteStatus.DOWNVOTED);
                         slideToBottom();
                         mediaViewArrayDeque.pollFirst();
 
@@ -201,7 +201,7 @@ public class MainFeedLayoutManager {
                     } else {
                         //TODO Animate to original position.
                         returnToPosition();
-                        mediaView.setLikeStatus(Post.VoteStatus.NOT_VOTED);
+                        mediaView.setTint(Post.VoteStatus.NOT_VOTED);
                     }
 
 //                    mediaViewArrayDeque.peekFirst().mediaVideoViewThumbnail.setVisibility(View.GONE);

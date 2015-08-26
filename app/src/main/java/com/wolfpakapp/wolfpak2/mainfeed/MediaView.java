@@ -1,7 +1,12 @@
 package com.wolfpakapp.wolfpak2.mainfeed;
 
+import android.animation.Animator;
+import android.animation.ArgbEvaluator;
+import android.animation.ObjectAnimator;
 import android.content.Context;
 import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
@@ -22,7 +27,6 @@ public class MediaView extends RelativeLayout {
 
     private ImageView mediaImageView;
     private VideoView mediaVideoView;
-//    public ImageView mediaVideoViewThumbnail;
     private View likeStatusOverlayView;
 
     /** Constructors **/
@@ -49,33 +53,29 @@ public class MediaView extends RelativeLayout {
 
         mediaImageView = (ImageView)findViewById(R.id.mediaImageView);
         mediaVideoView = (VideoView)findViewById(R.id.mediaVideoView);
-//        this.mediaVideoViewThumbnail = (ImageView) findViewById(R.id.mediaVideoViewThumbnail);
 
         likeStatusOverlayView = findViewById(R.id.likeStatusOverlayView);
     }
-
     /**
-     * Handles Changing Opaque View on Top of ImageView/VideoView Based on LikeStatus
-     * - Upvote: Green
-     * - Downvote: Red
-     * - Neutral: Transparent
+     * Set the tint of the view based on the vote status.
      *
      * @param voteStatus Status of the view
      */
-    public void setLikeStatus(Post.VoteStatus voteStatus) {
+    public void setTint(Post.VoteStatus voteStatus) {
         switch (voteStatus) {
-            case UPVOTED:
+            case UPVOTED: {
                 likeStatusOverlayView.setBackgroundColor(Color.argb(100, 0, 255, 0));
                 break;
-
-            case DOWNVOTED:
+            }
+            case DOWNVOTED: {
                 likeStatusOverlayView.setBackgroundColor(Color.argb(100, 255, 0, 0));
                 break;
-
+            }
             case NOT_VOTED:
-            default:
-                likeStatusOverlayView.setBackgroundColor(Color.argb(0,0,0,0));
+            default: {
+                likeStatusOverlayView.setBackgroundColor(Color.TRANSPARENT);
                 break;
+            }
         }
     }
 
@@ -93,8 +93,6 @@ public class MediaView extends RelativeLayout {
             mediaVideoView.setVisibility(View.VISIBLE);
             mediaVideoView.setVideoPath(post.getMediaUrl());
             mediaVideoView.requestFocus();
-//            mediaVideoViewThumbnail.setVisibility(View.VISIBLE);
-//            Picasso.with(mediaVideoViewThumbnail.getContext()).load(thumbnail).into(mediaVideoViewThumbnail);
         }
     }
 
