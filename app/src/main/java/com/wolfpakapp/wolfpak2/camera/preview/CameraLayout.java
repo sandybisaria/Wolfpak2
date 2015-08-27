@@ -169,7 +169,7 @@ public class CameraLayout implements CameraController.CameraActionCallback {
                 break;
             case R.id.btn_sound:
                 if(CameraStates.IS_SOUND)  {
-                    mSoundButton.setImageResource(R.drawable.no_sound);
+                    mSoundButton.setImageResource(R.drawable.mute_1);
                 } else  {
                     mSoundButton.setImageResource(R.drawable.sound_on_1);
                 }
