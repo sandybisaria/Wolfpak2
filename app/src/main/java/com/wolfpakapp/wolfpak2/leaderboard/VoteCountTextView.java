@@ -5,8 +5,6 @@ import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.content.Context;
-import android.graphics.drawable.GradientDrawable;
-import android.os.Build;
 import android.os.Handler;
 import android.os.Vibrator;
 import android.support.v4.view.MotionEventCompat;
@@ -20,7 +18,6 @@ import android.view.ViewGroup;
 import android.view.ViewParent;
 import android.view.animation.OvershootInterpolator;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.wolfpakapp.wolfpak2.Post;
@@ -58,31 +55,35 @@ public class VoteCountTextView extends TextView {
         this.parentItemView = parentItemView;
         refresh();
 
-        // If this is in the local leaderboard, then enable the onTouchEvent() method.
-        isTouchEnabled = manager.getTag().equals(LeaderboardFragment.LOCAL_TAG);
+        if (manager.getTag().equals(LeaderboardFragment.LOCAL_TAG)) {
+            // If this is in the local leaderboard, then enable the onTouchEvent() method.
+            isTouchEnabled = true;
+        } else {
+            setBackgroundResource(R.drawable.vote_count_cant_vote);
+        }
     }
 
     /**
      * Sets the background color so that it corresponds to the given VoteStatus.
-     * @param voteStatus
+     * @param voteStatus The vote status that determines the background
      */
-    private void setBackgroundColor(Post.VoteStatus voteStatus) {
-        GradientDrawable bg;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            bg = (GradientDrawable) getResources()
-                    .getDrawable(R.drawable.background_vote_count, null);
-        } else {
-            bg = (GradientDrawable) getResources()
-                    .getDrawable(R.drawable.background_vote_count);
+    private void setBackground(Post.VoteStatus voteStatus) {
+        switch (voteStatus) {
+            case UPVOTED: {
+                setBackgroundResource(R.drawable.vote_count_up_voted);
+                break;
+            }
+            case DOWNVOTED: {
+                setBackgroundResource(R.drawable.vote_count_down_voted);
+                break;
+            }
+            case NOT_VOTED:
+            default: {
+                setBackgroundResource(R.drawable.vote_count_not_voted);
+                break;
+            }
         }
 
-        int statusColor = voteStatus.getStatusColor(getContext());
-        if (bg != null) {
-            bg.setColor(statusColor);
-            setBackground(bg);
-        }
-
-        invalidate();
     }
 
     /**
@@ -90,7 +91,7 @@ public class VoteCountTextView extends TextView {
      */
     private void refresh() {
         setText(Integer.toString(mPost.getUpdatedVoteCount()));
-        setBackgroundColor(mPost.getVoteStatus());
+        setBackground(mPost.getVoteStatus());
     }
 
     @Override
@@ -167,15 +168,15 @@ public class VoteCountTextView extends TextView {
                 // Change the COLOR of the vote count, but do NOT save the status yet!
                 if (getY() < initialViewY) {
                     if (mPost.getVoteStatus() == Post.VoteStatus.UPVOTED) {
-                        setBackgroundColor(Post.VoteStatus.NOT_VOTED);
+                        setBackground(Post.VoteStatus.NOT_VOTED);
                     } else {
-                        setBackgroundColor(Post.VoteStatus.UPVOTED);
+                        setBackground(Post.VoteStatus.UPVOTED);
                     }
                 } else if (getY() > initialViewY) {
                     if (mPost.getVoteStatus() == Post.VoteStatus.DOWNVOTED) {
-                        setBackgroundColor(Post.VoteStatus.NOT_VOTED);
+                        setBackground(Post.VoteStatus.NOT_VOTED);
                     } else {
-                        setBackgroundColor(Post.VoteStatus.DOWNVOTED);
+                        setBackground(Post.VoteStatus.DOWNVOTED);
                     }
                 }
 

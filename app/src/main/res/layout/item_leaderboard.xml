@@ -45,12 +45,14 @@
         <com.wolfpakapp.wolfpak2.leaderboard.VoteCountTextView
             android:layout_width="@dimen/leaderboard_item_vote_count_size"
             android:layout_height="@dimen/leaderboard_item_vote_count_size"
-            android:layout_centerInParent="true"
+            android:layout_centerHorizontal="true"
             android:layout_alignParentBottom="true"
+            android:background="@drawable/vote_count_not_voted"
+            android:id="@+id/leaderboard_item_vote_count_text_view"
             android:gravity="center"
-            android:layout_margin="@dimen/leaderboard_item_view_count_margin"
-            android:background="@drawable/background_vote_count"
-            android:id="@+id/leaderboard_item_vote_count_text_view" />
+            android:paddingTop="25dp"
+            android:textColor="@android:color/white"
+            android:textSize="20sp" />
 
     </RelativeLayout>
     
