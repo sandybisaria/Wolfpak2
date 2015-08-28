@@ -15,6 +15,7 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.VideoView;
 
+import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
 import com.wolfpakapp.wolfpak2.Post;
 import com.wolfpakapp.wolfpak2.R;
@@ -27,7 +28,7 @@ public class MediaView extends RelativeLayout {
 
     private ImageView mediaImageView;
     private VideoView mediaVideoView;
-    private View likeStatusOverlayView;
+    private ImageView likeStatusOverlayView;
 
     /** Constructors **/
     public MediaView(Context context) {
@@ -54,7 +55,7 @@ public class MediaView extends RelativeLayout {
         mediaImageView = (ImageView)findViewById(R.id.mediaImageView);
         mediaVideoView = (VideoView)findViewById(R.id.mediaVideoView);
 
-        likeStatusOverlayView = findViewById(R.id.likeStatusOverlayView);
+        likeStatusOverlayView = (ImageView) findViewById(R.id.likeStatusOverlayView);
     }
     /**
      * Set the tint of the view based on the vote status.
@@ -64,16 +65,37 @@ public class MediaView extends RelativeLayout {
     public void setTint(Post.VoteStatus voteStatus) {
         switch (voteStatus) {
             case UPVOTED: {
-                likeStatusOverlayView.setBackgroundColor(Color.argb(100, 0, 255, 0));
+                Picasso.with(getContext()).load(R.drawable.main_feed_up_vote).into(likeStatusOverlayView, new Callback() {
+                    @Override
+                    public void onSuccess() {
+                        likeStatusOverlayView.setBackgroundColor(Color.argb(100, 0, 255, 0));
+                    }
+
+                    @Override
+                    public void onError() {
+
+                    }
+                });
                 break;
             }
             case DOWNVOTED: {
-                likeStatusOverlayView.setBackgroundColor(Color.argb(100, 255, 0, 0));
+                Picasso.with(getContext()).load(R.drawable.main_feed_down_vote).into(likeStatusOverlayView, new Callback() {
+                    @Override
+                    public void onSuccess() {
+                        likeStatusOverlayView.setBackgroundColor(Color.argb(100, 255, 0, 0));
+                    }
+
+                    @Override
+                    public void onError() {
+
+                    }
+                });
                 break;
             }
             case NOT_VOTED:
             default: {
                 likeStatusOverlayView.setBackgroundColor(Color.TRANSPARENT);
+                likeStatusOverlayView.setImageDrawable(null);
                 break;
             }
         }
