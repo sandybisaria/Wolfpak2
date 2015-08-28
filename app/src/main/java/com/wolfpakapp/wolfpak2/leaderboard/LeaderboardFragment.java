@@ -1,6 +1,7 @@
 package com.wolfpakapp.wolfpak2.leaderboard;
 
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.location.Location;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -11,6 +12,7 @@ import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.FrameLayout;
 import android.widget.TabHost;
+import android.widget.TabWidget;
 
 import com.loopj.android.http.RequestParams;
 import com.wolfpakapp.wolfpak2.R;
@@ -60,7 +62,7 @@ public class LeaderboardFragment extends Fragment implements TabHost.TabContentF
         View baseLayout = inflater.inflate(R.layout.fragment_leaderboard, container, false);
         mBaseFrameLayout = (FrameLayout) baseLayout.findViewById(R.id.leaderboard_base_frame_layout);
 
-        TabHost tabHost = (TabHost) baseLayout.findViewById(android.R.id.tabhost);
+        final TabHost tabHost = (TabHost) baseLayout.findViewById(android.R.id.tabhost);
         // REQUIRED for a TabHost loaded with findViewById()
         tabHost.setup();
 
@@ -72,7 +74,7 @@ public class LeaderboardFragment extends Fragment implements TabHost.TabContentF
         tabHost.addTab(tabHost.newTabSpec(ALL_TIME_TAG).setIndicator("All Time").setContent(this));
         tabHost.addTab(tabHost.newTabSpec(DEN_TAG).setIndicator("Den").setContent(this));
 
-        // Add padding to the top of the layout so that it doesn't sink under the status bar.
+        // Add padding to the top of the layout so that it isn't obscured by the status bar.
         int statusBarPadding = 0;
         int resourceId = getResources().getIdentifier("status_bar_height", "dimen", "android");
         if (resourceId > 0) {
@@ -80,7 +82,27 @@ public class LeaderboardFragment extends Fragment implements TabHost.TabContentF
         }
         tabHost.setPadding(0, statusBarPadding, 0, 0);
 
+        tabHost.setOnTabChangedListener(new TabHost.OnTabChangeListener() {
+            @Override
+            public void onTabChanged(String tabId) {
+                updateTabBackgrounds(tabHost);
+            }
+        });
+        updateTabBackgrounds(tabHost);
+
+
         return baseLayout;
+    }
+
+    private void updateTabBackgrounds(TabHost tabHost) {
+        TabWidget tabWidget = tabHost.getTabWidget();
+        for (int i = 0; i < tabWidget.getChildCount(); i++) {
+            if (i == tabHost.getCurrentTab()) {
+                tabWidget.getChildAt(i).setBackgroundResource(R.drawable.drawable_selected_tab);
+            } else {
+                tabWidget.getChildAt(i).setBackgroundResource(R.drawable.drawable_unselected_tab);
+            }
+        }
     }
 
     @Override

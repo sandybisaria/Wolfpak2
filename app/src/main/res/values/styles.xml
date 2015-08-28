@@ -4,6 +4,9 @@
     <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
         <!-- Customize your theme here. -->
         <item name="android:windowFullscreen">true</item>
+        <item name="android:statusBarColor">@color/wolfpak_red</item>
+        <item name="android:colorControlActivated">@color/wolfpak_red</item>
+        <item name="android:textColorHighlight">@color/wolfpak_red_light</item>
     </style>
 
     <style name="ColorPickerViewStyle">

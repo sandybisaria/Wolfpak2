@@ -3,7 +3,7 @@
 
     <!-- THIS PART IS FOR THE "PARTS YOU CARE ABOUT" radio buttons and following us -->
 
-    <PreferenceCategory android:title="@string/misc_prefs">
+    <com.wolfpakapp.wolfpak2.settings.WolfpakPreferenceCategory android:title="@string/misc_prefs">
 
         <SwitchPreference
             android:id="@+id/NSFWswitch"
@@ -43,12 +43,12 @@
             android:title="@string/summary" />
 
 
-    </PreferenceCategory>
+    </com.wolfpakapp.wolfpak2.settings.WolfpakPreferenceCategory>
 
 
     <!-- THIS PART IS FOR THE "PARTS YOU DON'T CARE ABOUT" emailing us, and dialogue boxes and stuff, currently just opens a separate email application because EASY, also because other ways don't work -->
 
-    <PreferenceCategory android:title="@string/terms_conditions">
+    <com.wolfpakapp.wolfpak2.settings.WolfpakPreferenceCategory android:title="@string/terms_conditions">
 
         <Preference
             android:key="@string/contact"
@@ -99,6 +99,6 @@
             android:key="@string/privacy_policy"
             android:title="Tutorial" />
 
-    </PreferenceCategory>
+    </com.wolfpakapp.wolfpak2.settings.WolfpakPreferenceCategory>
 
 </PreferenceScreen>

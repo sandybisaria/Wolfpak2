@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <android.support.v4.widget.SwipeRefreshLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical" android:layout_width="match_parent"
-    android:layout_height="wrap_content" android:background="@color/leaderboard_background_grey"
+    android:layout_height="wrap_content" android:background="@color/leaderboard_background_color"
     android:id="@+id/leaderboard_swipe_refresh_layout">
 
     <LinearLayout
@@ -17,6 +17,7 @@
             android:layout_margin="@dimen/leaderboard_karma_margin"
             android:background="@drawable/background_karma"
             android:textSize="@dimen/leaderboard_karma_text_size"
+            android:textColor="@android:color/white"
             android:visibility="gone"
             android:id="@+id/leaderboard_den_karma_text_view"/>
 
