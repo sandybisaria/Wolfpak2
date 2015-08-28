@@ -1,6 +1,7 @@
 package com.wolfpakapp.wolfpak2.leaderboard;
 
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -63,7 +64,13 @@ public class LeaderboardTabAdapter extends RecyclerView.Adapter<LeaderboardTabAd
         }
 
         public void bindPost(Post post) {
-            handleTextView.setText(post.getHandle());
+            String handle = post.getHandle();
+            handleTextView.setText(handle);
+            if (handle.isEmpty()) {
+                handleTextView.setBackgroundResource(R.drawable.word_logo);
+            } else {
+                handleTextView.setBackground(null);
+            }
 
             voteCountTextView.initialize(mParentManager, post, itemView);
             thumbnailImageView.initialize(mParentManager, post, itemView);

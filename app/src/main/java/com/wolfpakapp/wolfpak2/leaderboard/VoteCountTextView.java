@@ -83,7 +83,6 @@ public class VoteCountTextView extends TextView {
                 break;
             }
         }
-
     }
 
     /**

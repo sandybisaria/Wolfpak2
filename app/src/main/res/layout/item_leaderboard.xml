@@ -35,7 +35,7 @@
 
         <TextView
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="@dimen/leaderboard_item_handle_height"
             android:gravity="center"
             android:layout_gravity="center"
             android:layout_margin="@dimen/leaderboard_item_handle_margin"
