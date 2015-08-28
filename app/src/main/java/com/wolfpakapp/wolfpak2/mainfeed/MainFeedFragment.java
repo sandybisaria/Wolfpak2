@@ -20,7 +20,6 @@ import java.util.ArrayList;
  */
 public class MainFeedFragment extends Fragment {
 
-    /** Layouts & Buttons **/
     private ImageButton reportImageButton;
 //    private ImageButton share;
     private RelativeLayout baseLayout;

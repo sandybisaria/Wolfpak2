@@ -16,12 +16,16 @@
 
     <ImageButton
         android:id="@+id/main_feed_report_button"
-        android:layout_width="39dp"
-        android:layout_height="39dp"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
         android:layout_alignParentEnd="true"
         android:layout_alignParentTop="true"
         android:layout_gravity="end|top"
-        android:src="@drawable/alert" />
+        android:layout_margin="5dp"
+        android:scaleType="centerCrop"
+        android:src="@drawable/alert"
+        android:background="@drawable/background_alert"
+        android:padding="5dp" />
 
     <!--<ImageButton-->
     <!--android:layout_width="40dp"-->
