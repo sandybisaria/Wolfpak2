@@ -14,6 +14,8 @@ import com.wolfpakapp.wolfpak2.R;
 
 import java.util.ArrayList;
 
+import pl.droidsonroids.gif.GifDrawable;
+
 
 /**
  * Fragment for showing the main feed
