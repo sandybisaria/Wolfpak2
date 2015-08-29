@@ -16,7 +16,8 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 
 /**
- * Created by Vishaal on 7/20/15.
+ * The MainFeedLayoutManager manages the layout of the main feed. It is responsible for adding and
+ * removing the MediaViews.
  */
 public class MainFeedLayoutManager {
     private RelativeLayout baseLayout;
@@ -65,13 +66,15 @@ public class MainFeedLayoutManager {
 
             @Override
             public void onBecomesInvisible() {
+                // When the fragment is no longer visible, return the top post back to the starting
+                // position.
                 returnToPosition();
             }
         });
     }
 
     /**
-     * Animate the topmost view so that it slides up and disappears.
+     * Animate the topmost view so that it slides up and disappears, and then remove it from layout.
      */
     private void slideToTop() {
         View view = mediaViewArrayDeque.peekFirst();
@@ -90,7 +93,7 @@ public class MainFeedLayoutManager {
     }
 
     /**
-     * Animate the topmost view so that it slides down and disappears.
+     * Animate the topmost view so that it slides down and disappears, and then remove it from layout.
      */
     private void slideToBottom() {
         View view = mediaViewArrayDeque.peekFirst();
@@ -125,6 +128,9 @@ public class MainFeedLayoutManager {
         }
     }
 
+    /**
+     * The HowlOnTouchListener is the OnTouchListener for every post (howl).
+     */
     public final class HowlOnTouchListener implements View.OnTouchListener {
 
         private float initialTouchY = 0;
@@ -157,13 +163,6 @@ public class MainFeedLayoutManager {
 
                     lastTouchX = x;
                     lastTouchY = y;
-
-//                    Display display = mainFeed.getActivity().getWindowManager().getDefaultDisplay();
-//                    Point size = new Point();
-//                    display.getSize(size);
-//                    double maxY = size.y;
-//                    double green = maxY * 0.35;
-//                    double red = maxY * 0.65;
 
                     MediaView mediaView = (MediaView) v;
                     if (isUpvoting()) {
@@ -199,12 +198,9 @@ public class MainFeedLayoutManager {
                             mediaViewArrayDeque.peekFirst().start();
                         }
                     } else {
-                        //TODO Animate to original position.
                         returnToPosition();
                         mediaView.setTint(Post.VoteStatus.NOT_VOTED);
                     }
-
-//                    mediaViewArrayDeque.peekFirst().mediaVideoViewThumbnail.setVisibility(View.GONE);
 
                     if(mediaViewArrayDeque.size() == 0){
                         //TODO Do we want auto-refresh?

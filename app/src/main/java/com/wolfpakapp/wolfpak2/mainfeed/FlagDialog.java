@@ -17,17 +17,21 @@ import com.wolfpakapp.wolfpak2.R;
 import java.util.Random;
 
 /**
- * Created by Syed Raziq Mohideen on 8/20/2015.
+ * The FlagDialog represents the dialog that is displayed whenever a post is being reported.
  */
 public class FlagDialog extends DialogFragment {
 
-    public interface FlagDialogListener {
+    /**
+     * The FlagDialogListener interface contains methods that are invoked depending on the user's
+     * actions.
+     */
+    interface FlagDialogListener {
         void onDialogPositiveClick();
         void onDialogNegativeClick();
         void onDialogCanceled();
     }
 
-    // Use this instance of the interface to deliver action events
+    // Use this instance of the interface to deliver action events.
     private FlagDialogListener mListener;
 
     public void setFlagDialogListener(FlagDialogListener flagDialogListener)  {
@@ -38,7 +42,6 @@ public class FlagDialog extends DialogFragment {
     public Dialog onCreateDialog(Bundle savedInstanceState) {
 
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-        // Get the layout inflater
         LayoutInflater inflater = getActivity().getLayoutInflater();
         final View view = inflater.inflate(R.layout.dialog_flag, null);
 
@@ -53,6 +56,7 @@ public class FlagDialog extends DialogFragment {
             @Override
             public void onClick(View v) {
                 EditText inputEditText = (EditText) view.findViewById(R.id.dialog_flag_input_edit_text);
+                // Only do something if the user input matches the captcha.
                 if (captchaString.equals(inputEditText.getText().toString())) {
                     mListener.onDialogPositiveClick();
                     getDialog().dismiss();

@@ -21,13 +21,13 @@ import java.util.ArrayList;
 public class MainFeedFragment extends Fragment {
 
     private ImageButton reportImageButton;
-//    private ImageButton share;
     private RelativeLayout baseLayout;
+    private ImageView refreshImageView;
 
     MainFeedNetworkingManager networkingManager;
     MainFeedLayoutManager layoutManager;
 
-    /** Facebook Share Features **/
+//    private ImageButton share;
 //    private ShareDialog shareDialog;
 //    private CallbackManager callbackManager;
 //    public LoginManager manager;
@@ -55,7 +55,8 @@ public class MainFeedFragment extends Fragment {
 //        } catch (PackageManager.NameNotFoundException | NoSuchAlgorithmException ignored) {
 //        }
 
-        ImageView refreshImageView = (ImageView) view.findViewById(R.id.main_feed_no_posts_image_view);
+        // Initialize essential main feed elements.
+        refreshImageView = (ImageView) view.findViewById(R.id.main_feed_no_posts_image_view);
         baseLayout = (RelativeLayout) view.findViewById(R.id.main_feed_base_layout);
         reportImageButton = (ImageButton) view.findViewById(R.id.main_feed_report_button);
 
@@ -102,7 +103,7 @@ public class MainFeedFragment extends Fragment {
 
         refreshImageView.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View arg0) {
+            public void onClick(View view) {
                 networkingManager.getHowls();
             }
         });
@@ -153,7 +154,7 @@ public class MainFeedFragment extends Fragment {
         return layoutManager;
     }
 
-    //    /** Share Picture to Facebook **/
+//    /** Share Picture to Facebook **/
 //    public void sharePicFB(ImageView imageView) {
 //        imageView.buildDrawingCache();
 //        Bitmap image = imageView.getDrawingCache();
@@ -196,6 +197,10 @@ public class MainFeedFragment extends Fragment {
 //        callbackManager.onActivityResult(requestCode, resultCode, data);
 //    }
 
+    /**
+     * The OnVisibilityChangeCallbacks interface represents callbacks that are invoked when the
+     * visibility status of the fragment changes.
+     */
     interface OnVisibilityChangeCallbacks {
         /**
          * Callback to be invoked when the fragment becomes visible.

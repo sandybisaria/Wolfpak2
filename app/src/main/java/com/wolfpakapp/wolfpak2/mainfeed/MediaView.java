@@ -22,6 +22,9 @@ import com.wolfpakapp.wolfpak2.R;
 
 import java.util.Objects;
 
+/**
+ * The MediaView class represents the view for each post on the main feed.
+ */
 public class MediaView extends RelativeLayout {
 
     private Post mPost;
@@ -47,7 +50,7 @@ public class MediaView extends RelativeLayout {
     }
 
     /**
-     * Base initialization for this class
+     * Base initialization for this class.
      */
     private void baseInit() {
         LayoutInflater.from(getContext()).inflate(R.layout.media_view, this);
@@ -65,7 +68,8 @@ public class MediaView extends RelativeLayout {
     public void setTint(Post.VoteStatus voteStatus) {
         switch (voteStatus) {
             case UPVOTED: {
-                Picasso.with(getContext()).load(R.drawable.main_feed_up_vote).into(likeStatusOverlayView, new Callback() {
+                Picasso.with(getContext()).load(R.drawable.main_feed_up_vote)
+                        .into(likeStatusOverlayView, new Callback() {
                     @Override
                     public void onSuccess() {
                         likeStatusOverlayView.setBackgroundColor(Color.argb(100, 0, 255, 0));
@@ -79,7 +83,8 @@ public class MediaView extends RelativeLayout {
                 break;
             }
             case DOWNVOTED: {
-                Picasso.with(getContext()).load(R.drawable.main_feed_down_vote).into(likeStatusOverlayView, new Callback() {
+                Picasso.with(getContext()).load(R.drawable.main_feed_down_vote)
+                        .into(likeStatusOverlayView, new Callback() {
                     @Override
                     public void onSuccess() {
                         likeStatusOverlayView.setBackgroundColor(Color.argb(100, 255, 0, 0));
