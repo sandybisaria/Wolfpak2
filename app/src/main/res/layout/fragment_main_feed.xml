@@ -5,14 +5,46 @@
     android:layout_margin="0dp"
     android:padding="0dp">
 
-    <ImageView
-        android:id="@+id/main_feed_no_posts_image_view"
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
-        android:layout_margin="0dp"
-        android:padding="0dp"
-        android:scaleType="fitXY"
-        android:src="@drawable/wolfpaktest" />
+    <RelativeLayout
+        android:id="@+id/main_feed_background_layout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <ImageView
+            android:id="@+id/main_feed_no_posts_gif_image_view"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:scaleType="centerCrop"
+            android:src="@drawable/main_feed_no_howls_background"/>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:textSize="25sp"
+            android:text="@string/no_howls_text"
+            android:textColor="@android:color/white"
+            android:layout_alignParentBottom="true"
+            android:layout_marginBottom="@dimen/main_feed_no_howls_text_margin_bottom"
+            android:layout_marginLeft="@dimen/main_feed_no_howls_text_margin_side"
+            android:layout_marginRight="@dimen/main_feed_no_howls_text_margin_side"
+            android:layout_centerHorizontal="true"
+            android:visibility="gone"
+            android:id="@+id/main_feed_no_posts_text_view"/>
+
+        <ProgressBar
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_alignParentBottom="true"
+            android:layout_marginBottom="@dimen/main_feed_no_howls_text_margin_bottom"
+            android:layout_marginLeft="@dimen/main_feed_no_howls_text_margin_side"
+            android:layout_marginRight="@dimen/main_feed_no_howls_text_margin_side"
+            style="@android:style/Widget.ProgressBar.Large"
+            android:visibility="gone"
+            android:id="@+id/main_feed_loading_posts_progress_bar"/>
+
+    </RelativeLayout>
 
     <ImageButton
         android:id="@+id/main_feed_report_button"

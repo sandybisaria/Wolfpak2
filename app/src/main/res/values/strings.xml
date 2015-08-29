@@ -17,6 +17,7 @@
     <string name="dialog_flag_hint">Captcha</string>
     <string name="dialog_flag_cancel_button_text">Cancel</string>
     <string name="dialog_flag_report_button_text">Report</string>
+    <string name="no_howls_text">Sorry No One Is Howling Around You!\nTap To Refresh</string>
     <string name="facebook_app_id">1604860893099435</string>
 
     <!--Strings for the Settings Screen-->

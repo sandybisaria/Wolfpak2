@@ -1,16 +1,15 @@
 package com.wolfpakapp.wolfpak2.mainfeed;
 
-import android.app.AlertDialog;
-import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.location.Location;
 import android.preference.PreferenceManager;
-import android.text.InputType;
-import android.util.Log;
-import android.widget.EditText;
+import android.view.View;
+import android.widget.ImageView;
+import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
-import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
 import com.wolfpakapp.wolfpak2.Post;
@@ -26,7 +25,9 @@ import org.json.JSONArray;
 import org.json.JSONException;
 
 import java.util.ArrayDeque;
-import java.util.Random;
+
+import pl.droidsonroids.gif.AnimationListener;
+import pl.droidsonroids.gif.GifDrawable;
 
 /**
  * The MainFeedNetworkingManager is responsible for the main feed's connection to the server.
@@ -38,16 +39,50 @@ public class MainFeedNetworkingManager {
     private MainFeedFragment mainFeed;
     private MainFeedLayoutManager layoutManager;
 
+    private RelativeLayout backgroundLayout;
+    private ImageView backgroundImageView;
+    private GifDrawable noHowlsDrawable;
+
     private ArrayDeque<Post> postArrayDeque = new ArrayDeque<>();
 
     RequestParams mParams = new RequestParams();
 
-    public MainFeedNetworkingManager(MainFeedFragment mainFeed) {
+    public MainFeedNetworkingManager(MainFeedFragment mainFeed, RelativeLayout backgroundLayout) {
         // Retrieve a server REST client object to be used for calls to the server.
         mClient = (ServerRestClient) WolfpakServiceProvider
                 .getServiceManager(WolfpakServiceProvider.SERVERRESTCLIENT);
 
         this.mainFeed = mainFeed;
+
+        this.backgroundLayout = backgroundLayout;
+        backgroundImageView = (ImageView) backgroundLayout.findViewById(R.id.main_feed_no_posts_gif_image_view);
+        try {
+            noHowlsDrawable = new GifDrawable(mainFeed.getResources(), R.drawable.main_feed_no_howls_background);
+            noHowlsDrawable.addAnimationListener(new AnimationListener() {
+                @Override
+                public void onAnimationCompleted() {
+                    noHowlsDrawable.start();
+                }
+            });
+            backgroundImageView.setImageDrawable(noHowlsDrawable);
+            noHowlsDrawable.start();
+            final ProgressBar loadingProgressBar = (ProgressBar) backgroundLayout
+                    .findViewById(R.id.main_feed_loading_posts_progress_bar);
+            loadingProgressBar.setVisibility(View.VISIBLE);
+            final TextView noHowlsTextView = (TextView) backgroundLayout
+                    .findViewById(R.id.main_feed_no_posts_text_view);
+            noHowlsTextView.setVisibility(View.GONE);
+            backgroundImageView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    noHowlsTextView.setVisibility(View.GONE);
+                    loadingProgressBar.setVisibility(View.VISIBLE);
+                    getHowls();
+                }
+            });
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -104,6 +139,9 @@ public class MainFeedNetworkingManager {
 
                         if (postArrayDeque.size() > 0) {
                             layoutManager.loadViews(postArrayDeque);
+                            resetNoHowlsBehavior();
+                        } else {
+                            startNoHowlsBehavior();
                         }
                     } catch (JSONException e) {
                         e.printStackTrace();
@@ -112,11 +150,11 @@ public class MainFeedNetworkingManager {
 
                 @Override
                 public void onFailure(int statusCode, Header[] headers, byte[] errorResponse, Throwable e) {
-                    // Display nothing.
+                    startNoHowlsBehavior();
                 }
             });
         } catch (NoLocationException e) {
-            // Display nothing.
+            startNoHowlsBehavior();
             e.printStackTrace();
         }
     }
@@ -129,12 +167,14 @@ public class MainFeedNetworkingManager {
         mClient.updateLikeStatus(post.getId(), voteStatus, new AsyncHttpResponseHandler() {
             @Override
             public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
-
+                if (postArrayDeque.size() <= 0) {
+                    startNoHowlsBehavior();
+                }
             }
 
             @Override
             public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
-
+                onSuccess(statusCode, headers, responseBody);
             }
         });
     }
@@ -184,5 +224,24 @@ public class MainFeedNetworkingManager {
                 Toast.makeText(mainFeed.getActivity(), "Failed to report...", Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    private void resetNoHowlsBehavior() {
+        final ProgressBar loadingProgressBar = (ProgressBar) backgroundLayout
+                .findViewById(R.id.main_feed_loading_posts_progress_bar);
+        loadingProgressBar.setVisibility(View.GONE);
+
+        noHowlsDrawable.stop();
+        noHowlsDrawable.reset();
+    }
+
+    private void startNoHowlsBehavior() {
+        final ProgressBar loadingProgressBar = (ProgressBar) backgroundLayout
+                .findViewById(R.id.main_feed_loading_posts_progress_bar);
+        loadingProgressBar.setVisibility(View.GONE);
+
+        final TextView noHowlsTextView = (TextView) backgroundLayout
+                .findViewById(R.id.main_feed_no_posts_text_view);
+        noHowlsTextView.setVisibility(View.VISIBLE);
     }
 }

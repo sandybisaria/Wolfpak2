@@ -15,6 +15,7 @@ import com.wolfpakapp.wolfpak2.R;
 import java.util.ArrayList;
 
 import pl.droidsonroids.gif.GifDrawable;
+import pl.droidsonroids.gif.GifImageView;
 
 
 /**
@@ -24,7 +25,6 @@ public class MainFeedFragment extends Fragment {
 
     private ImageButton reportImageButton;
     private RelativeLayout baseLayout;
-    private ImageView refreshImageView;
 
     MainFeedNetworkingManager networkingManager;
     MainFeedLayoutManager layoutManager;
@@ -58,11 +58,11 @@ public class MainFeedFragment extends Fragment {
 //        }
 
         // Initialize essential main feed elements.
-        refreshImageView = (ImageView) view.findViewById(R.id.main_feed_no_posts_image_view);
         baseLayout = (RelativeLayout) view.findViewById(R.id.main_feed_base_layout);
+        RelativeLayout backgroundLayout = (RelativeLayout) view.findViewById(R.id.main_feed_background_layout);
         reportImageButton = (ImageButton) view.findViewById(R.id.main_feed_report_button);
 
-        networkingManager = new MainFeedNetworkingManager(this);
+        networkingManager = new MainFeedNetworkingManager(this, backgroundLayout);
         layoutManager = new MainFeedLayoutManager(this);
 
 //        /** Facebook Share Feature **/
@@ -100,13 +100,6 @@ public class MainFeedFragment extends Fragment {
             @Override
             public void onClick(View view) {
                 networkingManager.showFlagDialog();
-            }
-        });
-
-        refreshImageView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                networkingManager.getHowls();
             }
         });
 
