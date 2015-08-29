@@ -7,10 +7,13 @@
     <dimen name="leaderboard_item_margin">4dp</dimen>
     <dimen name="leaderboard_item_thumbnail_margin">7dp</dimen>
     <dimen name="leaderboard_item_handle_margin">14dp</dimen>
+    <dimen name="leaderboard_item_vote_count_margin_top">80dp</dimen>
+    <dimen name="leaderboard_item_vote_count_padding_top">25dp</dimen>
     <dimen name="leaderboard_karma_margin">20dp</dimen>
 
     <dimen name="leaderboard_item_thumbnail_size">160dp</dimen>
-    <dimen name="leaderboard_item_vote_count_size">120dp</dimen>
+    <dimen name="leaderboard_item_vote_count_size">80dp</dimen>
+    <dimen name="leaderboard_item_vote_count_text_size">20sp</dimen>
     <dimen name="leaderboard_item_handle_height">50dp</dimen>
     <dimen name="leaderboard_item_text_size">20sp</dimen>
     <dimen name="leaderboard_karma_size">120dp</dimen>

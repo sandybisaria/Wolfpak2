@@ -46,13 +46,13 @@
             android:layout_width="@dimen/leaderboard_item_vote_count_size"
             android:layout_height="@dimen/leaderboard_item_vote_count_size"
             android:layout_centerHorizontal="true"
-            android:layout_alignParentBottom="true"
             android:background="@drawable/vote_count_not_voted"
             android:id="@+id/leaderboard_item_vote_count_text_view"
             android:gravity="center"
-            android:paddingTop="25dp"
+            android:layout_marginTop="@dimen/leaderboard_item_vote_count_margin_top"
+            android:paddingTop="@dimen/leaderboard_item_vote_count_padding_top"
             android:textColor="@android:color/white"
-            android:textSize="20sp" />
+            android:textSize="@dimen/leaderboard_item_vote_count_text_size" />
 
     </RelativeLayout>
     
