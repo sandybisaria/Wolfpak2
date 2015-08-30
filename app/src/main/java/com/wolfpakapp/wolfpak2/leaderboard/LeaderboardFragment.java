@@ -1,7 +1,6 @@
 package com.wolfpakapp.wolfpak2.leaderboard;
 
 import android.content.SharedPreferences;
-import android.graphics.Color;
 import android.location.Location;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -98,9 +97,9 @@ public class LeaderboardFragment extends Fragment implements TabHost.TabContentF
         TabWidget tabWidget = tabHost.getTabWidget();
         for (int i = 0; i < tabWidget.getChildCount(); i++) {
             if (i == tabHost.getCurrentTab()) {
-                tabWidget.getChildAt(i).setBackgroundResource(R.drawable.drawable_selected_tab);
+                tabWidget.getChildAt(i).setBackgroundResource(R.drawable.background_selected_tab);
             } else {
-                tabWidget.getChildAt(i).setBackgroundResource(R.drawable.drawable_unselected_tab);
+                tabWidget.getChildAt(i).setBackgroundResource(R.drawable.background_unselected_tab);
             }
         }
     }
@@ -154,7 +153,7 @@ public class LeaderboardFragment extends Fragment implements TabHost.TabContentF
      * Refresh the request params (or initialize them if not set).
      * @param tag The tag of the specific request parameter (or null if all)
      */
-    public void refreshRequestParams(String tag) throws NoLocationException {
+    private void refreshRequestParams(String tag) throws NoLocationException {
         RequestParams localParams = mRequestParamsMap.get(LOCAL_TAG);
         RequestParams allTimeParams = mRequestParamsMap.get(ALL_TIME_TAG);
 

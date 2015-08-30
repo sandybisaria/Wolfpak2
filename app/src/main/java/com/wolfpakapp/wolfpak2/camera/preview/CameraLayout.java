@@ -16,8 +16,6 @@ import android.widget.ProgressBar;
 
 import com.wolfpakapp.wolfpak2.R;
 
-import java.io.IOException;
-
 /**
  * Layout handler that contains camera preview.  Performs photo capture and video recording
  * Adapted from Google Sample code "android-Camera2Basic" @
@@ -95,7 +93,7 @@ public class CameraLayout implements CameraController.CameraActionCallback {
 
         mFlashButton = (ImageButton) view.findViewById(R.id.btn_flash); // flash button
         mFlashButton.setOnClickListener(fragment);
-        mFlashButton.setImageResource(R.drawable.flash_auto_1);
+        mFlashButton.setImageResource(R.drawable.camera_flash_auto);
 
         mSoundButton = (ImageButton) view.findViewById(R.id.btn_sound); // sound button
         mSoundButton.setOnClickListener(fragment);
@@ -159,19 +157,19 @@ public class CameraLayout implements CameraController.CameraActionCallback {
                 break;
             case R.id.btn_flash:
                 if(CameraStates.FLASH_STATE == CameraStates.AUTO_FLASH)  {
-                    mFlashButton.setImageResource(R.drawable.flash_off_1);
+                    mFlashButton.setImageResource(R.drawable.camera_flash_off);
                 } else if (CameraStates.FLASH_STATE == CameraStates.NO_FLASH)  {
-                    mFlashButton.setImageResource(R.drawable.flash_on_1);
+                    mFlashButton.setImageResource(R.drawable.camera_flash_on);
                 } else  {
-                    mFlashButton.setImageResource(R.drawable.flash_auto_1);
+                    mFlashButton.setImageResource(R.drawable.camera_flash_auto);
                 }
                 mCameraController.toggleFlash();
                 break;
             case R.id.btn_sound:
                 if(CameraStates.IS_SOUND)  {
-                    mSoundButton.setImageResource(R.drawable.mute_1);
+                    mSoundButton.setImageResource(R.drawable.camera_mute);
                 } else  {
-                    mSoundButton.setImageResource(R.drawable.sound_on_1);
+                    mSoundButton.setImageResource(R.drawable.camera_sound_on);
                 }
                 mCameraController.toggleSound();
                 break;

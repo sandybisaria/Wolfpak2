@@ -118,7 +118,7 @@ public class MainFeedLayoutManager {
     /**
      * Return the topmost view to its original position.
      */
-    public void returnToPosition() {
+    private void returnToPosition() {
         View view = mediaViewArrayDeque.peekFirst();
         if (view != null) {
             AnimatorSet set = new AnimatorSet();

@@ -27,7 +27,6 @@ import android.widget.ImageButton;
 import android.widget.Toast;
 import android.widget.VideoView;
 
-import com.squareup.picasso.Picasso;
 import com.wolfpakapp.wolfpak2.R;
 import com.wolfpakapp.wolfpak2.camera.editor.colorpicker.ColorPickerView;
 import com.wolfpakapp.wolfpak2.camera.editor.colorpicker.DrawingUtils;
@@ -427,7 +426,7 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
                 if(isImage) {// don't enable blurring for video
                     if(mOverlay.getState() == EditableOverlay.STATE_BLUR) {
                         mOverlay.setState(EditableOverlay.STATE_IDLE);
-                        mBlurButton.setImageResource(R.drawable.blur_inactive_1);
+                        mBlurButton.setImageResource(R.drawable.camera_blur_inactive);
                         break;
                     } else if(mOverlay.getState() == EditableOverlay.STATE_DRAW)   {
                         mColorPicker.setVisibility(View.GONE);
@@ -438,7 +437,7 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
                         mOverlay.getTextOverlay().clearFocus();
                     }
                     mOverlay.setState(EditableOverlay.STATE_BLUR);
-                    mBlurButton.setImageResource(R.drawable.blur_active_1);
+                    mBlurButton.setImageResource(R.drawable.camera_blur_active);
                 }
                 break;
             case R.id.btn_text:

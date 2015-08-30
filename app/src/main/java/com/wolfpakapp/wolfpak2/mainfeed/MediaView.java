@@ -1,13 +1,7 @@
 package com.wolfpakapp.wolfpak2.mainfeed;
 
-import android.animation.Animator;
-import android.animation.ArgbEvaluator;
-import android.animation.ObjectAnimator;
 import android.content.Context;
 import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
-import android.graphics.drawable.Drawable;
-import android.net.Uri;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -19,8 +13,6 @@ import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
 import com.wolfpakapp.wolfpak2.Post;
 import com.wolfpakapp.wolfpak2.R;
-
-import java.util.Objects;
 
 /**
  * The MediaView class represents the view for each post on the main feed.

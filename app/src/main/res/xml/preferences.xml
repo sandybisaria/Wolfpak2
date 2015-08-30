@@ -29,10 +29,10 @@
             android:key="@string/rate"
             android:title="Rate Us in the App Store">
 
+            <!--TODO Replace with the Wolfpak page!-->
             <intent
                 android:action="android.intent.action.VIEW"
                 android:data="https://play.google.com/store/apps/details?id=com.snapchat.android&amp;hl=en" />
-            />
 
         </Preference>
 

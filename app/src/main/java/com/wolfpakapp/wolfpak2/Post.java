@@ -3,7 +3,6 @@ package com.wolfpakapp.wolfpak2;
 
 import android.content.Context;
 import android.content.res.Resources;
-import android.util.Log;
 
 import com.wolfpakapp.wolfpak2.R;
 import com.wolfpakapp.wolfpak2.leaderboard.LeaderboardFragment;
@@ -24,8 +23,8 @@ public class Post {
     private int updatedVoteCount;
     private VoteStatus voteStatus;
 
-    public Post(int id, String handle, boolean isImage, String mediaUrl, String thumbnailUrl,
-                int updatedVoteCount, VoteStatus voteStatus) {
+    private Post(int id, String handle, boolean isImage, String mediaUrl, String thumbnailUrl,
+                 int updatedVoteCount, VoteStatus voteStatus) {
         this.id = id;
         this.handle = handle;
         this.isImage = isImage;

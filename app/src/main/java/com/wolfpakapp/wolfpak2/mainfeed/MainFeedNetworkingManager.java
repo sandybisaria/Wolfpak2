@@ -45,7 +45,7 @@ public class MainFeedNetworkingManager {
 
     private ArrayDeque<Post> postArrayDeque = new ArrayDeque<>();
 
-    RequestParams mParams = new RequestParams();
+    private RequestParams mParams = new RequestParams();
 
     public MainFeedNetworkingManager(MainFeedFragment mainFeed, RelativeLayout backgroundLayout) {
         // Retrieve a server REST client object to be used for calls to the server.
@@ -89,7 +89,7 @@ public class MainFeedNetworkingManager {
      * Initialize the request parameters for the get request.
      * @throws NoLocationException
      */
-    public void initializeRequestParams() throws NoLocationException {
+    private void initializeRequestParams() throws NoLocationException {
         // Retrieve the stored user ID.
         String userId = ((UserIdManager) WolfpakServiceProvider
                 .getServiceManager(WolfpakServiceProvider.USERIDMANAGER)).getDeviceId();

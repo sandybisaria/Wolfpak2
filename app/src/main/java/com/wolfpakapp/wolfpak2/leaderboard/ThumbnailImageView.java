@@ -10,12 +10,10 @@ import android.graphics.Color;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
-import android.media.Image;
 import android.media.MediaPlayer;
 import android.os.Build;
 import android.support.v4.view.MotionEventCompat;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
@@ -31,11 +29,6 @@ import com.squareup.picasso.Picasso;
 import com.wolfpakapp.wolfpak2.MainActivity;
 import com.wolfpakapp.wolfpak2.Post;
 import com.wolfpakapp.wolfpak2.R;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.MalformedURLException;
-import java.net.URL;
 
 public class ThumbnailImageView extends ImageView {
     private LeaderboardTabManager mManager = null;

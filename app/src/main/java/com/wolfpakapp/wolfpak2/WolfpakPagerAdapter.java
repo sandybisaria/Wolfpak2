@@ -14,7 +14,7 @@ import com.wolfpakapp.wolfpak2.settings.WolfpakPreferenceFragment;
  * Wolfpak application.
  * @see WolfpakPagerAdapter#getItem(int)
  */
-public class WolfpakPagerAdapter extends FragmentStatePagerAdapter {
+class WolfpakPagerAdapter extends FragmentStatePagerAdapter {
 
     public WolfpakPagerAdapter(FragmentManager fm) {
         super(fm);

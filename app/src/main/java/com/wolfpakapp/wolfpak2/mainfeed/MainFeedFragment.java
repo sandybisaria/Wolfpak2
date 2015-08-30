@@ -7,15 +7,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.ImageButton;
-import android.widget.ImageView;
 import android.widget.RelativeLayout;
 
 import com.wolfpakapp.wolfpak2.R;
 
 import java.util.ArrayList;
-
-import pl.droidsonroids.gif.GifDrawable;
-import pl.droidsonroids.gif.GifImageView;
 
 
 /**
@@ -26,8 +22,8 @@ public class MainFeedFragment extends Fragment {
     private ImageButton reportImageButton;
     private RelativeLayout baseLayout;
 
-    MainFeedNetworkingManager networkingManager;
-    MainFeedLayoutManager layoutManager;
+    private MainFeedNetworkingManager networkingManager;
+    private MainFeedLayoutManager layoutManager;
 
 //    private ImageButton share;
 //    private ShareDialog shareDialog;

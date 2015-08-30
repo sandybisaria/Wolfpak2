@@ -55,7 +55,7 @@
         android:layout_gravity="end|top"
         android:layout_margin="5dp"
         android:scaleType="centerCrop"
-        android:src="@drawable/alert"
+        android:src="@drawable/main_feed_alert"
         android:background="@drawable/background_alert"
         android:padding="5dp" />
 

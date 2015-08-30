@@ -199,7 +199,7 @@ public class TextOverlay extends EditText {
                 requestFocus();
                 // resume center position
                 setX(0);
-                setBackgroundResource(R.drawable.text_bar);
+                setBackgroundResource(R.drawable.camera_text_bar);
                 break;
             case TEXT_STATE_VERTICAL:
                 setCursorVisible(false);

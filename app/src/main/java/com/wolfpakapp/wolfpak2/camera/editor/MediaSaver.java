@@ -53,17 +53,17 @@ public class MediaSaver {
     /**
      * The server URL
      */
-    public static final String SERVER_URL = "http://ec2-52-4-176-1.compute-1.amazonaws.com/posts/";
+    private static final String SERVER_URL = "http://ec2-52-4-176-1.compute-1.amazonaws.com/posts/";
 
     /*
      * Keys for database and post for convenience, directly from MediaEntry
      */
-    public static final String HANDLE = WolfpakSQLiteHelper.MediaEntry.COLUMN_HANDLE;
-    public static final String LATITUDE = WolfpakSQLiteHelper.MediaEntry.COLUMN_LATITUDE;
-    public static final String LONGITUDE = WolfpakSQLiteHelper.MediaEntry.COLUMN_LONGITUDE;
-    public static final String IS_NSFW = WolfpakSQLiteHelper.MediaEntry.COLUMN_IS_NSFW;
-    public static final String IS_IMAGE = WolfpakSQLiteHelper.MediaEntry.COLUMN_IS_IMAGE;
-    public static final String USER = WolfpakSQLiteHelper.MediaEntry.COLUMN_USER;
+    private static final String HANDLE = WolfpakSQLiteHelper.MediaEntry.COLUMN_HANDLE;
+    private static final String LATITUDE = WolfpakSQLiteHelper.MediaEntry.COLUMN_LATITUDE;
+    private static final String LONGITUDE = WolfpakSQLiteHelper.MediaEntry.COLUMN_LONGITUDE;
+    private static final String IS_NSFW = WolfpakSQLiteHelper.MediaEntry.COLUMN_IS_NSFW;
+    private static final String IS_IMAGE = WolfpakSQLiteHelper.MediaEntry.COLUMN_IS_IMAGE;
+    private static final String USER = WolfpakSQLiteHelper.MediaEntry.COLUMN_USER;
     public static final String THUMBNAIL = WolfpakSQLiteHelper.MediaEntry.COLUMN_THUMBNAIL;
     public static final String MEDIA = WolfpakSQLiteHelper.MediaEntry.COLUMN_MEDIA;
 
@@ -557,7 +557,7 @@ public class MediaSaver {
      * @param dst the copied file
      * @throws IOException
      */
-    public static void copy(File src, File dst) throws IOException {
+    private static void copy(File src, File dst) throws IOException {
         InputStream in = new FileInputStream(src);
         OutputStream out = new FileOutputStream(dst);
 

@@ -6,8 +6,8 @@ import java.util.ArrayList;
  * ServiceManager is an abstract class for managers that provide application services.
  */
 public abstract class ServiceManager {
-    protected boolean isInitialized = false;
-    protected ArrayList<OnInitializedCallback> mCallbacks = new ArrayList<>();
+    private boolean isInitialized = false;
+    private ArrayList<OnInitializedCallback> mCallbacks = new ArrayList<>();
 
     /**
      * Set a callback for when the ServiceManager is finished initialization.
@@ -28,7 +28,7 @@ public abstract class ServiceManager {
      * invoked within the constructor so that the application can be notified if the manager has
      * initialized.
      */
-    protected final void finishInitialize() {
+    final void finishInitialize() {
         isInitialized = true;
         for (OnInitializedCallback callback : mCallbacks) {
             callback.onInitialized();

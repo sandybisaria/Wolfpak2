@@ -11,7 +11,6 @@ import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
 import com.wolfpakapp.wolfpak2.Post;
 import com.wolfpakapp.wolfpak2.WolfpakServiceProvider;
-import com.wolfpakapp.wolfpak2.leaderboard.LeaderboardTabAdapter;
 import com.wolfpakapp.wolfpak2.service.ServiceManager;
 import com.wolfpakapp.wolfpak2.service.UserIdManager;
 
