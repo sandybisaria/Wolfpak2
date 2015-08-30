@@ -1,6 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<com.wolfpakapp.wolfpak2.WolfpakPager xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
-    android:layout_height="match_parent" tools:context="com.wolfpakapp.wolfpak2.MainActivity"
-    android:id="@+id/main_activity_view_pager" />
+<ViewSwitcher xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="com.wolfpakapp.wolfpak2.MainActivity"
+    android:layout_height="match_parent"
+    android:layout_width="match_parent"
+    android:id="@+id/main_activity_view_switcher"
+    android:inAnimation="@android:anim/fade_in"
+    android:outAnimation="@android:anim/fade_out" >
+
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="centerCrop"
+        android:id="@+id/main_activity_splash_image_view"
+        android:src="@drawable/splash_screen" />
+
+    <com.wolfpakapp.wolfpak2.WolfpakPager
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/main_activity_view_pager" />
+
+
+</ViewSwitcher>

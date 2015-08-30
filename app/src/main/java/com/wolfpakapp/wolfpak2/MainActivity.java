@@ -2,11 +2,13 @@ package com.wolfpakapp.wolfpak2;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.os.Handler;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.ViewSwitcher;
 
 import com.wolfpakapp.wolfpak2.service.LocationProvider;
 import com.wolfpakapp.wolfpak2.service.SQLiteManager;
@@ -29,7 +31,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
         // Once all the service managers are initialized, continue with running the app.
         // This will be useful when we have to check for features like Facebook, Internet, and GPS.
         // If any service is not available, then the ServiceManagers can prompt the user to enable
@@ -68,6 +69,14 @@ public class MainActivity extends AppCompatActivity {
         mViewPager.setAdapter(mPagerAdapter);
         // The default page is the main feed.
         mViewPager.setCurrentItem(2);
+
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                ViewSwitcher viewSwitcher = (ViewSwitcher) findViewById(R.id.main_activity_view_switcher);
+                viewSwitcher.showNext();
+            }
+        }, 2000);
     }
 
     @Override

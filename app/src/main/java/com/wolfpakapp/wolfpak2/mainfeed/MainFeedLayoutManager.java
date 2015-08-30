@@ -44,7 +44,6 @@ public class MainFeedLayoutManager {
         for (Post post : postArrayDeque) {
             MediaView mediaView = new MediaView(mainFeed.getActivity());
             mediaView.setContent(post);
-            mediaView.setOnTouchListener(new HowlOnTouchListener());
             mediaViewList.add(mediaView);
             mediaViewArrayDeque.addLast(mediaView);
         }
@@ -71,6 +70,11 @@ public class MainFeedLayoutManager {
                 returnToPosition();
             }
         });
+
+        // Give the MediaViews enough time to load the content before adding the OnTouchListener.
+        for (MediaView mediaView : mediaViewList) {
+            mediaView.setOnTouchListener(new HowlOnTouchListener());
+        }
     }
 
     /**
