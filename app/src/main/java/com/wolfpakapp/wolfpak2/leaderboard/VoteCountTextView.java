@@ -22,6 +22,7 @@ import android.widget.TextView;
 import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.wolfpakapp.wolfpak2.Post;
 import com.wolfpakapp.wolfpak2.R;
+import com.wolfpakapp.wolfpak2.VoteStatus;
 
 import org.apache.http.Header;
 
@@ -67,7 +68,7 @@ public class VoteCountTextView extends TextView {
      * Sets the background color so that it corresponds to the given VoteStatus.
      * @param voteStatus The vote status that determines the background
      */
-    private void setBackground(Post.VoteStatus voteStatus) {
+    private void setBackground(VoteStatus voteStatus) {
         switch (voteStatus) {
             case UPVOTED: {
                 setBackgroundResource(R.drawable.vote_count_up_voted);
@@ -166,16 +167,16 @@ public class VoteCountTextView extends TextView {
 
                 // Change the COLOR of the vote count, but do NOT save the status yet!
                 if (getY() < initialViewY) {
-                    if (mPost.getVoteStatus() == Post.VoteStatus.UPVOTED) {
-                        setBackground(Post.VoteStatus.NOT_VOTED);
+                    if (mPost.getVoteStatus() == VoteStatus.UPVOTED) {
+                        setBackground(VoteStatus.NOT_VOTED);
                     } else {
-                        setBackground(Post.VoteStatus.UPVOTED);
+                        setBackground(VoteStatus.UPVOTED);
                     }
                 } else if (getY() > initialViewY) {
-                    if (mPost.getVoteStatus() == Post.VoteStatus.DOWNVOTED) {
-                        setBackground(Post.VoteStatus.NOT_VOTED);
+                    if (mPost.getVoteStatus() == VoteStatus.DOWNVOTED) {
+                        setBackground(VoteStatus.NOT_VOTED);
                     } else {
-                        setBackground(Post.VoteStatus.DOWNVOTED);
+                        setBackground(VoteStatus.DOWNVOTED);
                     }
                 }
 
@@ -190,18 +191,18 @@ public class VoteCountTextView extends TextView {
             case MotionEvent.ACTION_CANCEL:
             case MotionEvent.ACTION_UP: {
                 // Determine what the new VoteStatus of the post should be.
-                final Post.VoteStatus newStatus;
+                final VoteStatus newStatus;
                 if (getY() < initialViewY) {
-                    if (mPost.getVoteStatus() == Post.VoteStatus.UPVOTED) {
-                        newStatus = Post.VoteStatus.NOT_VOTED;
+                    if (mPost.getVoteStatus() == VoteStatus.UPVOTED) {
+                        newStatus = VoteStatus.NOT_VOTED;
                     } else {
-                        newStatus = Post.VoteStatus.UPVOTED;
+                        newStatus = VoteStatus.UPVOTED;
                     }
                 } else if (getY() > initialViewY) {
-                    if (mPost.getVoteStatus() == Post.VoteStatus.DOWNVOTED) {
-                        newStatus = Post.VoteStatus.NOT_VOTED;
+                    if (mPost.getVoteStatus() == VoteStatus.DOWNVOTED) {
+                        newStatus = VoteStatus.NOT_VOTED;
                     } else {
-                        newStatus = Post.VoteStatus.DOWNVOTED;
+                        newStatus = VoteStatus.DOWNVOTED;
                     }
                 } else {
                     // Don't change the vote status (this case should rarely happen).

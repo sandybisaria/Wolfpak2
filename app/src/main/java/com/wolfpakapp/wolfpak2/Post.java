@@ -1,11 +1,7 @@
 package com.wolfpakapp.wolfpak2;
 
-
-import android.content.Context;
-import android.content.res.Resources;
-
-import com.wolfpakapp.wolfpak2.R;
 import com.wolfpakapp.wolfpak2.leaderboard.LeaderboardFragment;
+import com.wolfpakapp.wolfpak2.VoteStatus;
 
 import org.json.JSONObject;
 
@@ -73,7 +69,6 @@ public class Post {
                 break;
             }
             case LeaderboardFragment.ALL_TIME_TAG: {
-                //TODO Get like status using API
                 likeStatus = 0;
                 break;
             }
@@ -85,7 +80,7 @@ public class Post {
             }
         }
         return new Post(id, handle, isImage, mediaUrl, thumbnailUrl, originalVoteCount,
-                Post.VoteStatus.getVoteStatus(likeStatus));
+                VoteStatus.getVoteStatus(likeStatus));
     }
 
     public int getId() {
@@ -112,56 +107,7 @@ public class Post {
         return updatedVoteCount;
     }
 
-    /**
-     * The VoteStatus enumeration represents the three states that a post can be in. Each status has
-     * an associated color which is used to change the view count backgrounds.
-     */
-    public enum VoteStatus {
-        NOT_VOTED(0), UPVOTED(1), DOWNVOTED(-1);
-        public final int change;
 
-        VoteStatus(int change) {
-            this.change = change;
-        }
-
-        /**
-         * Since the server uses integers to represent vote statuses, this method will return the
-         * corresponding VoteStatus enum.
-         * @param change The integral like status (from the server response).
-         * @return The corresponding VoteStatus.
-         */
-        public static VoteStatus getVoteStatus(int change) {
-            switch (change) {
-                case -1:
-                    return DOWNVOTED;
-                case 1:
-                    return UPVOTED;
-                case 0:
-                default:
-                    return NOT_VOTED;
-            }
-        }
-
-        /**
-         * @param context The Context which will be used to retrieve the color.
-         * @return The color integer corresponding to the VoteStatus enum.
-         */
-        public int getStatusColor(Context context) {
-            Resources resources = context.getResources();
-            switch (this) {
-                case UPVOTED: {
-                    return resources.getColor(R.color.leaderboard_view_count_background_green);
-                }
-                case DOWNVOTED: {
-                    return resources.getColor(R.color.leaderboard_view_count_background_red);
-                }
-                case NOT_VOTED:
-                default: {
-                    return resources.getColor(R.color.leaderboard_view_count_background_grey);
-                }
-            }
-        }
-    }
 
     public VoteStatus getVoteStatus() {
         return voteStatus;

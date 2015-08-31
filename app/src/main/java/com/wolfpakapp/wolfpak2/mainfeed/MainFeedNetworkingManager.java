@@ -14,6 +14,7 @@ import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
 import com.wolfpakapp.wolfpak2.Post;
 import com.wolfpakapp.wolfpak2.R;
+import com.wolfpakapp.wolfpak2.VoteStatus;
 import com.wolfpakapp.wolfpak2.WolfpakServiceProvider;
 import com.wolfpakapp.wolfpak2.service.LocationProvider;
 import com.wolfpakapp.wolfpak2.service.NoLocationException;
@@ -162,7 +163,7 @@ public class MainFeedNetworkingManager {
     /**
      * Update the like status of the topmost post.
      **/
-    public void updateLikeStatus(Post.VoteStatus voteStatus) {
+    public void updateLikeStatus(VoteStatus voteStatus) {
         Post post = postArrayDeque.pollFirst();
         mClient.updateLikeStatus(post.getId(), voteStatus, new AsyncHttpResponseHandler() {
             @Override

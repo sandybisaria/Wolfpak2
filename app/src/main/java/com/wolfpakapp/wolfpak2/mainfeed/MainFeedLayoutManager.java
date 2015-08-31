@@ -11,6 +11,7 @@ import android.view.animation.TranslateAnimation;
 import android.widget.RelativeLayout;
 
 import com.wolfpakapp.wolfpak2.Post;
+import com.wolfpakapp.wolfpak2.VoteStatus;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -170,11 +171,11 @@ public class MainFeedLayoutManager {
 
                     MediaView mediaView = (MediaView) v;
                     if (isUpvoting()) {
-                        mediaView.setTint(Post.VoteStatus.UPVOTED);
+                        mediaView.setTint(VoteStatus.UPVOTED);
                     } else if (isDownvoting()) {
-                        mediaView.setTint(Post.VoteStatus.DOWNVOTED);
+                        mediaView.setTint(VoteStatus.DOWNVOTED);
                     } else {
-                        mediaView.setTint(Post.VoteStatus.NOT_VOTED);
+                        mediaView.setTint(VoteStatus.NOT_VOTED);
                     }
                     break;
                 }
@@ -184,8 +185,8 @@ public class MainFeedLayoutManager {
                 case MotionEvent.ACTION_UP: {
                     MediaView mediaView = (MediaView) v;
                     if (isUpvoting()) {
-                        networkingManager.updateLikeStatus(Post.VoteStatus.UPVOTED);
-                        mediaView.setTint(Post.VoteStatus.UPVOTED);
+                        networkingManager.updateLikeStatus(VoteStatus.UPVOTED);
+                        mediaView.setTint(VoteStatus.UPVOTED);
                         slideToTop();
                         mediaViewArrayDeque.pollFirst();
 
@@ -193,8 +194,8 @@ public class MainFeedLayoutManager {
                             mediaViewArrayDeque.peekFirst().start();
                         }
                     } else if (isDownvoting()) {
-                        networkingManager.updateLikeStatus(Post.VoteStatus.DOWNVOTED);
-                        mediaView.setTint(Post.VoteStatus.DOWNVOTED);
+                        networkingManager.updateLikeStatus(VoteStatus.DOWNVOTED);
+                        mediaView.setTint(VoteStatus.DOWNVOTED);
                         slideToBottom();
                         mediaViewArrayDeque.pollFirst();
 
@@ -203,7 +204,7 @@ public class MainFeedLayoutManager {
                         }
                     } else {
                         returnToPosition();
-                        mediaView.setTint(Post.VoteStatus.NOT_VOTED);
+                        mediaView.setTint(VoteStatus.NOT_VOTED);
                     }
 
                     if(mediaViewArrayDeque.size() == 0){

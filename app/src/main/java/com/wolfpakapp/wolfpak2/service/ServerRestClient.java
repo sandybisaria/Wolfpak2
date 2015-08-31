@@ -11,8 +11,7 @@ import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
 import com.wolfpakapp.wolfpak2.Post;
 import com.wolfpakapp.wolfpak2.WolfpakServiceProvider;
-import com.wolfpakapp.wolfpak2.service.ServiceManager;
-import com.wolfpakapp.wolfpak2.service.UserIdManager;
+import com.wolfpakapp.wolfpak2.VoteStatus;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.entity.StringEntity;
@@ -93,7 +92,7 @@ public class ServerRestClient extends ServiceManager {
      * @param voteStatus The VoteStatus to send to the server.
      * @param handler The response handler.
      */
-    public void updateLikeStatus(int postId, final Post.VoteStatus voteStatus,
+    public void updateLikeStatus(int postId, final VoteStatus voteStatus,
                                  AsyncHttpResponseHandler handler) {
         if (!checkInternetConnection()) {
             toastNoConnection();

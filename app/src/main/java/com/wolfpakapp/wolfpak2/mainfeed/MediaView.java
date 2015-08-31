@@ -13,6 +13,7 @@ import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
 import com.wolfpakapp.wolfpak2.Post;
 import com.wolfpakapp.wolfpak2.R;
+import com.wolfpakapp.wolfpak2.VoteStatus;
 
 /**
  * The MediaView class represents the view for each post on the main feed.
@@ -57,7 +58,7 @@ public class MediaView extends RelativeLayout {
      *
      * @param voteStatus Status of the view
      */
-    public void setTint(Post.VoteStatus voteStatus) {
+    public void setTint(VoteStatus voteStatus) {
         switch (voteStatus) {
             case UPVOTED: {
                 Picasso.with(getContext()).load(R.drawable.main_feed_up_vote)

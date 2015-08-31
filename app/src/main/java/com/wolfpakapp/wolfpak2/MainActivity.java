@@ -116,7 +116,6 @@ public class MainActivity extends AppCompatActivity {
                     }
                     case Activity.RESULT_CANCELED: {
                         // The user was asked to change settings, but chose not to.
-                        //TODO Define app behaviors when required services aren't available!
                         ((LocationProvider) WolfpakServiceProvider
                                 .getServiceManager(WolfpakServiceProvider.LOCATIONPROVIDER))
                                 .obtainLocation();

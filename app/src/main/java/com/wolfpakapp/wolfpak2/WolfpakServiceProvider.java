@@ -100,9 +100,7 @@ public class WolfpakServiceProvider {
         // Set isAllInitialized to true; innocent unless proven guilty...
         isAllInitialized = true;
 
-        Iterator iterator = initializedHashMap.entrySet().iterator();
-        while (iterator.hasNext()) {
-            Map.Entry pair = (Map.Entry) iterator.next();
+        for (Map.Entry pair : initializedHashMap.entrySet()) {
             if (!(Boolean) pair.getValue()) {
                 isAllInitialized = false;
                 break;
