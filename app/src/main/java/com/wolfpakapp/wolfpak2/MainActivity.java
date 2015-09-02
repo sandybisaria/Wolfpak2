@@ -129,7 +129,7 @@ public class MainActivity extends AppCompatActivity {
                 break;
             }
             case REQUEST_RESOLVE_ERROR: {
-                LocationProvider.isResolvingError = false;
+                LocationProvider.setIsResolvingError(false);
                 switch (resultCode) {
                     case RESULT_OK: {
                         ((LocationProvider) WolfpakServiceProvider

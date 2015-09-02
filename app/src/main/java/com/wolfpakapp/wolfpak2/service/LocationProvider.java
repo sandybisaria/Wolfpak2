@@ -130,7 +130,15 @@ public class LocationProvider extends ServiceManager
     }
 
 
-    public static boolean isResolvingError = false;
+    private static boolean isResolvingError = false;
+
+    public static void setIsResolvingError(boolean isResolvingError) {
+        LocationProvider.isResolvingError = isResolvingError;
+    }
+
+    public static boolean isIsResolvingError() {
+        return isResolvingError;
+    }
 
     @Override
     public void onConnectionFailed(ConnectionResult connectionResult) {
