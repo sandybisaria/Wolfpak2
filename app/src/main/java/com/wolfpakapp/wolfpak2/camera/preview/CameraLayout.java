@@ -1,6 +1,7 @@
 package com.wolfpakapp.wolfpak2.camera.preview;
 
 import android.graphics.Bitmap;
+import android.os.Build;
 import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -227,7 +228,11 @@ public class CameraLayout implements CameraController.CameraActionCallback {
 
     private void stopVideoStarterThread() {
         try {
-            mVideoStarterThread.quitSafely();
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+                mVideoStarterThread.quitSafely();
+            } else {
+                mVideoStarterThread.quit();
+            }
             mVideoStarterThread.join();
             mVideoStarterThread = null;
             mVideoStarterHandler = null;
@@ -253,7 +258,11 @@ public class CameraLayout implements CameraController.CameraActionCallback {
 
                     Thread.sleep(750); // make sure the video lasts at least 0.75s
                     Log.d(TAG, "1s wait");
-                    mVideoStarterThread.quitSafely();
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+                        mVideoStarterThread.quitSafely();
+                    } else {
+                        mVideoStarterThread.quit();
+                    }
                 } catch (InterruptedException e1) {
                     e1.printStackTrace();
                 }
