@@ -1,13 +1,17 @@
 package com.wolfpakapp.wolfpak2.service;
 
+import android.app.Dialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.IntentSender;
 import android.location.Location;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.v4.app.DialogFragment;
 import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.PendingResult;
 import com.google.android.gms.common.api.ResultCallback;
@@ -40,6 +44,12 @@ public class LocationProvider extends ServiceManager
                 .addOnConnectionFailedListener(this)
                 .build();
         mClient.connect();
+    }
+
+    public void reconnect() {
+        if (!mClient.isConnecting() && !mClient.isConnected()) {
+            mClient.connect();
+        }
     }
 
     @Override
@@ -119,9 +129,53 @@ public class LocationProvider extends ServiceManager
 
     }
 
+
+    public static boolean isResolvingError = false;
+
     @Override
     public void onConnectionFailed(ConnectionResult connectionResult) {
+        if (isResolvingError) {
+            return;
+        } else if (connectionResult.hasResolution()) {
+            try {
+                isResolvingError = true;
+                connectionResult.startResolutionForResult((MainActivity) mContext,
+                        MainActivity.REQUEST_RESOLVE_ERROR);
+            } catch (IntentSender.SendIntentException e) {
+                mClient.connect();
+            }
+        } else {
+            showErrorDialog(connectionResult.getErrorCode());
+            isResolvingError = true;
+        }
 
+    }
+
+    private static final String DIALOG_ERROR = "dialog_error";
+
+    private void showErrorDialog(int errorCode) {
+        ErrorDialogFragment dialogFragment = new ErrorDialogFragment();
+        Bundle args = new Bundle();
+        args.putInt(DIALOG_ERROR, errorCode);
+        dialogFragment.setArguments(args);
+        dialogFragment.show(((MainActivity) mContext).getSupportFragmentManager(), "errordialog");
+    }
+
+    public static class ErrorDialogFragment extends DialogFragment {
+        public ErrorDialogFragment() { }
+
+        @Override
+        public Dialog onCreateDialog(Bundle savedInstanceState) {
+            // Get the error code and retrieve the appropriate dialog
+            int errorCode = this.getArguments().getInt(DIALOG_ERROR);
+            return GoogleApiAvailability.getInstance().getErrorDialog(
+                    this.getActivity(), errorCode, MainActivity.REQUEST_RESOLVE_ERROR);
+        }
+
+        @Override
+        public void onDismiss(DialogInterface dialog) {
+            isResolvingError = false;
+        }
     }
 
     public Location getLastLocation() throws NoLocationException {

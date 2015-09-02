@@ -13,14 +13,14 @@ public class UndoManager {
     private static ArrayList<Bitmap> screenStates;
 
     static  {
-        screenStates = new ArrayList<>();
+        screenStates = new ArrayList<Bitmap>();
     }
     /**
      * Initializes Undo Manager
      * @deprecated
      */
     public UndoManager ()   {
-        screenStates = new ArrayList<>();
+        screenStates = new ArrayList<Bitmap>();
     }
 
     /**

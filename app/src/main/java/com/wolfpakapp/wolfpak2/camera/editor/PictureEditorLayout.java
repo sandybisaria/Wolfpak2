@@ -402,6 +402,9 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
                 }
                 break;
             case R.id.btn_draw:
+                if(mOverlay.getState() == EditableOverlay.STATE_BLUR) {
+                    mBlurButton.setImageResource(R.drawable.camera_blur_inactive);
+                }
                 if(mOverlay.getState() == EditableOverlay.STATE_TEXT)    {
                     mOverlay.getTextOverlay().setEditable(false);
                     mOverlay.getTextOverlay().setEnabled(false);
@@ -442,6 +445,9 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
                 break;
             case R.id.btn_text:
                 Log.d(TAG, "Clicked on text");
+                if(mOverlay.getState() == EditableOverlay.STATE_BLUR) {
+                    mBlurButton.setImageResource(R.drawable.camera_blur_inactive);
+                }
                 if(mOverlay.getState() == EditableOverlay.STATE_DRAW)   {
                     mColorPicker.setVisibility(View.GONE);
                     mDrawButton.setBackgroundColor(0x00000000);

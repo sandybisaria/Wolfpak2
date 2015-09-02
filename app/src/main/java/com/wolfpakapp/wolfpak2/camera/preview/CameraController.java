@@ -2,7 +2,7 @@ package com.wolfpakapp.wolfpak2.camera.preview;
 
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.util.Size;
+import com.wolfpakapp.wolfpak2.Size;
 import android.util.SparseIntArray;
 import android.view.Surface;
 

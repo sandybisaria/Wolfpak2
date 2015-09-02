@@ -21,10 +21,10 @@ public class WolfpakServiceProvider {
 
     private static ServiceManager nullManager = new NullManager();
 
-    private static HashMap<String, ServiceManager> managerHashMap = new HashMap<>();
-    private static HashMap<String, Boolean> initializedHashMap = new HashMap<>();
+    private static HashMap<String, ServiceManager> managerHashMap = new HashMap<String, ServiceManager>();
+    private static HashMap<String, Boolean> initializedHashMap = new HashMap<String, Boolean>();
 
-    private static ArrayList<OnAllInitializedCallback> mCallbacks = new ArrayList<>();
+    private static ArrayList<OnAllInitializedCallback> mCallbacks = new ArrayList<OnAllInitializedCallback>();
     private static boolean isAllInitialized = false;
 
     /**

@@ -1,6 +1,6 @@
 package com.wolfpakapp.wolfpak2.camera.preview;
 
-import android.util.Size;
+import com.wolfpakapp.wolfpak2.Size;
 
 /**
  * Holds the global states of the camera for access across all camera classes

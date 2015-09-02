@@ -3,7 +3,7 @@ package com.wolfpakapp.wolfpak2.camera.preview;
 import android.content.Context;
 import android.hardware.Camera;
 import android.util.Log;
-import android.util.Size;
+import com.wolfpakapp.wolfpak2.Size;
 import android.view.Surface;
 import android.view.WindowManager;
 
@@ -106,7 +106,7 @@ public class CameraUtils {
      */
     public static Size chooseOptimalSize(List<Size> choices, int width, int height, Size aspectRatio)  {
         // Collect supported resolutions at least as big as preview surface
-        List<Size> bigEnough = new ArrayList<>();
+        List<Size> bigEnough = new ArrayList<Size>();
         int w = aspectRatio.getWidth();
         int h = aspectRatio.getHeight();
         for(Size option : choices)  {

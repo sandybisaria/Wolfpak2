@@ -7,7 +7,7 @@ import android.hardware.Camera;
 import android.media.CamcorderProfile;
 import android.media.MediaRecorder;
 import android.util.Log;
-import android.util.Size;
+import com.wolfpakapp.wolfpak2.Size;
 
 import java.io.File;
 import java.io.IOException;
@@ -390,7 +390,7 @@ public class CameraController1 extends CameraController {
      * @return the list of {@link Size} objects
      */
     private List<Size> cameraSizeToUtilSize(List<Camera.Size> camSizes)    {
-        List<Size> utilSizes = new ArrayList<>();
+        List<Size> utilSizes = new ArrayList<Size>();
         for(Camera.Size size : camSizes)    {
             utilSizes.add(new Size(size.width, size.height));
         }

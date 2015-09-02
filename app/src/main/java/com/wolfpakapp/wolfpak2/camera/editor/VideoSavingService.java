@@ -47,7 +47,7 @@ public class VideoSavingService extends Service {
                 final String videoPath = (String) intent.getExtras().get(MediaSaver.VIDEO_PATH);
                 final String overlayPath = (String) intent.getExtras().get(MediaSaver.OVERLAY_PATH);
                 final String outputPath = (String) intent.getExtras().get(MediaSaver.OUTPUT_PATH);
-                final boolean isUploading = (boolean) intent.getExtras().get(MediaSaver.IS_UPLOADING);
+                final boolean isUploading = (Boolean) intent.getExtras().get(MediaSaver.IS_UPLOADING);
 
                 // construct contentvalues if uploading
                 final ContentValues contentValues = new ContentValues();
@@ -134,7 +134,7 @@ public class VideoSavingService extends Service {
 
     @Override
     public void onCreate() {
-        requests = new HashMap<>();
+        requests = new HashMap<Message, Intent>();
         // Start up the thread running the service.  Note that we create a
         // separate thread because the service normally runs in the process's
         // main thread, which we don't want to block.  We also make it

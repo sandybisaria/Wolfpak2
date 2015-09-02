@@ -21,11 +21,12 @@ public class MainActivity extends AppCompatActivity {
 
     private static final int NUM_PAGES = 4;
     public static final int REQUEST_CHECK_SETTINGS = 123;
+    public static final int REQUEST_RESOLVE_ERROR = 456;
 
     private WolfpakPagerAdapter mPagerAdapter;
     private ViewPager mViewPager;
 
-    private ArrayList<Runnable> backPressedRunnables = new ArrayList<>();
+    private ArrayList<Runnable> backPressedRunnables = new ArrayList<Runnable>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -122,6 +123,18 @@ public class MainActivity extends AppCompatActivity {
                         break;
                     }
                     default: {
+                        break;
+                    }
+                }
+                break;
+            }
+            case REQUEST_RESOLVE_ERROR: {
+                LocationProvider.isResolvingError = false;
+                switch (resultCode) {
+                    case RESULT_OK: {
+                        ((LocationProvider) WolfpakServiceProvider
+                                .getServiceManager(WolfpakServiceProvider.LOCATIONPROVIDER))
+                                .reconnect();
                         break;
                     }
                 }

@@ -5,7 +5,7 @@ import android.content.Context;
 import android.graphics.Matrix;
 import android.graphics.SurfaceTexture;
 import android.util.AttributeSet;
-import android.util.Size;
+import com.wolfpakapp.wolfpak2.Size;
 import android.view.Surface;
 import android.view.TextureView;
 
