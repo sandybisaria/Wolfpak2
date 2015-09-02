@@ -250,10 +250,10 @@ public class ColorPickerView extends View {
         if (BORDER_WIDTH_PX > 0) {
             mBorderPaint.setColor(mBorderColor);
 
-            canvas.drawRoundRect(rect.left - BORDER_WIDTH_PX,
-                    rect.top - BORDER_WIDTH_PX,
-                    rect.right + BORDER_WIDTH_PX,
-                    rect.bottom + BORDER_WIDTH_PX,
+            canvas.drawRoundRect(new RectF(rect.left - BORDER_WIDTH_PX,
+                            rect.top - BORDER_WIDTH_PX,
+                            rect.right + BORDER_WIDTH_PX,
+                            rect.bottom + BORDER_WIDTH_PX),
                     DrawingUtils.dpToPx(getContext(), HUE_PANEL_WDITH_DP / 2),
                     DrawingUtils.dpToPx(getContext(), HUE_PANEL_WDITH_DP / 2),
                     mBorderPaint);
