@@ -7,6 +7,7 @@ import android.hardware.Camera;
 import android.media.CamcorderProfile;
 import android.media.MediaRecorder;
 import android.util.Log;
+
 import com.wolfpakapp.wolfpak2.Size;
 
 import java.io.File;
@@ -16,6 +17,7 @@ import java.util.List;
 
 /**
  * Controls camera actions using the deprecated Camera API
+ *
  * @author Roland Fong
  */
 @SuppressWarnings("deprecation")
@@ -32,7 +34,7 @@ public class CameraController1 extends CameraController {
 
     private MediaRecorder mMediaRecorder;
 
-    public CameraController1(Context context)  {
+    public CameraController1(Context context) {
         super(context);
         mVideoPath = (new File(mContext.getExternalFilesDir(null), "video.mp4")).getAbsolutePath();
     }
@@ -43,19 +45,19 @@ public class CameraController1 extends CameraController {
     @Override
     public void openCamera() {
         Camera.CameraInfo info = new Camera.CameraInfo();
-        if(mCamera != null) // stop the camera if it had already been inited
+        if (mCamera != null) // stop the camera if it had already been inited
             stopPreviewAndFreeCamera();
 
         // find the correct facing camera
-        for(int id = 0; id <= Camera.getNumberOfCameras(); id++) {
+        for (int id = 0; id <= Camera.getNumberOfCameras(); id++) {
             Camera.getCameraInfo(id, info);
             int lensFacing = (CameraStates.CAMERA_FACE == CameraStates.FRONT) ?
                     Camera.CameraInfo.CAMERA_FACING_FRONT : Camera.CameraInfo.CAMERA_FACING_BACK;
-            if(info.facing == lensFacing)   {
+            if (info.facing == lensFacing) {
                 try {
                     mCameraId = id;
                     mCamera = Camera.open(id); // open the camera
-                } catch(RuntimeException e) {
+                } catch (RuntimeException e) {
                     Log.e(TAG, "Could not open camera with id: " + id);
                     e.printStackTrace();
                 }
@@ -72,7 +74,7 @@ public class CameraController1 extends CameraController {
     /**
      * Sets up the camera related outputs etc. and begins preview
      */
-    private void setupCamera()  {
+    private void setupCamera() {
         CameraUtils.setCameraDisplayOrientation(mContext, mCameraId, mCamera);
         // set the error callback
         mCamera.setErrorCallback(new Camera.ErrorCallback() {
@@ -84,10 +86,10 @@ public class CameraController1 extends CameraController {
         });
         // get video size
         Size largest = CameraUtils.getBestSize(cameraSizeToUtilSize(getSupportedImageSizes()));
-        if(getSupportedVideoSizes() != null) {
+        if (getSupportedVideoSizes() != null) {
             mVideoSize = CameraUtils.chooseOptimalSize(cameraSizeToUtilSize(getSupportedVideoSizes()),
                     mScreenSize.getWidth(), mScreenSize.getHeight(), largest);
-        } else  {
+        } else {
             mVideoSize = CameraUtils.chooseOptimalSize(cameraSizeToUtilSize(getSupportedPreviewSizes()),
                     mScreenSize.getWidth(), mScreenSize.getHeight(), largest);
         }
@@ -119,7 +121,7 @@ public class CameraController1 extends CameraController {
                 // applications. Applications should release the camera immediately
                 // during onPause() and re-open() it during onResume()).
                 mCamera.release();
-            } catch(RuntimeException e) {
+            } catch (RuntimeException e) {
                 Log.e(TAG, "Couldn't release camera");
                 e.printStackTrace();
             } finally {
@@ -136,17 +138,18 @@ public class CameraController1 extends CameraController {
         try {
             mCamera.setPreviewTexture(mCameraView.getSurfaceTexture());
             mCamera.startPreview();
-        } catch(IOException e)  {
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
     /**
      * Prepares the media recorder
+     *
      * @return whether prepare was successful
      */
-    private boolean setUpMediaRecorder()    {
-        if(mCamera == null) return false; // fail!
+    private boolean setUpMediaRecorder() {
+        if (mCamera == null) return false; // fail!
         CameraStates.FILE_TYPE = CameraStates.FILE_VIDEO;
         // unlock the camera so mediarecorder can use it
         mCamera.unlock();
@@ -155,7 +158,7 @@ public class CameraController1 extends CameraController {
         mMediaRecorder.setCamera(mCamera);
         // set audio/video sources
 
-        if(CameraStates.IS_SOUND)
+        if (CameraStates.IS_SOUND)
             mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.CAMCORDER);
         mMediaRecorder.setVideoSource(MediaRecorder.VideoSource.CAMERA);
 
@@ -192,18 +195,18 @@ public class CameraController1 extends CameraController {
 
         int rotation = CameraUtils.getRotation(mContext);
         int orientation = ORIENTATIONS.get(rotation);
-        if(CameraStates.isFrontCamera())    {
+        if (CameraStates.isFrontCamera()) {
             orientation += 180; // hopefully this will cause video to save right side up
         }
         mMediaRecorder.setOrientationHint(orientation);
 
         try {
             mMediaRecorder.prepare();
-        } catch(IOException e)  {
+        } catch (IOException e) {
             Log.e(TAG, "Mediarecorder IOexception while preparing");
             e.printStackTrace();
             return false;
-        } catch(IllegalStateException e1)    {
+        } catch (IllegalStateException e1) {
             Log.e(TAG, "Mediarecorder illegal state exception while preparing");
             e1.printStackTrace();
             return false;
@@ -217,16 +220,16 @@ public class CameraController1 extends CameraController {
     @Override
     public void startRecording() {
         //mCamera.stopPreview();
-        if(setUpMediaRecorder())    {
+        if (setUpMediaRecorder()) {
             try {
                 mMediaRecorder.start();
-            } catch(RuntimeException e) {
+            } catch (RuntimeException e) {
                 Log.d(TAG, "Mediarecorder start failed");
                 e.printStackTrace();
                 releaseMediaRecorder();
                 mCamera.startPreview();
             }
-        } else  { // exceptions occurred
+        } else { // exceptions occurred
             releaseMediaRecorder();
             mCamera.startPreview();
         }
@@ -250,14 +253,14 @@ public class CameraController1 extends CameraController {
     @Override
     public void stopRecording() {
         try {
-            if(mMediaRecorder != null) {
+            if (mMediaRecorder != null) {
                 Log.d(TAG, "Media recorder stop");
                 mMediaRecorder.stop();// Stop recording
                 Log.d(TAG, "media Recorder reset");
                 mMediaRecorder.reset();
                 releaseMediaRecorder();
             }
-        } catch(IllegalStateException e)    {
+        } catch (IllegalStateException e) {
             Log.d(TAG, "Media recorder could not be stopped correctly");
             e.printStackTrace();
             startPreview(); // restart the preview
@@ -279,7 +282,7 @@ public class CameraController1 extends CameraController {
             }
         };
         // called when picture is available
-        Camera.PictureCallback pictureCallback = new Camera.PictureCallback()   {
+        Camera.PictureCallback pictureCallback = new Camera.PictureCallback() {
             @Override
             public void onPictureTaken(byte[] data, Camera camera) {
                 Bitmap img = BitmapFactory.decodeByteArray(data, 0, data.length);
@@ -287,7 +290,7 @@ public class CameraController1 extends CameraController {
             }
         };
         Camera.Parameters params = mCamera.getParameters();
-        switch(CameraStates.FLASH_STATE)    {
+        switch (CameraStates.FLASH_STATE) {
             case CameraStates.AUTO_FLASH:
                 params.setFlashMode(Camera.Parameters.FLASH_MODE_AUTO);
                 break;
@@ -319,7 +322,7 @@ public class CameraController1 extends CameraController {
      */
     @Override
     public void toggleFlash() {
-        switch(CameraStates.FLASH_STATE)    {
+        switch (CameraStates.FLASH_STATE) {
             case CameraStates.AUTO_FLASH:
                 CameraStates.FLASH_STATE = CameraStates.NO_FLASH;
                 break;
@@ -386,12 +389,13 @@ public class CameraController1 extends CameraController {
 
     /**
      * Converts horrid {@link android.hardware.Camera.Size} to the usual {@link Size} objects
+     *
      * @param camSizes the list of {@link android.hardware.Camera.Size} objects
      * @return the list of {@link Size} objects
      */
-    private List<Size> cameraSizeToUtilSize(List<Camera.Size> camSizes)    {
+    private List<Size> cameraSizeToUtilSize(List<Camera.Size> camSizes) {
         List<Size> utilSizes = new ArrayList<Size>();
-        for(Camera.Size size : camSizes)    {
+        for (Camera.Size size : camSizes) {
             utilSizes.add(new Size(size.width, size.height));
         }
         return utilSizes;

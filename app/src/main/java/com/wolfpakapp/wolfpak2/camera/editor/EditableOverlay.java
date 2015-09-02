@@ -17,6 +17,7 @@ import android.view.View;
 
 /**
  * An overlay for drawing above textureview
+ *
  * @author Roland Fong
  */
 public class EditableOverlay extends View {
@@ -60,7 +61,7 @@ public class EditableOverlay extends View {
 
                 @Override
                 public boolean onScale(ScaleGestureDetector detector) {
-                    if(mTextOverlay.getState() == TextOverlay.TEXT_STATE_FREE ||
+                    if (mTextOverlay.getState() == TextOverlay.TEXT_STATE_FREE ||
                             mTextOverlay.getState() == TextOverlay.TEXT_STATE_VERTICAL) {
                         Log.d(TAG, "Scaling by " + detector.getScaleFactor());
                         mTextOverlay.setTextSize(TypedValue.COMPLEX_UNIT_PX, currentFontSize * detector.getScaleFactor());
@@ -81,13 +82,13 @@ public class EditableOverlay extends View {
         @Override
         public float onRotationBegin(RotationGestureDetector rotationDetector) {
             mTextOverlay.setRotating(true);
-            return -1 *  mTextOverlay.getRotation();
+            return -1 * mTextOverlay.getRotation();
         }
 
         @Override
         public void OnRotation(RotationGestureDetector rotationDetector) {
             Log.d(TAG, "Rotation by angle " + rotationDetector.getAngle());
-            if(mTextOverlay.getState() == TextOverlay.TEXT_STATE_FREE ||
+            if (mTextOverlay.getState() == TextOverlay.TEXT_STATE_FREE ||
                     mTextOverlay.getState() == TextOverlay.TEXT_STATE_VERTICAL) {
                 mTextOverlay.setPivotX(mTextOverlay.getWidth() / 2);
                 mTextOverlay.setPivotY(mTextOverlay.getHeight() / 2);
@@ -102,15 +103,15 @@ public class EditableOverlay extends View {
         }
     };
 
-    public EditableOverlay(Context context)  {
+    public EditableOverlay(Context context) {
         this(context, null);
     }
 
-    public EditableOverlay(Context context, AttributeSet attrs)  {
+    public EditableOverlay(Context context, AttributeSet attrs) {
         this(context, attrs, 0);
     }
 
-    public EditableOverlay(Context context, AttributeSet attrs, int defStyle)    {
+    public EditableOverlay(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
     }
 
@@ -157,10 +158,9 @@ public class EditableOverlay extends View {
     /**
      * @return the overlay bitmap with text
      */
-    public Bitmap getBitmap()
-    {
+    public Bitmap getBitmap() {
         Bitmap b = Bitmap.createBitmap(mBitmap);
-        if(mTextOverlay.getState() != TextOverlay.TEXT_STATE_HIDDEN) {
+        if (mTextOverlay.getState() != TextOverlay.TEXT_STATE_HIDDEN) {
             Canvas c = new Canvas(b);
             c.drawBitmap(mTextOverlay.getBitmap(), mTextOverlay.getX(), mTextOverlay.getY(), null);
         }
@@ -170,30 +170,32 @@ public class EditableOverlay extends View {
     /**
      * @return the overlay bitmap without text
      */
-    public Bitmap getBitmapWithoutText()    {
+    public Bitmap getBitmapWithoutText() {
         return mBitmap;
     }
 
     /**
      * Sets the state of the overlay
+     *
      * @param state the overlay state (draw, blur, text)
      */
-    public void setState(int state)  {
+    public void setState(int state) {
         mState = state;
     }
 
     /**
      * @return the state of the overlay
      */
-    public int getState()   {
+    public int getState() {
         return mState;
     }
 
     /**
      * Sets the color of drawing tool
+     *
      * @param color the draw tool color
      */
-    public void setColor(int color)   {
+    public void setColor(int color) {
         mColor = color;
         mPaint.setColor(color);
     }
@@ -209,12 +211,12 @@ public class EditableOverlay extends View {
         return mTextOverlay;
     }
 
-    public void clearBitmap()   {
+    public void clearBitmap() {
         mBitmap.eraseColor(Color.argb(0, 0, 0, 0));
     }
 
     private void touch_start(float x, float y, int state) {
-        switch(state)   {
+        switch (state) {
             case STATE_DRAW:
                 mPath.reset();
                 mPath.moveTo(x, y);
@@ -225,7 +227,7 @@ public class EditableOverlay extends View {
     }
 
     private void touch_move(float x, float y, int state) {
-        switch(state)   {
+        switch (state) {
             case STATE_DRAW:
                 float dx = Math.abs(x - mX);
                 float dy = Math.abs(y - mY);
@@ -239,7 +241,7 @@ public class EditableOverlay extends View {
     }
 
     private void touch_up(int state) {
-        switch(state)   {
+        switch (state) {
             case STATE_DRAW:
                 mPath.lineTo(mX, mY);
                 // commit the path to our offscreen
@@ -258,8 +260,8 @@ public class EditableOverlay extends View {
     /**
      * Blits the overlay onto the image and saves an undo state instance
      */
-    private void blitOverlay()  {
-        mDrawHandler.post(new Runnable()    {
+    private void blitOverlay() {
+        mDrawHandler.post(new Runnable() {
             @Override
             public void run() {
                 // if image, combine overlay and textureview onto textureview surface
@@ -280,7 +282,7 @@ public class EditableOverlay extends View {
     }
 
     private boolean performTouchEvent(MotionEvent event, int state) {
-        if(state == STATE_BLUR) return false;// blur is not handled on overlay
+        if (state == STATE_BLUR) return false;// blur is not handled on overlay
         float x = event.getX();
         float y = event.getY();
         switch (event.getAction()) {
@@ -289,11 +291,11 @@ public class EditableOverlay extends View {
                 touch_start(x, y, state);
                 break;
             case MotionEvent.ACTION_MOVE:
-                if(mTouched) // if finger has been detected, continue drawing
+                if (mTouched) // if finger has been detected, continue drawing
                     touch_move(x, y, state);
                 break;
             case MotionEvent.ACTION_UP:
-                if(mTouched) {// if finger started drawing, finish drawing
+                if (mTouched) {// if finger started drawing, finish drawing
                     mTouched = false;
                     touch_up(state);
                 }
@@ -305,12 +307,12 @@ public class EditableOverlay extends View {
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        if(mState == STATE_IDLE) return false;// don't even do anything
+        if (mState == STATE_IDLE) return false;// don't even do anything
 
         mScaleDetector.onTouchEvent(event);
         mRotationDetector.onTouchEvent(event);
 
-        if(!mDrawHandler.hasMessages(BLITTING_OVERLAY)) {
+        if (!mDrawHandler.hasMessages(BLITTING_OVERLAY)) {
             switch (event.getAction()) {
                 case MotionEvent.ACTION_DOWN:
                 case MotionEvent.ACTION_MOVE:
@@ -331,7 +333,7 @@ public class EditableOverlay extends View {
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
-        System.out.println("w "+w+" h "+h+" oldw "+oldw+" oldh "+oldh);
+        System.out.println("w " + w + " h " + h + " oldw " + oldw + " oldh " + oldh);
         mBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
         mCanvas = new Canvas(mBitmap);
     }
@@ -349,16 +351,16 @@ public class EditableOverlay extends View {
             return (mAngle + mStartAngle) % 360;
         }
 
-        public RotationGestureDetector(OnRotationGestureListener listener){
+        public RotationGestureDetector(OnRotationGestureListener listener) {
             mListener = listener;
             ptrID1 = INVALID_POINTER_ID;
             ptrID2 = INVALID_POINTER_ID;
         }
 
-        public boolean onTouchEvent(MotionEvent event){
+        public boolean onTouchEvent(MotionEvent event) {
             switch (event.getActionMasked()) {
                 case MotionEvent.ACTION_DOWN:
-                    if(mListener != null)
+                    if (mListener != null)
                         mStartAngle = mListener.onRotationBegin(this);
                     else
                         mStartAngle = 0;
@@ -372,7 +374,7 @@ public class EditableOverlay extends View {
                     fY = event.getY(event.findPointerIndex(ptrID2));
                     break;
                 case MotionEvent.ACTION_MOVE:
-                    if(ptrID1 != INVALID_POINTER_ID && ptrID2 != INVALID_POINTER_ID){
+                    if (ptrID1 != INVALID_POINTER_ID && ptrID2 != INVALID_POINTER_ID) {
                         float nfX, nfY, nsX, nsY;
                         nsX = event.getX(event.findPointerIndex(ptrID1));
                         nsY = event.getY(event.findPointerIndex(ptrID1));
@@ -388,14 +390,14 @@ public class EditableOverlay extends View {
                     break;
                 case MotionEvent.ACTION_UP:
                     ptrID1 = INVALID_POINTER_ID;
-                    if(mListener != null)
+                    if (mListener != null)
                         mListener.onRotationEnd(this);
                     break;
                 case MotionEvent.ACTION_POINTER_UP:
                     ptrID2 = INVALID_POINTER_ID;
                     break;
                 case MotionEvent.ACTION_CANCEL:
-                    if(mListener != null)
+                    if (mListener != null)
                         mListener.onRotationEnd(this);
                     ptrID1 = INVALID_POINTER_ID;
                     ptrID2 = INVALID_POINTER_ID;
@@ -404,12 +406,11 @@ public class EditableOverlay extends View {
             return true;
         }
 
-        private float angleBetweenLines (float fX, float fY, float sX, float sY, float nfX, float nfY, float nsX, float nsY)
-        {
-            float angle1 = (float) Math.atan2( (fY - sY), (fX - sX) );
-            float angle2 = (float) Math.atan2( (nfY - nsY), (nfX - nsX) );
+        private float angleBetweenLines(float fX, float fY, float sX, float sY, float nfX, float nfY, float nsX, float nsY) {
+            float angle1 = (float) Math.atan2((fY - sY), (fX - sX));
+            float angle2 = (float) Math.atan2((nfY - nsY), (nfX - nsX));
 
-            float angle = ((float)Math.toDegrees(angle1 - angle2)) % 360;
+            float angle = ((float) Math.toDegrees(angle1 - angle2)) % 360;
             if (angle < -180.f) angle += 360.0f;
             if (angle > 180.f) angle -= 360.0f;
             return angle;
@@ -417,7 +418,9 @@ public class EditableOverlay extends View {
 
         public interface OnRotationGestureListener {
             float onRotationBegin(RotationGestureDetector rotationDetector);
+
             void OnRotation(RotationGestureDetector rotationDetector);
+
             void onRotationEnd(RotationGestureDetector rotationDetector);
         }
     }

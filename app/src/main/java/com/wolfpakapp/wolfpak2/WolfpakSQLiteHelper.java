@@ -8,6 +8,7 @@ import android.util.Log;
 
 /**
  * WolfpakSQLiteHelper holds database attributes and manages the database.
+ *
  * @author Roland Fong
  */
 public class WolfpakSQLiteHelper extends SQLiteOpenHelper {
@@ -47,7 +48,7 @@ public class WolfpakSQLiteHelper extends SQLiteOpenHelper {
                     MediaEntry.COLUMN_USER + TEXT_TYPE + COMMA_SEP +
                     MediaEntry.COLUMN_THUMBNAIL + TEXT_TYPE + COMMA_SEP +
                     MediaEntry.COLUMN_MEDIA + TEXT_TYPE +
-            " )";
+                    " )";
 
     private static final String SQL_DELETE_ENTRIES =
             "DROP TABLE IF EXISTS " + MediaEntry.TABLE_MEDIA;

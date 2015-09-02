@@ -11,6 +11,7 @@ public abstract class ServiceManager {
 
     /**
      * Set a callback for when the ServiceManager is finished initialization.
+     *
      * @param callback The callback to be invoked.
      */
     public void setOnInitializedCallback(OnInitializedCallback callback) {

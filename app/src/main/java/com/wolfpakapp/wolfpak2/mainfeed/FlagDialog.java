@@ -26,14 +26,16 @@ public class FlagDialog extends DialogFragment {
      */
     interface FlagDialogListener {
         void onDialogPositiveClick();
+
         void onDialogNegativeClick();
+
         void onDialogCanceled();
     }
 
     // Use this instance of the interface to deliver action events.
     private FlagDialogListener mListener;
 
-    public void setFlagDialogListener(FlagDialogListener flagDialogListener)  {
+    public void setFlagDialogListener(FlagDialogListener flagDialogListener) {
         mListener = flagDialogListener;
     }
 

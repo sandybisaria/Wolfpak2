@@ -15,6 +15,7 @@ import com.wolfpakapp.wolfpak2.R;
 
 /**
  * Dialog for prompting user upload details before sending to server
+ *
  * @author Roland Fong
  */
 public class UploadDialog extends DialogFragment {
@@ -30,14 +31,16 @@ public class UploadDialog extends DialogFragment {
      * Each method passes the DialogFragment in case the host needs to query it. */
     public interface UploadDialogListener {
         void onDialogPositiveClick(UploadDialog dialog);
+
         void onDialogNegativeClick(UploadDialog dialog);
+
         void onDialogCanceled(UploadDialog dialog);
     }
 
     // Use this instance of the interface to deliver action events
     private UploadDialogListener mListener;
 
-    public void setUploadDialogListener(UploadDialogListener uploadDialogListener)  {
+    public void setUploadDialogListener(UploadDialogListener uploadDialogListener) {
         mListener = uploadDialogListener;
     }
 
@@ -105,6 +108,7 @@ public class UploadDialog extends DialogFragment {
 
     /**
      * Sets the title
+     *
      * @param handle the title of the upload
      */
     public void setHandle(String handle) {
@@ -116,5 +120,5 @@ public class UploadDialog extends DialogFragment {
         super.onCancel(dialog);
         mListener.onDialogCanceled(UploadDialog.this);
     }
-    
+
 }

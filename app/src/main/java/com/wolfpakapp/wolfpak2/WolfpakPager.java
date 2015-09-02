@@ -11,7 +11,7 @@ import android.view.MotionEvent;
  * NullPointerExceptions. The onInterceptTouchEvent method was overridden to ignore these errors.
  * They should not impact the functionality of the application.
  */
-public class WolfpakPager extends ViewPager{
+public class WolfpakPager extends ViewPager {
 
     private static boolean active = true;
 
@@ -25,7 +25,7 @@ public class WolfpakPager extends ViewPager{
 
     @Override
     public boolean onInterceptTouchEvent(MotionEvent ev) {
-        if(active) {
+        if (active) {
             try {
                 return super.onInterceptTouchEvent(ev);
             } catch (Exception e) {
@@ -35,11 +35,11 @@ public class WolfpakPager extends ViewPager{
         return false;
     }
 
-    public static boolean isActive()   {
+    public static boolean isActive() {
         return active;
     }
 
-    public static void setActive(boolean a)   {
+    public static void setActive(boolean a) {
         active = a;
     }
 }

@@ -35,6 +35,7 @@ import com.wolfpakapp.wolfpak2.camera.preview.CameraStates;
 
 /**
  * A fragment that displays a captured image or loops video for the user to edit
+ *
  * @author Roland Fong
  */
 public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
@@ -76,25 +77,27 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
      * Handles lifecycle events on {@link TextureView}
      */
     private final TextureView.SurfaceTextureListener mSurfaceTextureListener
-            = new TextureView.SurfaceTextureListener()  {
-                @Override
-                public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
-                    //Log.d(TAG, "Edit Texture Avail");
-                    mTextureView.setTransform(new Matrix());
-                    displayMedia();
-                }
+            = new TextureView.SurfaceTextureListener() {
+        @Override
+        public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
+            //Log.d(TAG, "Edit Texture Avail");
+            mTextureView.setTransform(new Matrix());
+            displayMedia();
+        }
 
-                @Override
-                public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {}
+        @Override
+        public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {
+        }
 
-                @Override
-                public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
-                    return true;
-                }
+        @Override
+        public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
+            return true;
+        }
 
-                @Override
-                public void onSurfaceTextureUpdated(SurfaceTexture surface) {}
-            };
+        @Override
+        public void onSurfaceTextureUpdated(SurfaceTexture surface) {
+        }
+    };
 
     public PictureEditorLayout(CameraFragment fragment, View view) {
         // set up texture view
@@ -152,7 +155,7 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
     /**
      * @return if image is being handled
      */
-    public static boolean isImage()    {
+    public static boolean isImage() {
         return isImage;
     }
 
@@ -169,8 +172,8 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
     private void displayMedia() {
         isImage = (CameraStates.FILE_TYPE == CameraStates.FILE_IMAGE);
 
-        if(isImage) {
-            if(UndoManager.getNumberOfStates() == 0) {
+        if (isImage) {
+            if (UndoManager.getNumberOfStates() == 0) {
                 Canvas canvas = mTextureView.lockCanvas();
 
                 Bitmap src = mFragment.getImageBitmap();
@@ -180,7 +183,7 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
                 if (src.getWidth() > src.getHeight()) {
                     // transformation matrix that scales and rotates
                     Matrix matrix = new Matrix();
-                    if(CameraStates.isFrontCamera())  {
+                    if (CameraStates.isFrontCamera()) {
                         matrix.setScale(-1, 1);
                     }
                     matrix.postRotate(90);
@@ -190,7 +193,7 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
                             src, 0, 0, src.getWidth(), src.getHeight(), matrix, true);
                     canvas.drawBitmap(resizedBitmap, 0, 0, null);
                     UndoManager.addScreenState(resizedBitmap); // initial state
-                } else  {
+                } else {
                     canvas.drawBitmap(src, 0, 0, null);
                     UndoManager.addScreenState(src); // initial state
                 }
@@ -203,8 +206,8 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
                 c.drawBitmap(UndoManager.getLastScreenState(), 0, 0, null);
                 mTextureView.unlockCanvasAndPost(c);
             }
-        } else  {
-            if(UndoManager.getNumberOfStates() == 0) {
+        } else {
+            if (UndoManager.getNumberOfStates() == 0) {
                 mVideoPath = mFragment.getVideoPath();
                 Bitmap placeholder = Bitmap.createBitmap(// initial state, empty screen
                         CameraStates.SCREEN_SIZE.getWidth(),
@@ -213,7 +216,7 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
 //                Canvas temp = new Canvas(placeholder);
                 UndoManager.addScreenState(placeholder);
                 // mFragment.setVideoPath(null); // so we know to skip initing upon resume
-            } else  { // device likely resumed, so restore previous session
+            } else { // device likely resumed, so restore previous session
                 mOverlay.setBitmap(UndoManager.getLastScreenState());
             }
             // play the video
@@ -237,12 +240,13 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
     /**
      * @return the ColorPickerView
      */
-    public static ColorPickerView getColorPicker()  {
+    public static ColorPickerView getColorPicker() {
         return mColorPicker;
     }
 
     /**
      * Takes a square bitmap and turns it into a circle
+     *
      * @param bitmap the square bitmap
      * @return the circle bitmap
      */
@@ -271,12 +275,13 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
     /**
      * Blurs image at specified coordinates by producing a circular bitmap and blitting it
      * to the textureview
+     *
      * @param action the action (draw or blur)
-     * @param x the x coordinate on the screen
-     * @param y the y coordinate on the screen
+     * @param x      the x coordinate on the screen
+     * @param y      the y coordinate on the screen
      */
-    private void blurImage(int action, float x, float y)    {
-        switch(action)  {
+    private void blurImage(int action, float x, float y) {
+        switch (action) {
             case MotionEvent.ACTION_DOWN:
                 // get the previous state of the screen, which is supposed to be equivalent to textureview
                 // mTextureView.getBitmap is relatively slow, 50ms or so to do
@@ -288,14 +293,14 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
                 Bitmap blurredbmp = Bitmap.createBitmap(BLUR_SIDE, BLUR_SIDE, txbmp.getConfig());
 
                 // prevent errors when blur rectangle exceeds bounds
-                if((int) x - BLUR_SIDE / 2 <= 0)
+                if ((int) x - BLUR_SIDE / 2 <= 0)
                     x = BLUR_SIDE / 2;
-                if((int) y - BLUR_SIDE / 2 <= 0)
+                if ((int) y - BLUR_SIDE / 2 <= 0)
                     y = BLUR_SIDE / 2;
 
-                if((int) x + BLUR_SIDE > txbmp.getWidth())
+                if ((int) x + BLUR_SIDE > txbmp.getWidth())
                     x = txbmp.getWidth() - BLUR_SIDE / 2;
-                if((int) y + BLUR_SIDE > txbmp.getHeight())
+                if ((int) y + BLUR_SIDE > txbmp.getHeight())
                     y = txbmp.getHeight() - BLUR_SIDE / 2;
 
                 final Bitmap blursrc = getRoundedCornerBitmap(Bitmap.createBitmap(txbmp,
@@ -325,40 +330,40 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
                 UndoManager.addScreenState(Bitmap.createBitmap(screen));
                 break;
             case MotionEvent.ACTION_CANCEL:
-            default: break;
+            default:
+                break;
         }
 
     }
 
     public void onPause() {
-        if(!isImage) {
+        if (!isImage) {
             mVideoView.pause();
         }
     }
 
-    public void onResume()  {
+    public void onResume() {
         View decorView = mFragment.getActivity().getWindow().getDecorView();
         // Hide the status bar.
         decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_FULLSCREEN);
 
-        if(!isImage)    {
+        if (!isImage) {
             // video view doesn't need to wait for textureview to be ready
             displayMedia();
         }
     }
 
     public void onClick(int id) {
-        switch(id) {
+        switch (id) {
             case R.id.btn_back:
                 startCamera();
                 break;
             case R.id.btn_download:
-                if(isImage) {
+                if (isImage) {
                     MediaSaver.downloadImage(this, // listener
                             Bitmap.createBitmap(mTextureView.getBitmap()), // background image
                             Bitmap.createBitmap(mOverlay.getBitmap())); // foreground overlay
-                }
-                else    {
+                } else {
                     mVideoView.pause();
                     MediaSaver.downloadVideo(this,
                             mVideoPath, // the original video
@@ -378,11 +383,11 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
                             "Error, check network connection", Toast.LENGTH_SHORT).show();
                     return;
                 }
-                if(isImage) {
+                if (isImage) {
                     MediaSaver.uploadImage(this, // listener
                             Bitmap.createBitmap(mTextureView.getBitmap()), // background image
                             Bitmap.createBitmap(mOverlay.getBitmap())); // foreground overlay
-                } else  {
+                } else {
                     mVideoView.pause();
                     MediaSaver.uploadVideo(this,
                             mVideoPath, // the original video
@@ -390,7 +395,7 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
                 }
                 break;
             case R.id.btn_undo:
-                if(UndoManager.getNumberOfStates() > 1) {
+                if (UndoManager.getNumberOfStates() > 1) {
                     if (isImage) {
                         Canvas c = mTextureView.lockCanvas();
                         c.drawBitmap(UndoManager.undoScreenState(), 0, 0, null);
@@ -402,15 +407,15 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
                 }
                 break;
             case R.id.btn_draw:
-                if(mOverlay.getState() == EditableOverlay.STATE_BLUR) {
+                if (mOverlay.getState() == EditableOverlay.STATE_BLUR) {
                     mBlurButton.setImageResource(R.drawable.camera_blur_inactive);
                 }
-                if(mOverlay.getState() == EditableOverlay.STATE_TEXT)    {
+                if (mOverlay.getState() == EditableOverlay.STATE_TEXT) {
                     mOverlay.getTextOverlay().setEditable(false);
                     mOverlay.getTextOverlay().setEnabled(false);
                     mOverlay.getTextOverlay().clearFocus();
                 }
-                if(mOverlay.getState() != EditableOverlay.STATE_DRAW) {
+                if (mOverlay.getState() != EditableOverlay.STATE_DRAW) {
                     mOverlay.setState(EditableOverlay.STATE_DRAW);
                     mOverlay.setColor(mColorPicker.getColor());
                     mColorPicker.setVisibility(View.VISIBLE);
@@ -426,15 +431,15 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
                 }
                 break;
             case R.id.btn_blur:
-                if(isImage) {// don't enable blurring for video
-                    if(mOverlay.getState() == EditableOverlay.STATE_BLUR) {
+                if (isImage) {// don't enable blurring for video
+                    if (mOverlay.getState() == EditableOverlay.STATE_BLUR) {
                         mOverlay.setState(EditableOverlay.STATE_IDLE);
                         mBlurButton.setImageResource(R.drawable.camera_blur_inactive);
                         break;
-                    } else if(mOverlay.getState() == EditableOverlay.STATE_DRAW)   {
+                    } else if (mOverlay.getState() == EditableOverlay.STATE_DRAW) {
                         mColorPicker.setVisibility(View.GONE);
                         mDrawButton.setBackgroundColor(0x00000000);
-                    } else if(mOverlay.getState() == EditableOverlay.STATE_TEXT)    {
+                    } else if (mOverlay.getState() == EditableOverlay.STATE_TEXT) {
                         mOverlay.getTextOverlay().setEditable(false);
                         mOverlay.getTextOverlay().setEnabled(false);
                         mOverlay.getTextOverlay().clearFocus();
@@ -445,22 +450,22 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
                 break;
             case R.id.btn_text:
                 Log.d(TAG, "Clicked on text");
-                if(mOverlay.getState() == EditableOverlay.STATE_BLUR) {
+                if (mOverlay.getState() == EditableOverlay.STATE_BLUR) {
                     mBlurButton.setImageResource(R.drawable.camera_blur_inactive);
                 }
-                if(mOverlay.getState() == EditableOverlay.STATE_DRAW)   {
+                if (mOverlay.getState() == EditableOverlay.STATE_DRAW) {
                     mColorPicker.setVisibility(View.GONE);
                     mDrawButton.setBackgroundColor(0x00000000);
                 }
-                if(mOverlay.getState() != EditableOverlay.STATE_TEXT) {
+                if (mOverlay.getState() != EditableOverlay.STATE_TEXT) {
                     mOverlay.setState(EditableOverlay.STATE_TEXT);
                     mOverlay.getTextOverlay().setEditable(true);
                     mOverlay.getTextOverlay().setEnabled(true);
                     mOverlay.getTextOverlay().requestFocus();
                     mOverlay.getTextOverlay().nextState();// go to default state
-                } else  {// if text is selected
+                } else {// if text is selected
                     // goes to next state and ends text editing session if text hidden
-                    if(mOverlay.getTextOverlay().nextState() == TextOverlay.TEXT_STATE_HIDDEN)  {
+                    if (mOverlay.getTextOverlay().nextState() == TextOverlay.TEXT_STATE_HIDDEN) {
                         mOverlay.setState(EditableOverlay.STATE_IDLE);
                     }
                 }
@@ -469,9 +474,9 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
     }
 
     public boolean onTouch(int id, MotionEvent event) {
-        switch(id)   {
+        switch (id) {
             case R.id.edit_texture: // the edit layout textureview
-                if(mOverlay.getState() == EditableOverlay.STATE_BLUR) {
+                if (mOverlay.getState() == EditableOverlay.STATE_BLUR) {
                     blurImage(event.getAction(), event.getX(), event.getY());
                 }
                 break;
@@ -498,33 +503,33 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
     /**
      * Hides all the editor icons
      */
-    public void hide()  {
+    public void hide() {
         mFragment.getActivity().runOnUiThread(new Runnable() {
-              @Override
-              public void run() {
-                  mVideoView.stopPlayback();
-                  mVideoView.suspend();
-                  mOverlay.setVisibility(View.GONE);
-                  mOverlay.getTextOverlay().setVisibility(View.GONE);
-                  mColorPicker.setVisibility(View.GONE);
-                  mVideoView.setVisibility(View.GONE);
-                  mTextureView.setVisibility(View.INVISIBLE);
-                  mUndoButton.setVisibility(View.GONE);
-                  mTextButton.setVisibility(View.GONE);
-                  mBlurButton.setVisibility(View.GONE);
-                  mDrawButton.setBackgroundColor(Color.argb(0, 0, 0, 0));
-                  mDrawButton.setVisibility(View.GONE);
-                  mBackButton.setVisibility(View.GONE);
-                  mDownloadButton.setVisibility(View.GONE);
-                  mUploadButton.setVisibility(View.GONE);
-              }
-          });
+            @Override
+            public void run() {
+                mVideoView.stopPlayback();
+                mVideoView.suspend();
+                mOverlay.setVisibility(View.GONE);
+                mOverlay.getTextOverlay().setVisibility(View.GONE);
+                mColorPicker.setVisibility(View.GONE);
+                mVideoView.setVisibility(View.GONE);
+                mTextureView.setVisibility(View.INVISIBLE);
+                mUndoButton.setVisibility(View.GONE);
+                mTextButton.setVisibility(View.GONE);
+                mBlurButton.setVisibility(View.GONE);
+                mDrawButton.setBackgroundColor(Color.argb(0, 0, 0, 0));
+                mDrawButton.setVisibility(View.GONE);
+                mBackButton.setVisibility(View.GONE);
+                mDownloadButton.setVisibility(View.GONE);
+                mUploadButton.setVisibility(View.GONE);
+            }
+        });
     }
 
     /**
      * Shows all the editor icons
      */
-    public void show()  {
+    public void show() {
         mFragment.getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -537,15 +542,14 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
                 mDownloadButton.setVisibility(View.VISIBLE);
                 mUploadButton.setVisibility(View.VISIBLE);
 
-                if(CameraStates.FILE_TYPE == CameraStates.FILE_IMAGE) {
+                if (CameraStates.FILE_TYPE == CameraStates.FILE_IMAGE) {
                     //Log.d(TAG, "Showing TextureView");
                     mTextureView.setVisibility(View.VISIBLE);
                     if (mTextureView.isAvailable()) {
                         Log.d(TAG, "Surface texture ready, calling onsurfaceavail");
                         displayMedia();
                     }
-                }
-                else { // video
+                } else { // video
                     mBlurButton.setVisibility(View.INVISIBLE); // no blur on video
                     //Log.d(TAG, "Showing VidView");
                     mVideoView.setVisibility(View.VISIBLE);
@@ -558,7 +562,7 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
     @Override
     public void onDownloadCompleted() {
         Log.d(TAG, "Download Completed");
-        if(!isImage)
+        if (!isImage)
             mVideoView.start();
     }
 
@@ -572,7 +576,7 @@ public class PictureEditorLayout implements MediaSaver.MediaSaverListener {
     @Override
     public void onUploadCanceled() {
         Log.d(TAG, "Upload Canceled");
-        if(CameraStates.FILE_TYPE == CameraStates.FILE_VIDEO)
+        if (CameraStates.FILE_TYPE == CameraStates.FILE_VIDEO)
             mVideoView.start();
     }
 }

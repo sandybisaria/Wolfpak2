@@ -31,7 +31,7 @@ public class LocationProvider extends ServiceManager
 
     private Context mContext;
     private GoogleApiClient mClient;
-    
+
     private static Location mLastLocation;
 
     private boolean canObtainLocation = false;
@@ -114,11 +114,11 @@ public class LocationProvider extends ServiceManager
             locationRequest.setInterval(interval);
             LocationServices.FusedLocationApi.requestLocationUpdates(mClient, locationRequest,
                     new com.google.android.gms.location.LocationListener() {
-                @Override
-                public void onLocationChanged(Location location) {
-                    mLastLocation = location;
-                }
-            });
+                        @Override
+                        public void onLocationChanged(Location location) {
+                            mLastLocation = location;
+                        }
+                    });
 
             finishInitialize();
         }
@@ -162,7 +162,8 @@ public class LocationProvider extends ServiceManager
     }
 
     public static class ErrorDialogFragment extends DialogFragment {
-        public ErrorDialogFragment() { }
+        public ErrorDialogFragment() {
+        }
 
         @Override
         public Dialog onCreateDialog(Bundle savedInstanceState) {

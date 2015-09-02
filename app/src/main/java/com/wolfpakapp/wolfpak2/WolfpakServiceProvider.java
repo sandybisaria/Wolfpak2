@@ -29,6 +29,7 @@ public class WolfpakServiceProvider {
 
     /**
      * Get the requested ServiceManager (or a NullManager if it does not exist).
+     *
      * @param tag The tag of the service manager.
      * @return The requested service manager (if null, then a NullManager).
      */
@@ -44,7 +45,8 @@ public class WolfpakServiceProvider {
 
     /**
      * Register a new ServiceManager.
-     * @param tag The tag of the service manager.
+     *
+     * @param tag     The tag of the service manager.
      * @param manager The initialized service manager.
      */
     public static void registerServiceManager(String tag, ServiceManager manager) {
@@ -54,6 +56,7 @@ public class WolfpakServiceProvider {
 
     /**
      * Set a callback for when all registered ServiceManagera have finished initialization.
+     *
      * @param callback The callback to be invoked.
      */
     public static void setOnAllInitializedCallback(OnAllInitializedCallback callback) {
@@ -94,6 +97,7 @@ public class WolfpakServiceProvider {
 
     /**
      * Check if all registered ServiceManagers are initialized.
+     *
      * @return True if all registered ServiceManagers are initialized.
      */
     private static boolean isAllInitialized() {

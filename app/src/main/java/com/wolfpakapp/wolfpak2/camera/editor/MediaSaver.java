@@ -45,6 +45,7 @@ import java.util.Locale;
 
 /**
  * Handles the saving of media to the phone and to the server
+ *
  * @author Roland Fong
  */
 public class MediaSaver {
@@ -89,7 +90,9 @@ public class MediaSaver {
 
     public interface MediaSaverListener {
         void onDownloadCompleted();
+
         void onUploadCompleted();
+
         void onUploadCanceled();
     }
 
@@ -102,27 +105,29 @@ public class MediaSaver {
     /**
      * A java object representation of either video or image that is to be saved and/or uploaded
      */
-    private static class MediaObject    {
+    private static class MediaObject {
         public Bitmap overlay;
         public Bitmap image;
         public String videoPath;
 
         /**
          * Image constructor
-         * @param image the image background
+         *
+         * @param image   the image background
          * @param overlay the foreground overlay
          */
-        public MediaObject(Bitmap image, Bitmap overlay)    {
+        public MediaObject(Bitmap image, Bitmap overlay) {
             this.overlay = overlay;
             this.image = image;
         }
 
         /**
          * Video Constructor
+         *
          * @param videoPath the path of background video
-         * @param overlay the foreground overlay
+         * @param overlay   the foreground overlay
          */
-        public MediaObject(String videoPath, Bitmap overlay)    {
+        public MediaObject(String videoPath, Bitmap overlay) {
             this.videoPath = videoPath;
             this.overlay = overlay;
         }
@@ -133,9 +138,10 @@ public class MediaSaver {
 
     /**
      * Downloads the image to user device
+     *
      * @param listener the MediaSaverListener
-     * @param image the background image
-     * @param overlay the foreground overlay
+     * @param image    the background image
+     * @param overlay  the foreground overlay
      */
     public static void downloadImage(final MediaSaverListener listener,
                                      final Bitmap image, final Bitmap overlay) {
@@ -161,7 +167,7 @@ public class MediaSaver {
                 // save image
                 try {
                     saveImagetoFile(imageObject);
-                } catch(IOException e)  {
+                } catch (IOException e) {
                     Toast.makeText(mActivity, "Save encountered an error", Toast.LENGTH_SHORT).show();
                     e.printStackTrace();
                 }
@@ -176,21 +182,22 @@ public class MediaSaver {
                 listener.onDownloadCompleted();
             }
         };
-        task.execute((Void[])null);
+        task.execute((Void[]) null);
     }
 
     /**
      * Saves image with overlay to file as image media
+     *
      * @param imageObject the object representation of the image
      * @return path the filepath
      * @throws IOException
      */
-    private static String saveImagetoFile(MediaObject imageObject) throws IOException   {
+    private static String saveImagetoFile(MediaObject imageObject) throws IOException {
         // Create an image file name
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(new Date());
         File storageDir = new File(Environment.getExternalStoragePublicDirectory(
                 Environment.DIRECTORY_DCIM), "/Wolfpak");
-        if(!storageDir.exists()) {
+        if (!storageDir.exists()) {
             storageDir.mkdir();
         }
         File imagefile = new File(storageDir, timeStamp + ".jpeg");
@@ -227,11 +234,12 @@ public class MediaSaver {
 
     /**
      * Uploads image to server
+     *
      * @param listener the MediaSaverListener
-     * @param image the background image
-     * @param overlay the foreground overlay
+     * @param image    the background image
+     * @param overlay  the foreground overlay
      */
-    public static void uploadImage(MediaSaverListener listener, Bitmap image, Bitmap overlay)    {
+    public static void uploadImage(MediaSaverListener listener, Bitmap image, Bitmap overlay) {
 
         MediaObject imageObject = new MediaObject(image, overlay);
         mMediaSaverListener = listener;
@@ -240,7 +248,7 @@ public class MediaSaver {
     }
 
     public static void downloadVideo(MediaSaverListener listener, String videoPath,
-                                     Bitmap overlay)  {
+                                     Bitmap overlay) {
         mProgressDialog = new ProgressDialog(mActivity);
         mMediaSaverListener = listener;
 
@@ -263,7 +271,7 @@ public class MediaSaver {
                 try {
                     Log.d(TAG, "about to try saving vid");
                     saveVideotoFile(videoObject, null, false);
-                } catch(IOException e)  {
+                } catch (IOException e) {
                     e.printStackTrace();
                 }
                 return null;
@@ -283,6 +291,7 @@ public class MediaSaver {
 
     /**
      * Saves video to file system in movies directory
+     *
      * @param videoObject the object representation of video
      * @param isUploading whether an upload to server is expected
      * @throws IOException
@@ -315,7 +324,7 @@ public class MediaSaver {
         String outputPath = "MP4_" + timeStamp + ".mp4";
         File storageDir = new File(Environment.getExternalStoragePublicDirectory(
                 Environment.DIRECTORY_DCIM), "/Wolfpak");
-        if(!storageDir.exists()) {
+        if (!storageDir.exists()) {
             storageDir.mkdir();
         }
         File video = new File(storageDir, outputPath); //File.createTempFile(outputPath, ".mp4", storageDir);
@@ -327,15 +336,15 @@ public class MediaSaver {
         intent.putExtra(OVERLAY_PATH, tempImgFile.getCanonicalPath());
         intent.putExtra(OUTPUT_PATH, video.getCanonicalPath());
         intent.putExtra(IS_UPLOADING, isUploading);
-        if(values != null)  {
-            for(String key : values.keySet())   {
-                if(values.get(key).getClass().equals(String.class))
+        if (values != null) {
+            for (String key : values.keySet()) {
+                if (values.get(key).getClass().equals(String.class))
                     intent.putExtra(key, values.get(key).toString());
-                else if(values.get(key).getClass().equals(Double.class))
+                else if (values.get(key).getClass().equals(Double.class))
                     intent.putExtra(key, (Double) values.get(key));
             }
         }
-        if(isUploading) {
+        if (isUploading) {
             // stop the progress dialog here
             mProgressDialog.dismiss();
         }
@@ -344,10 +353,11 @@ public class MediaSaver {
 
     /**
      * Upload video to server
+     *
      * @param videoPath the path of the original video
-     * @param overlay the foreground overlay
+     * @param overlay   the foreground overlay
      */
-    public static void uploadVideo(MediaSaverListener listener, String videoPath, Bitmap overlay)   {
+    public static void uploadVideo(MediaSaverListener listener, String videoPath, Bitmap overlay) {
         //generateUploadParams(listener, null, false, videoPath, overlay);
         MediaObject videoObject = new MediaObject(videoPath, overlay);
         mMediaSaverListener = listener;
@@ -358,11 +368,12 @@ public class MediaSaver {
     /**
      * Reusable function that sends created file (image or video) to server.
      * Generates parameters and starts AsyncHttpClient.
-     * @param params the request parameters
+     *
+     * @param params  the request parameters
      * @param isImage whether the upload is for an image or not
      */
     @SuppressWarnings("deprecation")
-    public static void upload(final RequestParams params, final boolean isImage)   {
+    public static void upload(final RequestParams params, final boolean isImage) {
         // ensure working network connection
         ConnectivityManager connMgr = (ConnectivityManager)
                 mActivity.getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -377,7 +388,7 @@ public class MediaSaver {
                 public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
                     Log.d(TAG, "Upload Success " + statusCode);
                     // only call if this is image, video already called
-                    if(isImage) {
+                    if (isImage) {
                         mMediaSaverListener.onUploadCompleted();
                         mProgressDialog.dismiss();
                     }
@@ -387,7 +398,7 @@ public class MediaSaver {
                 public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
                     Log.e(TAG, "Upload Failure " + statusCode);
                     // only call if this is image, video already called
-                    if(isImage) {
+                    if (isImage) {
                         mMediaSaverListener.onUploadCompleted();
                         mProgressDialog.dismiss();
                     }
@@ -401,22 +412,23 @@ public class MediaSaver {
 
     /**
      * Converts a {@link ContentValues} object to {@link RequestParams}.
+     *
      * @param values the content values
      * @return requestparams
      */
-    public static RequestParams contentValuesToRequestParams(ContentValues values)    {
+    public static RequestParams contentValuesToRequestParams(ContentValues values) {
         RequestParams requestParams = new RequestParams();
-        for(String key : values.keySet()) {
-            if(!key.equals(MEDIA) && !key.equals(THUMBNAIL))
+        for (String key : values.keySet()) {
+            if (!key.equals(MEDIA) && !key.equals(THUMBNAIL))
                 requestParams.put(key, values.get(key));
         }
         // media and thumbnail must be handled separately since they are stored as strings in
         // contentvalues but must be converted to files in requestparams
         try {
             requestParams.put(MEDIA, new File(values.get(MEDIA).toString()));
-            if(values.get(THUMBNAIL) != null)
+            if (values.get(THUMBNAIL) != null)
                 requestParams.put(THUMBNAIL, new File(values.get(THUMBNAIL).toString()));
-        } catch(IOException e)  {
+        } catch (IOException e) {
             e.printStackTrace();
         }
         return requestParams;
@@ -425,12 +437,12 @@ public class MediaSaver {
     /**
      * Caches media into SQLite database
      */
-    public static void cacheMedia(ContentValues values)    {
+    public static void cacheMedia(ContentValues values) {
         SQLiteManager sqLiteManager = (SQLiteManager) WolfpakServiceProvider
                 .getServiceManager(WolfpakServiceProvider.SQLITEMANAGER);
         try {
             sqLiteManager.open();
-        } catch(SQLException e) {
+        } catch (SQLException e) {
             e.printStackTrace();
         }
 
@@ -439,7 +451,7 @@ public class MediaSaver {
         /*********************************************************************/
         // TODO lists sql contents for debugging purposes
         Log.d(TAG, "LISTING SQL CONTENTS:");
-        for(String handle : sqLiteManager.getMediaHandles())    {
+        for (String handle : sqLiteManager.getMediaHandles()) {
             Log.d(TAG, "HANDLE: " + handle);
         }
         /*********************************************************************/
@@ -470,10 +482,11 @@ public class MediaSaver {
 
     /**
      * Inputs user and location into {@link ContentValues} object
+     *
      * @param values the contentvalues
      * @return updated ContentValues
      */
-    private static void generateUploadParams(final ContentValues values)    {
+    private static void generateUploadParams(final ContentValues values) {
         UserIdManager userIdManager = (UserIdManager) WolfpakServiceProvider
                 .getServiceManager(WolfpakServiceProvider.USERIDMANAGER);
         String userId = userIdManager.getDeviceId();
@@ -493,12 +506,13 @@ public class MediaSaver {
 
     /**
      * Displays upload dialog prompting user for handle and is_nsfw
-     * @param values the contentvalues
+     *
+     * @param values      the contentvalues
      * @param mediaObject the media to be uploaded
-     * @param isImage whether media is image
+     * @param isImage     whether media is image
      */
     private static void showUploadDialog(final ContentValues values,
-                                         final MediaObject mediaObject, final boolean isImage)  {
+                                         final MediaObject mediaObject, final boolean isImage) {
         Log.d(TAG, "Showing upload dialog");
         UploadDialog uploadDialog = new UploadDialog();
         uploadDialog.setUploadDialogListener(new UploadDialog.UploadDialogListener() {
@@ -512,13 +526,13 @@ public class MediaSaver {
                 values.put(IS_NSFW, dialog.isNsfw() ? "true" : "false");
                 values.put(IS_IMAGE, isImage ? "true" : "false");
 
-                if(isImage) {
+                if (isImage) {
                     // save image
                     try {
                         generateUploadParams(values);
                         String path = saveImagetoFile(mediaObject);
                         values.put(MEDIA, path);
-                    } catch (IOException e)   {
+                    } catch (IOException e) {
                         e.printStackTrace();
                     }
                     // cache and upload
@@ -530,7 +544,7 @@ public class MediaSaver {
                         generateUploadParams(values);
                         mMediaSaverListener.onUploadCompleted();
                         saveVideotoFile(mediaObject, values, true);
-                    } catch(IOException e)  {
+                    } catch (IOException e) {
                         e.printStackTrace();
                     }
                 }
@@ -553,6 +567,7 @@ public class MediaSaver {
 
     /**
      * Copies file from source to destination.  Purpose is for video to constantly have a new file
+     *
      * @param src the original file
      * @param dst the copied file
      * @throws IOException
@@ -573,6 +588,7 @@ public class MediaSaver {
 
     /**
      * Creates video thumbnail to send to server
+     *
      * @param vPath path of the video
      * @return the video thumbnail file
      */
@@ -583,7 +599,7 @@ public class MediaSaver {
             (ThumbnailUtils.createVideoThumbnail(vPath, MediaStore.Video.Thumbnails.MINI_KIND))
                     .compress(Bitmap.CompressFormat.JPEG, 100, out);
             return thumb;
-        } catch(FileNotFoundException e)    {
+        } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
         return null;
@@ -592,7 +608,7 @@ public class MediaSaver {
     /**
      * @return mFfmpeg the Ffmpeg
      */
-    public static FFmpeg getFfmpeg()    {
+    public static FFmpeg getFfmpeg() {
         return mFfmpeg;
     }
 

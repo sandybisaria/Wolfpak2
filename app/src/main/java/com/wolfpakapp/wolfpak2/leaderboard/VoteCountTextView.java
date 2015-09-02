@@ -66,6 +66,7 @@ public class VoteCountTextView extends TextView {
 
     /**
      * Sets the background color so that it corresponds to the given VoteStatus.
+     *
      * @param voteStatus The vote status that determines the background
      */
     private void setBackground(VoteStatus voteStatus) {
@@ -98,7 +99,7 @@ public class VoteCountTextView extends TextView {
     public boolean onTouchEvent(MotionEvent event) {
         if (!isTouchEnabled) {
             vibrateOnError();
-            
+
             return true;
         }
 
@@ -211,26 +212,26 @@ public class VoteCountTextView extends TextView {
 
                 mManager.getServerRestClient().updateLikeStatus(mPost.getId(), newStatus,
                         new AsyncHttpResponseHandler() {
-                    @Override
-                    public void onSuccess(int statusCode, Header[] headers,
-                                          byte[] responseBody) {
-                        // If successful, locally update the vote status and background.
-                        mPost.setVoteStatus(newStatus);
-                        refresh();
-                    }
+                            @Override
+                            public void onSuccess(int statusCode, Header[] headers,
+                                                  byte[] responseBody) {
+                                // If successful, locally update the vote status and background.
+                                mPost.setVoteStatus(newStatus);
+                                refresh();
+                            }
 
-                    @Override
-                    public void onFailure(int statusCode, Header[] headers,
-                                          byte[] responseBody, Throwable error) {
-                        try {
-                            Log.d("Failure", Integer.toString(statusCode));
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                        // If unsuccessful, the post's vote status is unchanged.
-                        refresh();
-                    }
-                });
+                            @Override
+                            public void onFailure(int statusCode, Header[] headers,
+                                                  byte[] responseBody, Throwable error) {
+                                try {
+                                    Log.d("Failure", Integer.toString(statusCode));
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
+                                // If unsuccessful, the post's vote status is unchanged.
+                                refresh();
+                            }
+                        });
 
                 // Animate the vote count returning to its position.
                 AnimatorSet animatorSet = new AnimatorSet();
@@ -275,6 +276,7 @@ public class VoteCountTextView extends TextView {
     /**
      * Call setClipChildren on (almost) all parents of this view. However, the
      * SwipeRefreshLayout is never modified (for rendering purposes).
+     *
      * @param clipChildren True to clip children to the bounds.
      */
     private void setClipChildrenForParents(boolean clipChildren) {

@@ -15,6 +15,7 @@ public enum VoteStatus {
     /**
      * Since the server uses integers to represent vote statuses, this method will return the
      * corresponding VoteStatus enum.
+     *
      * @param change The integral like status (from the server response).
      * @return The corresponding VoteStatus.
      */

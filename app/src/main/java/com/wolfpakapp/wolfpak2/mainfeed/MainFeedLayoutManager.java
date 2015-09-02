@@ -28,12 +28,13 @@ public class MainFeedLayoutManager {
 
     private ArrayDeque<MediaView> mediaViewArrayDeque = new ArrayDeque<>();
 
-    public MainFeedLayoutManager(MainFeedFragment mainFeed){
+    public MainFeedLayoutManager(MainFeedFragment mainFeed) {
         this.mainFeed = mainFeed;
     }
 
     /**
      * Load the views using the posts from the server.
+     *
      * @param postArrayDeque The ArrayDeque of posts (from the NetworkingManager).
      */
     public void loadViews(ArrayDeque<Post> postArrayDeque) {
@@ -207,7 +208,7 @@ public class MainFeedLayoutManager {
                         mediaView.setTint(VoteStatus.NOT_VOTED);
                     }
 
-                    if(mediaViewArrayDeque.size() == 0){
+                    if (mediaViewArrayDeque.size() == 0) {
                         //TODO Do we want auto-refresh?
 //                        networkingManager.getHowls();
                     }

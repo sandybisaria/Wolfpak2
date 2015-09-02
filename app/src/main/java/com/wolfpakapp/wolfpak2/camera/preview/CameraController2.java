@@ -23,8 +23,9 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.util.Log;
-import com.wolfpakapp.wolfpak2.Size;
 import android.view.Surface;
+
+import com.wolfpakapp.wolfpak2.Size;
 
 import java.io.File;
 import java.io.IOException;
@@ -37,6 +38,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Controls camera actions using the Camera2 API
+ *
  * @author Roland Fong
  */
 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
@@ -47,7 +49,7 @@ public class CameraController2 extends CameraController {
     /**
      * An enumeration of various states of capturing still images
      */
-    public enum CaptureState    {
+    public enum CaptureState {
         STATE_PREVIEW,
         STATE_WAITING_LOCK,
         STATE_WAITING_PRECAPTURE,
@@ -72,7 +74,7 @@ public class CameraController2 extends CameraController {
      */
     private Semaphore mCameraOpenCloseLock = new Semaphore(1);
 
-    private final CameraDevice.StateCallback mStateCallback = new CameraDevice.StateCallback()  {
+    private final CameraDevice.StateCallback mStateCallback = new CameraDevice.StateCallback() {
         @Override
         public void onOpened(CameraDevice cameraDevice) {
             Log.d(TAG, "On opened, will start preview");
@@ -94,7 +96,7 @@ public class CameraController2 extends CameraController {
         @Override
         public void onError(CameraDevice cameraDevice, int error) {
             Log.e(TAG, "An Error Occurred: " + error);
-            if(error != CameraDevice.StateCallback.ERROR_CAMERA_IN_USE) {
+            if (error != CameraDevice.StateCallback.ERROR_CAMERA_IN_USE) {
                 mCameraOpenCloseLock.release();
                 cameraDevice.close();
                 mCameraDevice = null;
@@ -122,11 +124,12 @@ public class CameraController2 extends CameraController {
      * The callback for handling still image capture
      */
     private CameraCaptureSession.CaptureCallback mCaptureCallback
-            = new CameraCaptureSession.CaptureCallback()    {
-        private void process(CaptureResult result)  {
+            = new CameraCaptureSession.CaptureCallback() {
+        private void process(CaptureResult result) {
             // process result
-            switch(mState)  {
-                case STATE_PREVIEW: break;
+            switch (mState) {
+                case STATE_PREVIEW:
+                    break;
                 case STATE_WAITING_LOCK:
                     Log.d(TAG, "Waiting lock");
                     int afState = result.get(CaptureResult.CONTROL_AF_STATE);
@@ -194,9 +197,10 @@ public class CameraController2 extends CameraController {
 
     /**
      * Camera Controller constructor
+     *
      * @param context the application context
      */
-    public CameraController2(Context context)    {
+    public CameraController2(Context context) {
         super(context);
         Log.d(TAG, "Initing Camera2Controller");
         mCameraManager = (CameraManager) context.getSystemService(Context.CAMERA_SERVICE);
@@ -207,7 +211,7 @@ public class CameraController2 extends CameraController {
      * Sets the id of the camera that will be used on the basis of
      * {@link CameraStates} CAMERA_FACE value
      */
-    private void setCamera()    {
+    private void setCamera() {
         Log.d(TAG, "Setting camera");
         int lensFacing = (CameraStates.CAMERA_FACE == CameraStates.FRONT) ?
                 CameraCharacteristics.LENS_FACING_FRONT : CameraCharacteristics.LENS_FACING_BACK;
@@ -221,7 +225,7 @@ public class CameraController2 extends CameraController {
 
                 if (characteristics.get(CameraCharacteristics.LENS_FACING) == lensFacing) {
                     return;
-                } else  {
+                } else {
                     continue;
                 }
             }
@@ -236,7 +240,7 @@ public class CameraController2 extends CameraController {
     /**
      * Selects the optimal image, preview, and video sizes
      */
-    private void configureSizes()  {
+    private void configureSizes() {
 
         List<Size> imageSizes = getSupportedImageSizes();
         List<Size> previewSizes = getSupportedPreviewSizes();
@@ -417,16 +421,16 @@ public class CameraController2 extends CameraController {
                             }
                         }, null
                 );
-            } catch(IllegalStateException e)    {
+            } catch (IllegalStateException e) {
                 e.printStackTrace();
             }
             Log.d(TAG, "Finished createcapturesession");
         } catch (CameraAccessException e) {
             e.printStackTrace();
-        } catch (IOException e1)  {
+        } catch (IOException e1) {
             // TODO handle media recorder IOexception
             e1.printStackTrace();
-        } catch (NullPointerException e2)   {
+        } catch (NullPointerException e2) {
             // TODO handle null pointer (such as null camera device)
             e2.printStackTrace();
         }
@@ -434,10 +438,11 @@ public class CameraController2 extends CameraController {
 
     /**
      * Sets up video specs
+     *
      * @throws IOException
      */
     private void setUpMediaRecorder() throws IOException {
-        if(CameraStates.IS_SOUND) {
+        if (CameraStates.IS_SOUND) {
             mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
         }
         mMediaRecorder.setVideoSource(MediaRecorder.VideoSource.SURFACE);
@@ -447,11 +452,11 @@ public class CameraController2 extends CameraController {
         mMediaRecorder.setVideoFrameRate(16);
         mMediaRecorder.setVideoSize(mVideoSize.getWidth(), mVideoSize.getHeight());
         mMediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.H264);
-        if(CameraStates.IS_SOUND)
+        if (CameraStates.IS_SOUND)
             mMediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
         int rotation = CameraUtils.getRotation(mContext);
         int orientation = ORIENTATIONS.get(rotation);
-        if(CameraStates.isFrontCamera())    {
+        if (CameraStates.isFrontCamera()) {
             orientation += 180; // hopefully this will cause video to save right side up
         }
         mMediaRecorder.setOrientationHint(orientation);
@@ -485,9 +490,9 @@ public class CameraController2 extends CameraController {
             //mMediaRecorder.reset();
             Log.d(TAG, "Starting media recorder");
             mMediaRecorder.start();
-        } catch(CameraAccessException e)    {
+        } catch (CameraAccessException e) {
             e.printStackTrace();
-        } catch(IllegalStateException e1)    {
+        } catch (IllegalStateException e1) {
             Log.e(TAG, "MediaRecorder could not be started correctly");
             e1.printStackTrace();
             // stop the mediarecorder and restart the preview
@@ -506,7 +511,7 @@ public class CameraController2 extends CameraController {
             mMediaRecorder.stop();// Stop recording
             Log.d(TAG, "media Recorder reset");
             mMediaRecorder.reset();
-        } catch(IllegalStateException e)    {
+        } catch (IllegalStateException e) {
             Log.d(TAG, "Media recorder could not be stopped correctly");
             e.printStackTrace();
             startPreview(); // restart the preview
@@ -536,7 +541,7 @@ public class CameraController2 extends CameraController {
             try {
                 mCaptureSession.setRepeatingRequest(mPreviewRequestBuilder.build(), mCaptureCallback,
                         mBackgroundHandler);
-            } catch(IllegalArgumentException e) {
+            } catch (IllegalArgumentException e) {
                 Log.e(TAG, "Lock Focus Request failed");
                 startPreview();
                 e.printStackTrace();
@@ -581,13 +586,13 @@ public class CameraController2 extends CameraController {
             captureBuilder.set(CaptureRequest.CONTROL_AF_MODE,
                     CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
 
-            if(CameraStates.FLASH_STATE == CameraStates.AUTO_FLASH) {
+            if (CameraStates.FLASH_STATE == CameraStates.AUTO_FLASH) {
                 captureBuilder.set(CaptureRequest.CONTROL_AE_MODE,
                         CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH); // auto flash
-            } else if(CameraStates.FLASH_STATE == CameraStates.NO_FLASH)  {
+            } else if (CameraStates.FLASH_STATE == CameraStates.NO_FLASH) {
                 captureBuilder.set(CaptureRequest.CONTROL_AE_MODE,
                         CaptureRequest.CONTROL_AE_MODE_ON); // no flash
-            } else  {
+            } else {
                 captureBuilder.set(CaptureRequest.CONTROL_AE_MODE,
                         CaptureRequest.CONTROL_AE_MODE_ON_ALWAYS_FLASH); // always flash
             }
@@ -612,7 +617,7 @@ public class CameraController2 extends CameraController {
             mCaptureSession.stopRepeating();
             try {
                 mCaptureSession.capture(captureBuilder.build(), CaptureCallback, null);
-            } catch(IllegalArgumentException e) {
+            } catch (IllegalArgumentException e) {
                 Log.e(TAG, "Capture threw exception");
                 startPreview(); // restart camera
                 e.printStackTrace();
@@ -665,7 +670,7 @@ public class CameraController2 extends CameraController {
      */
     @Override
     public void toggleFlash() {
-        switch(CameraStates.FLASH_STATE)    {
+        switch (CameraStates.FLASH_STATE) {
             case CameraStates.AUTO_FLASH:
                 CameraStates.FLASH_STATE = CameraStates.NO_FLASH;
                 break;
@@ -700,7 +705,7 @@ public class CameraController2 extends CameraController {
             CameraCharacteristics cc = mCameraManager.getCameraCharacteristics(mCameraId);
             StreamConfigurationMap map = cc.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
             return Arrays.asList(map.getOutputSizes(SurfaceTexture.class));
-        } catch(CameraAccessException e)    {
+        } catch (CameraAccessException e) {
             e.printStackTrace();
         }
         return null;
@@ -715,7 +720,7 @@ public class CameraController2 extends CameraController {
             CameraCharacteristics cc = mCameraManager.getCameraCharacteristics(mCameraId);
             StreamConfigurationMap map = cc.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
             return Arrays.asList(map.getOutputSizes(MediaRecorder.class));
-        } catch(CameraAccessException e)    {
+        } catch (CameraAccessException e) {
             e.printStackTrace();
         }
         return null;
@@ -730,7 +735,7 @@ public class CameraController2 extends CameraController {
             CameraCharacteristics cc = mCameraManager.getCameraCharacteristics(mCameraId);
             StreamConfigurationMap map = cc.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
             return Arrays.asList(map.getOutputSizes(ImageFormat.JPEG));
-        } catch(CameraAccessException e)    {
+        } catch (CameraAccessException e) {
             e.printStackTrace();
         }
         return null;
@@ -759,6 +764,7 @@ public class CameraController2 extends CameraController {
 
     /**
      * Converts image buffer to bitmap
+     *
      * @param img the image buffer
      * @return the output bitmap
      */

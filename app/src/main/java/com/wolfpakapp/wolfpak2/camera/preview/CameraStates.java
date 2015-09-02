@@ -4,6 +4,7 @@ import com.wolfpakapp.wolfpak2.Size;
 
 /**
  * Holds the global states of the camera for access across all camera classes
+ *
  * @author Roland Fong
  */
 public class CameraStates {
@@ -31,7 +32,7 @@ public class CameraStates {
 
     public static Size SCREEN_SIZE;
 
-    public static boolean isFrontCamera()   {
+    public static boolean isFrontCamera() {
         return (CAMERA_FACE == FRONT);
     }
 }

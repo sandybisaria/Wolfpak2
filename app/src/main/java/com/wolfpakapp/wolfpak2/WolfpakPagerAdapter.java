@@ -12,6 +12,7 @@ import com.wolfpakapp.wolfpak2.settings.WolfpakPreferenceFragment;
 /**
  * The WolfpakPagerAdapter is an extension of the FragmentStatePagerAdapter suited for use in the
  * Wolfpak application.
+ *
  * @see WolfpakPagerAdapter#getItem(int)
  */
 class WolfpakPagerAdapter extends FragmentStatePagerAdapter {
@@ -24,22 +25,28 @@ class WolfpakPagerAdapter extends FragmentStatePagerAdapter {
      * Return the Fragment associated with the index. Currently, the Fragments that can be returned
      * are:
      * <ul>
-     *     <li>0 - {@link WolfpakPreferenceFragment}</li>
-     *     <li>1 - {@link LeaderboardFragment}</li>
-     *     <li>2 - {@link MainFeedFragment}</li>
-     *     <li>3 - {@link CameraFragment}</li>
+     * <li>0 - {@link WolfpakPreferenceFragment}</li>
+     * <li>1 - {@link LeaderboardFragment}</li>
+     * <li>2 - {@link MainFeedFragment}</li>
+     * <li>3 - {@link CameraFragment}</li>
      * </ul>
+     *
      * @param i The index of the Fragment to get.
      * @return The requested Fragment.
      */
     @Override
     public Fragment getItem(int i) {
         switch (i) {
-            case 0: return new WolfpakPreferenceFragment();
-            case 1: return new LeaderboardFragment();
-            case 2: return new MainFeedFragment();
-            case 3: return new CameraFragment();
-            default: return null;
+            case 0:
+                return new WolfpakPreferenceFragment();
+            case 1:
+                return new LeaderboardFragment();
+            case 2:
+                return new MainFeedFragment();
+            case 3:
+                return new CameraFragment();
+            default:
+                return null;
         }
     }
 

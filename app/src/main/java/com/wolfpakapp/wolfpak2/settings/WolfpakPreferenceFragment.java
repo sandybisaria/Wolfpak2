@@ -72,7 +72,7 @@ public class WolfpakPreferenceFragment extends PreferenceFragment {
         final String[] str = getResources().getStringArray(R.array.iconName);
 
         //SET THE ICONS (NOTE TO SELF: FIND SMALLER GODDAMN ICONS LMAO)
-        final Integer[] icons = new Integer[] {R.drawable.settings_icon_facebook, R.drawable.settings_icon_twitter, R.drawable.settings_icon_instagram};
+        final Integer[] icons = new Integer[]{R.drawable.settings_icon_facebook, R.drawable.settings_icon_twitter, R.drawable.settings_icon_instagram};
 
         //COMBINE WITH MAGIC FUNCTION FOUND ON STACKOVERFLOW HERE: https://stackoverflow.com/questions/8533394/icons-in-a-list-dialog
         ListAdapter adapter = new ArrayAdapterWithIcon(getActivity(), str, icons);

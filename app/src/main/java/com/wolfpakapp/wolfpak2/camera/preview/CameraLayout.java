@@ -54,10 +54,10 @@ public class CameraLayout implements CameraController.CameraActionCallback {
     private HandlerThread mVideoStarterThread;
     private Handler mVideoStarterHandler;
 
-    private Runnable videoRunner = new Runnable()   {
+    private Runnable videoRunner = new Runnable() {
         @Override
         public void run() {
-            if(!mIsRecordingVideo)  {
+            if (!mIsRecordingVideo) {
                 Log.d(TAG, "Will record video");
                 startRecordingVideo();
             }
@@ -66,8 +66,9 @@ public class CameraLayout implements CameraController.CameraActionCallback {
 
     /**
      * Creates the layout.
+     *
      * @param fragment the fragment container
-     * @param view to locate components
+     * @param view     to locate components
      */
     public CameraLayout(CameraFragment fragment, View view) {
         mFragment = fragment;
@@ -104,8 +105,9 @@ public class CameraLayout implements CameraController.CameraActionCallback {
         mCountDownTimer = new CountDownTimer(10000, 10) {
             @Override
             public void onTick(long millisUntilFinished) {
-                mProgressBar.setProgress((10000 - (int)millisUntilFinished) / 10);
+                mProgressBar.setProgress((10000 - (int) millisUntilFinished) / 10);
             }
+
             @Override
             public void onFinish() {
                 mProgressBar.setProgress(1000);
@@ -114,11 +116,11 @@ public class CameraLayout implements CameraController.CameraActionCallback {
         };
     }
 
-    public void onPause()   {
+    public void onPause() {
         mCameraController.closeCamera();
     }
 
-    public void onResume()  {
+    public void onResume() {
         View decorView = mFragment.getActivity().getWindow().getDecorView();
         // Hide the status bar.
         decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_FULLSCREEN);
@@ -126,29 +128,29 @@ public class CameraLayout implements CameraController.CameraActionCallback {
         mLockingForEditor = false;
         mLockingSwitchCamera = false;
 
-        if(mCameraView.isAvailable())   {
+        if (mCameraView.isAvailable()) {
             try {
                 mCameraController.openCamera();
-            } catch(RuntimeException e) {
+            } catch (RuntimeException e) {
                 Log.e(TAG, "Couldn't open camera");
             }
         }
     }
 
     public void onClick(int id) {
-        switch(id)    {
+        switch (id) {
             case R.id.btn_switch:
-                if(!mLockingSwitchCamera) { // prevent freezing if user presses multiple times in quick succession
+                if (!mLockingSwitchCamera) { // prevent freezing if user presses multiple times in quick succession
                     mLockingSwitchCamera = true;
                     mCameraController.toggleCamera();
-                    (new Thread(new Runnable()  {
+                    (new Thread(new Runnable() {
                         @Override
                         public void run() {
                             try {
                                 Thread.sleep(500); // wait 0.5s for camera to finish switching before unlocking button
-                            } catch(InterruptedException e) {
+                            } catch (InterruptedException e) {
                                 e.printStackTrace();
-                            } finally   {
+                            } finally {
                                 mLockingSwitchCamera = false;
                             }
                         }
@@ -156,19 +158,19 @@ public class CameraLayout implements CameraController.CameraActionCallback {
                 }
                 break;
             case R.id.btn_flash:
-                if(CameraStates.FLASH_STATE == CameraStates.AUTO_FLASH)  {
+                if (CameraStates.FLASH_STATE == CameraStates.AUTO_FLASH) {
                     mFlashButton.setImageResource(R.drawable.camera_flash_off);
-                } else if (CameraStates.FLASH_STATE == CameraStates.NO_FLASH)  {
+                } else if (CameraStates.FLASH_STATE == CameraStates.NO_FLASH) {
                     mFlashButton.setImageResource(R.drawable.camera_flash_on);
-                } else  {
+                } else {
                     mFlashButton.setImageResource(R.drawable.camera_flash_auto);
                 }
                 mCameraController.toggleFlash();
                 break;
             case R.id.btn_sound:
-                if(CameraStates.IS_SOUND)  {
+                if (CameraStates.IS_SOUND) {
                     mSoundButton.setImageResource(R.drawable.camera_mute);
-                } else  {
+                } else {
                     mSoundButton.setImageResource(R.drawable.camera_sound_on);
                 }
                 mCameraController.toggleSound();
@@ -177,16 +179,15 @@ public class CameraLayout implements CameraController.CameraActionCallback {
     }
 
     public boolean onTouch(int id, MotionEvent event) {
-        switch(id)   {
+        switch (id) {
             case R.id.btn_takepicture:
-                if(event.getAction() == MotionEvent.ACTION_DOWN)   {
+                if (event.getAction() == MotionEvent.ACTION_DOWN) {
                     startTouchHandler();
                     mTouchHandler.postDelayed(videoRunner, 500); // if hold lasts 0.5s, record video
-                }
-                else if(event.getAction() == MotionEvent.ACTION_UP) {
+                } else if (event.getAction() == MotionEvent.ACTION_UP) {
                     Log.d(TAG, "Take Picture Action Up");
                     // wait for video to finish initing if needed
-                    if(mIsRecordingVideo) {
+                    if (mIsRecordingVideo) {
                         Log.d(TAG, "Waiting for thread join");
                         try {
                             mVideoStarterThread.join();
@@ -200,13 +201,13 @@ public class CameraLayout implements CameraController.CameraActionCallback {
                     mTouchHandler.removeCallbacks(videoRunner);
                     Log.d(TAG, "Callback removed");
                     stopTouchHandler();
-                    if(mIsRecordingVideo)   { // if indeed held for 0.6s, mIsRecordingVideo should be true
+                    if (mIsRecordingVideo) { // if indeed held for 0.6s, mIsRecordingVideo should be true
                         mCountDownTimer.cancel(); // needed if finished before 10s
                         Log.d(TAG, "Canceled timer");
                         stopRecordingVideo();
-                    } else if (!mLockingForEditor)  {
+                    } else if (!mLockingForEditor) {
                         // else mIsRecordingVideo is false, so take picture if not going to editor (from video)
-                        if(CameraStates.FLASH_STATE != CameraStates.ALWAYS_FLASH)   {
+                        if (CameraStates.FLASH_STATE != CameraStates.ALWAYS_FLASH) {
                             startFlashAnimation();
                         }
                         mLockingForEditor = true;
@@ -218,13 +219,13 @@ public class CameraLayout implements CameraController.CameraActionCallback {
         return false; // when set true, the state_pressed won't activate!
     }
 
-    private void startVideoStarterThread()  {
+    private void startVideoStarterThread() {
         mVideoStarterThread = new HandlerThread("VideoStarter");
         mVideoStarterThread.start();
         mVideoStarterHandler = new Handler(mVideoStarterThread.getLooper());
     }
 
-    private void stopVideoStarterThread()   {
+    private void stopVideoStarterThread() {
         try {
             mVideoStarterThread.quitSafely();
             mVideoStarterThread.join();
@@ -278,7 +279,7 @@ public class CameraLayout implements CameraController.CameraActionCallback {
      * Mimics a camera flash on the screen by fading in and out a white rectangular border,
      * like the existing camera app.  Runs asynchronously
      */
-    public void startFlashAnimation()   {
+    public void startFlashAnimation() {
         mFragment.getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -302,7 +303,7 @@ public class CameraLayout implements CameraController.CameraActionCallback {
     }
 
     private void fade(final int begin_alpha, final int end_alpha, int time,
-                              final boolean fadein) {
+                      final boolean fadein) {
 
         mScreenFlash.setImageAlpha(begin_alpha);
 
@@ -337,7 +338,7 @@ public class CameraLayout implements CameraController.CameraActionCallback {
         mScreenFlash.startAnimation(a);
     }
 
-    public static CameraView getCameraView()   {
+    public static CameraView getCameraView() {
         return mCameraView;
     }
 
@@ -345,11 +346,11 @@ public class CameraLayout implements CameraController.CameraActionCallback {
         mTouchHandler = new Handler();
     }
 
-    public void stopTouchHandler()  {
+    public void stopTouchHandler() {
         mTouchHandler = null;
     }
 
-    private void startEditor()   {
+    private void startEditor() {
         // note camera is closing on onpause
         Log.d(TAG, "Starting editor function");
         mFragment.getActivity().runOnUiThread(new Runnable() {
@@ -374,7 +375,7 @@ public class CameraLayout implements CameraController.CameraActionCallback {
 
     @Override
     public void onCaptureCompleted() {
-        if(CameraStates.FLASH_STATE == CameraStates.ALWAYS_FLASH)
+        if (CameraStates.FLASH_STATE == CameraStates.ALWAYS_FLASH)
             startFlashAnimation();
     }
 
@@ -393,7 +394,7 @@ public class CameraLayout implements CameraController.CameraActionCallback {
     /**
      * Hides all the camera icons
      */
-    public void hide()  {
+    public void hide() {
         //Log.d(TAG, "Hiding camera");
         mFragment.getActivity().runOnUiThread(new Runnable() {
             @Override
@@ -409,15 +410,15 @@ public class CameraLayout implements CameraController.CameraActionCallback {
     /**
      * Shows all the camera icons and starts up camera
      */
-    public void show()  {
+    public void show() {
         mFragment.getActivity().runOnUiThread(new Runnable() {
-              @Override
-              public void run() {
-                  mCaptureButton.setVisibility(View.VISIBLE);
-                  mFlashButton.setVisibility(View.VISIBLE);
-                  mSwitchButton.setVisibility(View.VISIBLE);
-                  mSoundButton.setVisibility(View.VISIBLE);
-              }
-          });
+            @Override
+            public void run() {
+                mCaptureButton.setVisibility(View.VISIBLE);
+                mFlashButton.setVisibility(View.VISIBLE);
+                mSwitchButton.setVisibility(View.VISIBLE);
+                mSoundButton.setVisibility(View.VISIBLE);
+            }
+        });
     }
 }

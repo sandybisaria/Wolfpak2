@@ -15,6 +15,7 @@ import java.util.List;
 /**
  * SQLiteManager allows different classes to read and write to an SQLite Database for
  * caching image and video media.
+ *
  * @author Roland Fong
  */
 public class SQLiteManager extends ServiceManager {
@@ -35,7 +36,7 @@ public class SQLiteManager extends ServiceManager {
             WolfpakSQLiteHelper.MediaEntry.COLUMN_MEDIA
     };
 
-    public SQLiteManager(Context context)   {
+    public SQLiteManager(Context context) {
         mSQLiteHelper = new WolfpakSQLiteHelper(context);
         Log.d(TAG, "SQLiteManager has been initialized");
         finishInitialize();
@@ -43,16 +44,17 @@ public class SQLiteManager extends ServiceManager {
 
     /**
      * Opens the SQLite database, allowing reading and writing
+     *
      * @throws SQLException
      */
     public void open() throws SQLException {
-       mSQLiteDatabase = mSQLiteHelper.getWritableDatabase();
+        mSQLiteDatabase = mSQLiteHelper.getWritableDatabase();
     }
 
     /**
      * Closes the SQLite database
      */
-    public void close()     {
+    public void close() {
         mSQLiteHelper.close();
     }
 
@@ -61,9 +63,10 @@ public class SQLiteManager extends ServiceManager {
      * values to match table column names in {@link com.wolfpakapp.wolfpak2.WolfpakSQLiteHelper.MediaEntry}
      * class. This could be a long running operation and may need to be run in a separate thread
      * or AsyncTask.
+     *
      * @param values the encapsulated media
      */
-    public void addEntry(ContentValues values)  {
+    public void addEntry(ContentValues values) {
         mSQLiteDatabase.insert(WolfpakSQLiteHelper.MediaEntry.TABLE_MEDIA, null, values);
         Log.d(TAG, "Entry added with handle: " + values.get(WolfpakSQLiteHelper.MediaEntry.COLUMN_HANDLE));
     }
@@ -72,6 +75,7 @@ public class SQLiteManager extends ServiceManager {
      * A utility method that obtains the handles of all existing entries in database.  For
      * debugging purposes.  This could be a long running operation and may need to be run in
      * a separate thread or AsyncTask.
+     *
      * @return list of handles
      */
     public List<String> getMediaHandles() {

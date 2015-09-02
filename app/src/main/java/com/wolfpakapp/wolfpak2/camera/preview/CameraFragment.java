@@ -4,8 +4,8 @@ import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.util.Log;
-import android.view.MotionEvent;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
@@ -13,15 +13,16 @@ import android.view.WindowManager;
 import com.github.hiteshsondhi88.libffmpeg.FFmpeg;
 import com.github.hiteshsondhi88.libffmpeg.LoadBinaryResponseHandler;
 import com.github.hiteshsondhi88.libffmpeg.exceptions.FFmpegNotSupportedException;
+import com.wolfpakapp.wolfpak2.R;
 import com.wolfpakapp.wolfpak2.WolfpakPager;
 import com.wolfpakapp.wolfpak2.camera.editor.MediaSaver;
 import com.wolfpakapp.wolfpak2.camera.editor.PictureEditorLayout;
-import com.wolfpakapp.wolfpak2.R;
 
 import java.io.File;
 
 /**
  * A fragment container housing both camera and editor user interfaces
+ *
  * @author Roland Fong
  */
 public class CameraFragment extends Fragment
@@ -53,13 +54,20 @@ public class CameraFragment extends Fragment
         try {
             MediaSaver.getFfmpeg().loadBinary(new LoadBinaryResponseHandler() {
                 @Override
-                public void onStart() {}
+                public void onStart() {
+                }
+
                 @Override
-                public void onFailure() {}
+                public void onFailure() {
+                }
+
                 @Override
-                public void onSuccess() {}
+                public void onSuccess() {
+                }
+
                 @Override
-                public void onFinish() {}
+                public void onFinish() {
+                }
             });
         } catch (FFmpegNotSupportedException e) {
             // Handle if FFmpeg is not supported by device
@@ -117,16 +125,17 @@ public class CameraFragment extends Fragment
 
     /**
      * Switches the layouts
+     *
      * @param state the current state
      */
-    public void switchLayouts(int state)  {
-        switch(state)    {
+    public void switchLayouts(int state) {
+        switch (state) {
             case CameraStates.GLOBAL_STATE_PREVIEW:
                 CameraStates.CAMERA_GLOBAL_STATE = CameraStates.GLOBAL_STATE_EDITOR;
                 WolfpakPager.setActive(false);
                 Log.d(TAG, "Hiding camera, showing editor");
                 mCameraLayout.hide();
-                mCameraCloseThread = new Thread(new Runnable()  {
+                mCameraCloseThread = new Thread(new Runnable() {
                     @Override
                     public void run() {
                         Log.d(TAG, "Pausing the camera");
@@ -142,12 +151,12 @@ public class CameraFragment extends Fragment
                 WolfpakPager.setActive(true);
                 Log.d(TAG, "Hiding Editor, showing camera");
                 mPictureEditorLayout.hide();
-                if(mCameraCloseThread != null) {
+                if (mCameraCloseThread != null) {
                     try {
                         Log.d(TAG, "Waiting for camera to finish pausing");
                         mCameraCloseThread.join(2000); // wait (up to 2s) until camera finishes closing
                         Log.d(TAG, "Will show layout");
-                    } catch(InterruptedException e) {
+                    } catch (InterruptedException e) {
                         e.printStackTrace();
                     } finally {
                         mCameraCloseThread = null;
@@ -194,7 +203,7 @@ public class CameraFragment extends Fragment
     public void onResume() {
         super.onResume();
         mCameraLayout.onResume();
-        if(CameraStates.CAMERA_GLOBAL_STATE == CameraStates.GLOBAL_STATE_EDITOR)
+        if (CameraStates.CAMERA_GLOBAL_STATE == CameraStates.GLOBAL_STATE_EDITOR)
             mPictureEditorLayout.onResume();
 
     }
@@ -214,7 +223,7 @@ public class CameraFragment extends Fragment
      */
     @Override
     public void onClick(View v) {
-        switch(CameraStates.CAMERA_GLOBAL_STATE)    {
+        switch (CameraStates.CAMERA_GLOBAL_STATE) {
             case CameraStates.GLOBAL_STATE_PREVIEW:
                 mCameraLayout.onClick(v.getId());
                 break;
@@ -229,7 +238,7 @@ public class CameraFragment extends Fragment
      */
     @Override
     public boolean onTouch(View v, MotionEvent event) {
-        switch(CameraStates.CAMERA_GLOBAL_STATE)    {
+        switch (CameraStates.CAMERA_GLOBAL_STATE) {
             case CameraStates.GLOBAL_STATE_PREVIEW:
                 return mCameraLayout.onTouch(v.getId(), event);
             case CameraStates.GLOBAL_STATE_EDITOR:

@@ -16,8 +16,6 @@
 
 package com.wolfpakapp.wolfpak2;
 
-import android.graphics.Point;
-
 /**
  * This is part of the AOSP implementation of the android.util.Size class. This is necessary for
  * backwards compatibility for versions of Android before API 21 (Lollipop).
@@ -25,11 +23,6 @@ import android.graphics.Point;
 public class Size {
     private final int width;
     private final int height;
-
-    public Size(Point point) {
-        this.width = point.x;
-        this.height = point.y;
-    }
 
     public Size(int width, int height) {
         this.width = width;

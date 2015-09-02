@@ -27,6 +27,7 @@ public class UserIdManager extends ServiceManager {
     /**
      * Start the UserIdManager service. Retrieve the device ID from memory or generate one for a
      * first time user.
+     *
      * @param context The context of the activity constructing the manager.
      */
     public UserIdManager(Context context) {

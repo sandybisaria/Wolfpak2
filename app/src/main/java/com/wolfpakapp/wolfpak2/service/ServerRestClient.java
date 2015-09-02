@@ -9,9 +9,8 @@ import android.widget.Toast;
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
-import com.wolfpakapp.wolfpak2.Post;
-import com.wolfpakapp.wolfpak2.WolfpakServiceProvider;
 import com.wolfpakapp.wolfpak2.VoteStatus;
+import com.wolfpakapp.wolfpak2.WolfpakServiceProvider;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.entity.StringEntity;
@@ -31,6 +30,7 @@ public class ServerRestClient extends ServiceManager {
 
     /**
      * Start the ServerRestClient service.
+     *
      * @param context The context of the activity constructing the manager.
      */
     public ServerRestClient(Context context) {
@@ -42,8 +42,9 @@ public class ServerRestClient extends ServiceManager {
 
     /**
      * Make a GET request to the server.
-     * @param url The relative URL.
-     * @param params The query parameters.
+     *
+     * @param url     The relative URL.
+     * @param params  The query parameters.
      * @param handler The response handler.
      */
     public void get(String url, RequestParams params, AsyncHttpResponseHandler handler) {
@@ -57,10 +58,11 @@ public class ServerRestClient extends ServiceManager {
 
     /**
      * Make a POST request to the server.
-     * @param url The relative URL.
-     * @param entity The raw entity to send with the request.
+     *
+     * @param url         The relative URL.
+     * @param entity      The raw entity to send with the request.
      * @param contentType The content type of the entity you are sending (e.g. application/json)
-     * @param handler The response handler.
+     * @param handler     The response handler.
      */
     public void post(String url, HttpEntity entity, String contentType, AsyncHttpResponseHandler handler) {
         if (!checkInternetConnection()) {
@@ -73,8 +75,9 @@ public class ServerRestClient extends ServiceManager {
 
     /**
      * Make a PUT request to the server.
-     * @param url The relative URL.
-     * @param params The query parameters.
+     *
+     * @param url     The relative URL.
+     * @param params  The query parameters.
      * @param handler The response handler.
      */
     public void put(String url, RequestParams params, AsyncHttpResponseHandler handler) {
@@ -88,9 +91,10 @@ public class ServerRestClient extends ServiceManager {
 
     /**
      * Update the like status of the given post.
-     * @param postId The ID of the post.
+     *
+     * @param postId     The ID of the post.
      * @param voteStatus The VoteStatus to send to the server.
-     * @param handler The response handler.
+     * @param handler    The response handler.
      */
     public void updateLikeStatus(int postId, final VoteStatus voteStatus,
                                  AsyncHttpResponseHandler handler) {

@@ -22,6 +22,7 @@ import com.wolfpakapp.wolfpak2.R;
 
 /**
  * Overlay for drawing text, also manages text states
+ *
  * @author Roland Fong
  */
 public class TextOverlay extends EditText {
@@ -78,15 +79,15 @@ public class TextOverlay extends EditText {
 
     private Context context = null;
 
-    public TextOverlay(Context context)  {
+    public TextOverlay(Context context) {
         this(context, null);
     }
 
-    public TextOverlay(Context context, AttributeSet attrs)  {
+    public TextOverlay(Context context, AttributeSet attrs) {
         this(context, attrs, 0);
     }
 
-    public TextOverlay(Context context, AttributeSet attrs, int defStyle)    {
+    public TextOverlay(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
         this.context = context;
     }
@@ -94,7 +95,7 @@ public class TextOverlay extends EditText {
     /**
      * Initialize view
      */
-    public void init()  {
+    public void init() {
         setState(TEXT_STATE_HIDDEN);
         RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(
                 RelativeLayout.LayoutParams.MATCH_PARENT,
@@ -120,12 +121,12 @@ public class TextOverlay extends EditText {
         this.setOnEditorActionListener(new OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-                    if(actionId == EditorInfo.IME_ACTION_DONE) {
-                        v.clearFocus(); // clear focus when keyboard is down
-                        // force close keyboard
-                        InputMethodManager imm = (InputMethodManager)context.getSystemService(Context.INPUT_METHOD_SERVICE);
-                        imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
-                    }
+                if (actionId == EditorInfo.IME_ACTION_DONE) {
+                    v.clearFocus(); // clear focus when keyboard is down
+                    // force close keyboard
+                    InputMethodManager imm = (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
+                    imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
+                }
                 return false;
             }
         });
@@ -136,7 +137,7 @@ public class TextOverlay extends EditText {
     /**
      * @return a bitmap of the text's current appearance
      */
-    public Bitmap getBitmap()   {
+    public Bitmap getBitmap() {
         clearFocus(); // in the event the cursor for some reason is still on there
         Bitmap b = getDrawingCache();
         Matrix rotator = new Matrix();
@@ -147,11 +148,12 @@ public class TextOverlay extends EditText {
     /**
      * Set whether user can edit text overlay
      * If true, user can change, transform, or recolor text
+     *
      * @param edit whether or not the text can be edited
      */
-    public void setEditable(boolean edit)   {
+    public void setEditable(boolean edit) {
         canEdit = edit;
-        if(!edit)   // also hide colorpicker
+        if (!edit)   // also hide colorpicker
             PictureEditorLayout.getColorPicker().setVisibility(View.GONE);
     }
 
@@ -181,10 +183,11 @@ public class TextOverlay extends EditText {
 
     /**
      * Set the text overlay state
+     *
      * @param state the state of the text overlay (hidden, default, vertical, free)
      */
     public void setState(int state) {
-        switch(state)   {
+        switch (state) {
             case TEXT_STATE_HIDDEN:
                 PictureEditorLayout.getColorPicker().setVisibility(View.GONE); // hide color picker
                 setVisibility(View.INVISIBLE);
@@ -238,16 +241,17 @@ public class TextOverlay extends EditText {
     /**
      * @return state
      */
-    public int getState()   {
+    public int getState() {
         return mState;
     }
 
     /**
      * Advances the state
+     *
      * @return the new state
      */
-    public int nextState()  {
-        switch(mState)  {
+    public int nextState() {
+        switch (mState) {
             case TEXT_STATE_HIDDEN:
                 setState(TEXT_STATE_DEFAULT);
                 return TEXT_STATE_DEFAULT;
@@ -275,7 +279,7 @@ public class TextOverlay extends EditText {
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        if(canEdit) {
+        if (canEdit) {
             float mx = event.getRawX();
             float my = event.getRawY();
             clearFocus();
@@ -283,7 +287,7 @@ public class TextOverlay extends EditText {
                 case MotionEvent.ACTION_DOWN:
                     break;
                 case MotionEvent.ACTION_MOVE:
-                    if(mIsRotating || mIsScaling) return false; // don't move text
+                    if (mIsRotating || mIsScaling) return false; // don't move text
                     if (mState == TEXT_STATE_DEFAULT || mState == TEXT_STATE_VERTICAL) {
                         mY = my - getHeight() / 2;
                         setY(mY); // only move in Y

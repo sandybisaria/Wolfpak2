@@ -35,6 +35,7 @@ public class VideoSavingService extends Service {
         public ServiceHandler(Looper looper) {
             super(looper);
         }
+
         @Override
         public void handleMessage(Message msg) {
             Log.d(TAG, "Handling message " + msg);
@@ -43,7 +44,7 @@ public class VideoSavingService extends Service {
 
             // unbundle intent
             Intent intent = requests.get(msg);
-            if(intent != null) {
+            if (intent != null) {
                 final String videoPath = (String) intent.getExtras().get(MediaSaver.VIDEO_PATH);
                 final String overlayPath = (String) intent.getExtras().get(MediaSaver.OVERLAY_PATH);
                 final String outputPath = (String) intent.getExtras().get(MediaSaver.OUTPUT_PATH);
@@ -51,13 +52,13 @@ public class VideoSavingService extends Service {
 
                 // construct contentvalues if uploading
                 final ContentValues contentValues = new ContentValues();
-                if(isUploading) {
-                    for(String key : MediaSaver.keys)   {
+                if (isUploading) {
+                    for (String key : MediaSaver.keys) {
                         Object obj = intent.getExtras().get(key);
-                        if(obj != null) {
-                            if(obj.getClass().equals(String.class))
+                        if (obj != null) {
+                            if (obj.getClass().equals(String.class))
                                 contentValues.put(key, obj.toString());
-                            else if(obj.getClass().equals(Double.class))
+                            else if (obj.getClass().equals(Double.class))
                                 contentValues.put(key, (Double) obj);
                         }
                     }
@@ -81,32 +82,37 @@ public class VideoSavingService extends Service {
                 try {
                     MediaSaver.getFfmpeg().execute(cmd, new ExecuteBinaryResponseHandler() {
                         @Override
-                        public void onStart() {}
+                        public void onStart() {
+                        }
+
                         @Override
                         public void onProgress(String message) {
                             Log.d(TAG, "Progress: " + message);
                         }
+
                         @Override
                         public void onFailure(String message) {
                             Log.d(TAG, "Failure: " + message);
                         }
+
                         @Override
                         public void onSuccess(String message) {
                             Log.d(TAG, "Success: " + message);
                         }
+
                         @Override
                         public void onFinish() {
                             // destroy the input temp files
                             (new File(videoPath)).delete();
                             (new File(overlayPath)).delete();
 
-                            if(isUploading) {
+                            if (isUploading) {
                                 // input content values
                                 String thumbnailPath = null;
                                 try {
                                     thumbnailPath = MediaSaver.createVideoThumbnail(outputPath)
                                             .getAbsolutePath();
-                                } catch(NullPointerException e) {
+                                } catch (NullPointerException e) {
                                     e.printStackTrace();
                                 }
                                 contentValues.put(MediaSaver.MEDIA, outputPath);
@@ -126,7 +132,7 @@ public class VideoSavingService extends Service {
                 } catch (FFmpegCommandAlreadyRunningException e) {
                     // Handle if FFmpeg is already running
                 }
-            } else  { // intent was null; possibly sent in error
+            } else { // intent was null; possibly sent in error
                 stopSelf(msg.arg1); // stop the service prevent crashing
             }
         }

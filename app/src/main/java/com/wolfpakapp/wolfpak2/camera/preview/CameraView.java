@@ -5,19 +5,22 @@ import android.content.Context;
 import android.graphics.Matrix;
 import android.graphics.SurfaceTexture;
 import android.util.AttributeSet;
-import com.wolfpakapp.wolfpak2.Size;
 import android.view.Surface;
 import android.view.TextureView;
+
+import com.wolfpakapp.wolfpak2.Size;
 
 /**
  * A custom TextureView that handles its own transformation and has its own callback interface
  * Adapted from
  * https://github.com/commonsguy/cwac-cam2/blob/master/cam2/src/main/java/com/commonsware/cwac/cam2/CameraView.java
+ *
  * @author Roland Fong
  */
 public class CameraView extends TextureView implements TextureView.SurfaceTextureListener {
     interface StateCallback {
         void onReady(CameraView cv, int width, int height);
+
         void onDestroyed(CameraView cv);
     }
 
@@ -43,7 +46,7 @@ public class CameraView extends TextureView implements TextureView.SurfaceTextur
      * Constructor, used by layout inflation.
      *
      * @param context the Activity that will host this View
-     * @param attrs the parsed attributes from the layout resource tag
+     * @param attrs   the parsed attributes from the layout resource tag
      */
     public CameraView(Context context, AttributeSet attrs) {
         super(context, attrs, 0);
@@ -51,8 +54,8 @@ public class CameraView extends TextureView implements TextureView.SurfaceTextur
     }
 
     /**
-     * @param context the Activity that will host this View
-     * @param attrs the parsed attributes from the layout resource tag
+     * @param context  the Activity that will host this View
+     * @param attrs    the parsed attributes from the layout resource tag
      * @param defStyle "An attribute in the current theme that
      *                 contains a reference to a style resource
      *                 that supplies default values for the view.
@@ -74,18 +77,18 @@ public class CameraView extends TextureView implements TextureView.SurfaceTextur
      * @param previewSize the requested preview size
      */
     public void setPreviewSize(Size previewSize) {
-        this.previewSize=previewSize;
+        this.previewSize = previewSize;
 
         enterTheMatrix();
     }
 
     public void setStateCallback(StateCallback cb) {
-        stateCallback=cb;
+        stateCallback = cb;
     }
 
     @Override
     public void onSurfaceTextureAvailable(SurfaceTexture surfaceTexture, int width, int height) {
-        if (stateCallback!=null) {
+        if (stateCallback != null) {
             stateCallback.onReady(this, width, height);
         }
     }
@@ -97,21 +100,22 @@ public class CameraView extends TextureView implements TextureView.SurfaceTextur
 
     @Override
     public boolean onSurfaceTextureDestroyed(SurfaceTexture surfaceTexture) {
-        if (stateCallback!=null) {
+        if (stateCallback != null) {
             stateCallback.onDestroyed(this);
         }
 
-        return false ;
+        return false;
     }
 
     @Override
-    public void onSurfaceTextureUpdated(SurfaceTexture surfaceTexture) {}
+    public void onSurfaceTextureUpdated(SurfaceTexture surfaceTexture) {
+    }
 
     private void enterTheMatrix() {
-        if (previewSize!=null) {
+        if (previewSize != null) {
             adjustAspectRatio(previewSize.getWidth(),
                     previewSize.getHeight(),
-                    ((Activity)getContext()).getWindowManager().getDefaultDisplay().getRotation());
+                    ((Activity) getContext()).getWindowManager().getDefaultDisplay().getRotation());
         }
     }
 
@@ -121,48 +125,47 @@ public class CameraView extends TextureView implements TextureView.SurfaceTextur
                                    int rotation) {
         // Log.e("CameraView", String.format("video=%d x %d", videoWidth, videoHeight));
 
-        int temp=videoWidth;
-        videoWidth=videoHeight;
-        videoHeight=temp;
+        int temp = videoWidth;
+        videoWidth = videoHeight;
+        videoHeight = temp;
         // Log.e("CameraView", String.format("video after flip=%d x %d", videoWidth, videoHeight));
 
-        int viewWidth=getWidth();
-        int viewHeight=getHeight();
-        double aspectRatio=(double)videoHeight/(double)videoWidth;
+        int viewWidth = getWidth();
+        int viewHeight = getHeight();
+        double aspectRatio = (double) videoHeight / (double) videoWidth;
         int newWidth, newHeight;
 
-        if (getHeight()>(int)(viewWidth*aspectRatio)) {
-            newWidth=(int)(viewHeight/aspectRatio);
-            newHeight=viewHeight;
-        }
-        else {
-            newWidth=viewWidth;
-            newHeight=(int)(viewWidth*aspectRatio);
+        if (getHeight() > (int) (viewWidth * aspectRatio)) {
+            newWidth = (int) (viewHeight / aspectRatio);
+            newHeight = viewHeight;
+        } else {
+            newWidth = viewWidth;
+            newHeight = (int) (viewWidth * aspectRatio);
         }
 
         // Log.e("CameraView", String.format("view=%d x %d", viewWidth, viewHeight));
         // Log.e("CameraView", String.format("new=%d x %d", newWidth, newHeight));
 
-        int xoff=(viewWidth-newWidth)/2;
-        int yoff=(viewHeight-newHeight)/2;
+        int xoff = (viewWidth - newWidth) / 2;
+        int yoff = (viewHeight - newHeight) / 2;
 
-        Matrix txform=new Matrix();
+        Matrix txform = new Matrix();
 
         getTransform(txform);
 
-        float xscale=(float)newWidth/(float)viewWidth;
-        float yscale=(float)newHeight/(float)viewHeight;
+        float xscale = (float) newWidth / (float) viewWidth;
+        float yscale = (float) newHeight / (float) viewHeight;
 
         // Log.e("CameraView", String.format("scale=%f x %f", xscale, yscale));
         txform.setScale(xscale, yscale);
 
-        switch(rotation) {
+        switch (rotation) {
             case Surface.ROTATION_90:
-                txform.postRotate(270, newWidth/2, newHeight/2);
+                txform.postRotate(270, newWidth / 2, newHeight / 2);
                 break;
 
             case Surface.ROTATION_270:
-                txform.postRotate(90, newWidth/2, newHeight/2);
+                txform.postRotate(90, newWidth / 2, newHeight / 2);
                 break;
         }
 

@@ -88,6 +88,7 @@ public class MainFeedNetworkingManager {
 
     /**
      * Initialize the request parameters for the get request.
+     *
      * @throws NoLocationException
      */
     private void initializeRequestParams() throws NoLocationException {

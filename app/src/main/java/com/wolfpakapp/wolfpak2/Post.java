@@ -1,7 +1,6 @@
 package com.wolfpakapp.wolfpak2;
 
 import com.wolfpakapp.wolfpak2.leaderboard.LeaderboardFragment;
-import com.wolfpakapp.wolfpak2.VoteStatus;
 
 import org.json.JSONObject;
 
@@ -47,7 +46,8 @@ public class Post {
     /**
      * Return a Post object created using the passed JSONObject. The tag determines how to parse the
      * JSONObject and instantiate the Post.
-     * @param tag The tag of the current leaderboard tab (or null otherwise).
+     *
+     * @param tag        The tag of the current leaderboard tab (or null otherwise).
      * @param jsonObject The JSONObject of the post.
      * @return A new Post object.
      */
@@ -108,13 +108,13 @@ public class Post {
     }
 
 
-
     public VoteStatus getVoteStatus() {
         return voteStatus;
     }
 
     /**
      * Set the item's vote status, and update the vote count.
+     *
      * @param voteStatus The new VoteStatus.
      */
     public void setVoteStatus(VoteStatus voteStatus) {

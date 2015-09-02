@@ -3,9 +3,10 @@ package com.wolfpakapp.wolfpak2.camera.preview;
 import android.content.Context;
 import android.hardware.Camera;
 import android.util.Log;
-import com.wolfpakapp.wolfpak2.Size;
 import android.view.Surface;
 import android.view.WindowManager;
+
+import com.wolfpakapp.wolfpak2.Size;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -14,6 +15,7 @@ import java.util.List;
 
 /**
  * Camera utility methods
+ *
  * @author Roland Fong
  */
 public class CameraUtils {
@@ -23,21 +25,22 @@ public class CameraUtils {
 
     /**
      * Returns the device rotation; Surface.ROTATION_0, ROTATION_90, etc.
+     *
      * @param context the application context
      * @return the rotation
      */
     public static int getRotation(Context context) {
-        WindowManager windowManager =  (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+        WindowManager windowManager = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
         return windowManager.getDefaultDisplay().getRotation();
     }
 
 
-
     /**
      * Sets the camera's display orientation based on device orientation
-     * @param context the application context
+     *
+     * @param context  the application context
      * @param cameraId the ID of the camera
-     * @param camera the camera itself
+     * @param camera   the camera itself
      */
     @SuppressWarnings("deprecation")
     public static void setCameraDisplayOrientation(Context context,
@@ -48,10 +51,18 @@ public class CameraUtils {
         int rotation = getRotation(context);
         int degrees = 0;
         switch (rotation) {
-            case Surface.ROTATION_0: degrees = 0; break;
-            case Surface.ROTATION_90: degrees = 90; break;
-            case Surface.ROTATION_180: degrees = 180; break;
-            case Surface.ROTATION_270: degrees = 270; break;
+            case Surface.ROTATION_0:
+                degrees = 0;
+                break;
+            case Surface.ROTATION_90:
+                degrees = 90;
+                break;
+            case Surface.ROTATION_180:
+                degrees = 180;
+                break;
+            case Surface.ROTATION_270:
+                degrees = 270;
+                break;
         }
 
         int result;
@@ -70,16 +81,17 @@ public class CameraUtils {
      * a size equal to that of the screen but sometimes does not.  It substitutes the aspect ratio
      * parameter in chooseOptimalSize()  This will return the largest size if no ideal size is
      * found.
+     *
      * @param choices the choices of size
      * @return the best size
      */
-    public static Size getBestSize(List<Size> choices)   {
+    public static Size getBestSize(List<Size> choices) {
         Log.d(TAG, "Choosing best size to match: " +
                 CameraStates.SCREEN_SIZE.getWidth() + ", " + CameraStates.SCREEN_SIZE.getHeight());
-        for(Size choice : choices)  {
+        for (Size choice : choices) {
             Log.d(TAG, "SIZE: " +
                     choice.getWidth() + ", " + choice.getHeight());
-            if(Math.abs(choice.getWidth() - CameraStates.SCREEN_SIZE.getHeight()) <= SIZE_TOLERANCE
+            if (Math.abs(choice.getWidth() - CameraStates.SCREEN_SIZE.getHeight()) <= SIZE_TOLERANCE
                     && Math.abs(choice.getHeight() - CameraStates.SCREEN_SIZE.getWidth()) <= SIZE_TOLERANCE)
                 return choice;
         }
@@ -88,28 +100,30 @@ public class CameraUtils {
 
     /**
      * Returns the largest size given a list of choices
+     *
      * @param choices the choices of sizes
      * @return the largest size
      */
-    public static Size getLargestSize(List<Size> choices)   {
+    public static Size getLargestSize(List<Size> choices) {
         return Collections.max(choices, new CameraUtils.CompareSizesByArea());
     }
 
     /**
      * Given sizes supported by camera, chooses smallest one whose width and height are at least as
      * large as respective requested values and whose aspect ratio matches specified value
-     * @param choices   list of choices supported by camera
-     * @param width     minimum width
-     * @param height    minimum height
+     *
+     * @param choices     list of choices supported by camera
+     * @param width       minimum width
+     * @param height      minimum height
      * @param aspectRatio the ratio of height to width
-     * @return  Optimal size or otherwise arbitrary
+     * @return Optimal size or otherwise arbitrary
      */
-    public static Size chooseOptimalSize(List<Size> choices, int width, int height, Size aspectRatio)  {
+    public static Size chooseOptimalSize(List<Size> choices, int width, int height, Size aspectRatio) {
         // Collect supported resolutions at least as big as preview surface
         List<Size> bigEnough = new ArrayList<Size>();
         int w = aspectRatio.getWidth();
         int h = aspectRatio.getHeight();
-        for(Size option : choices)  {
+        for (Size option : choices) {
             if (option.getHeight() == option.getWidth() * h / w &&
                     option.getWidth() >= width && option.getHeight() >= height) {
                 bigEnough.add(option);

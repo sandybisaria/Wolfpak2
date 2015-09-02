@@ -77,7 +77,7 @@ public class LeaderboardFragment extends Fragment implements TabHost.TabContentF
         int statusBarPadding = 0;
         int resourceId = getResources().getIdentifier("status_bar_height", "dimen", "android");
         if (resourceId > 0) {
-           statusBarPadding = getResources().getDimensionPixelSize(resourceId);
+            statusBarPadding = getResources().getDimensionPixelSize(resourceId);
         }
         tabHost.setPadding(0, statusBarPadding, 0, 0);
 
@@ -122,6 +122,7 @@ public class LeaderboardFragment extends Fragment implements TabHost.TabContentF
 
     /**
      * Create the content for each tab.
+     *
      * @param tag The tag of the requested tab.
      * @return The content (base view) of the tab.
      */
@@ -151,6 +152,7 @@ public class LeaderboardFragment extends Fragment implements TabHost.TabContentF
 
     /**
      * Refresh the request params (or initialize them if not set).
+     *
      * @param tag The tag of the specific request parameter (or null if all)
      */
     private void refreshRequestParams(String tag) throws NoLocationException {
