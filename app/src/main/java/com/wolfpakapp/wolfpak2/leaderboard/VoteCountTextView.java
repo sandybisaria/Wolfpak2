@@ -98,7 +98,7 @@ public class VoteCountTextView extends TextView {
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         if (!isTouchEnabled) {
-            vibrateOnError();
+//            vibrateOnError();
 
             return true;
         }
@@ -291,20 +291,20 @@ public class VoteCountTextView extends TextView {
         }
     }
 
-    private static boolean isVibrating = false;
-    private static final long VIBRATE_DURATION = 200;
-
-    private void vibrateOnError() {
-        Vibrator vibrator = (Vibrator) getContext().getSystemService(Context.VIBRATOR_SERVICE);
-        if (vibrator.hasVibrator() && !isVibrating) {
-            isVibrating = true;
-            vibrator.vibrate(VIBRATE_DURATION);
-            new Handler().postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    isVibrating = false;
-                }
-            }, VIBRATE_DURATION);
-        }
-    }
+//    private static boolean isVibrating = false;
+//    private static final long VIBRATE_DURATION = 200;
+//
+//    private void vibrateOnError() {
+//        Vibrator vibrator = (Vibrator) getContext().getSystemService(Context.VIBRATOR_SERVICE);
+//        if (vibrator.hasVibrator() && !isVibrating) {
+//            isVibrating = true;
+//            vibrator.vibrate(VIBRATE_DURATION);
+//            new Handler().postDelayed(new Runnable() {
+//                @Override
+//                public void run() {
+//                    isVibrating = false;
+//                }
+//            }, VIBRATE_DURATION);
+//        }
+//    }
 }
