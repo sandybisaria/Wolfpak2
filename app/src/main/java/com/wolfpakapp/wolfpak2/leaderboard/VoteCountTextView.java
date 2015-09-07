@@ -27,6 +27,8 @@ import com.wolfpakapp.wolfpak2.VoteStatus;
 import org.apache.http.Header;
 
 public class VoteCountTextView extends TextView {
+    private static final String TAG = "VoteCountTextView";
+
     private LeaderboardTabManager mManager = null;
     private Post mPost = null;
     private View parentItemView = null;
@@ -209,27 +211,30 @@ public class VoteCountTextView extends TextView {
                     // Don't change the vote status (this case should rarely happen).
                     newStatus = mPost.getVoteStatus();
                 }
+                final VoteStatus oldStatus = mPost.getVoteStatus();
+                mPost.setVoteStatus(newStatus);
+                refresh();
 
                 mManager.getServerRestClient().updateLikeStatus(mPost.getId(), newStatus,
                         new AsyncHttpResponseHandler() {
                             @Override
                             public void onSuccess(int statusCode, Header[] headers,
                                                   byte[] responseBody) {
-                                // If successful, locally update the vote status and background.
-                                mPost.setVoteStatus(newStatus);
-                                refresh();
+                                // Do nothing. The appearance was already changed.
                             }
 
                             @Override
                             public void onFailure(int statusCode, Header[] headers,
                                                   byte[] responseBody, Throwable error) {
+                                // If unsuccessful, revert the post to the old look.
+                                mPost.setVoteStatus(oldStatus);
+                                refresh();
+
                                 try {
-                                    Log.d("Failure", Integer.toString(statusCode));
+                                    Log.d(TAG, "Failure: " + Integer.toString(statusCode));
                                 } catch (Exception e) {
                                     e.printStackTrace();
                                 }
-                                // If unsuccessful, the post's vote status is unchanged.
-                                refresh();
                             }
                         });
 
